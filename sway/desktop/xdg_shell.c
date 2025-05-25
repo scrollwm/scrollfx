@@ -51,13 +51,14 @@ static void popup_unconstrain(struct sway_xdg_popup *popup) {
 	}
 
 	float scale = view_is_content_scaled(view) ? view_get_content_scale(view) : 1.0f;
+	scale *= layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 	struct sway_output *output = workspace->output;
 
 	// the output box expressed in the coordinate system of the toplevel parent
 	// of the popup
 	struct wlr_box output_toplevel_sx_box = {
-		.x = output->lx - view->container->pending.content_x + view->geometry.x,
-		.y = output->ly - view->container->pending.content_y + view->geometry.y,
+		.x = output->lx - (view->container->pending.content_x + view->geometry.x) / scale,
+		.y = output->ly - (view->container->pending.content_y + view->geometry.y) / scale,
 		.width = output->width / scale,
 		.height = output->height / scale,
 	};

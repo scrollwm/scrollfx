@@ -5,6 +5,7 @@
 #include "sway/input/cursor.h"
 #include "sway/input/seat.h"
 #include "sway/tree/view.h"
+#include "sway/tree/layout.h"
 #include "sway/desktop/transaction.h"
 #include "log.h"
 
@@ -228,7 +229,12 @@ void seatop_begin_down(struct sway_seat *seat, struct sway_container *con,
 	seatop_begin_down_on_surface(seat, con->view->surface, sx, sy);
 	struct seatop_down_event *e = seat->seatop_data;
 	e->con = con;
-	e->scale = view_is_content_scaled(con->view) ? view_get_content_scale(con->view) : 1.0f;
+	float scale = view_is_content_scaled(con->view) ? view_get_content_scale(con->view) : 1.0f;
+	struct sway_workspace *ws = con->pending.workspace;
+	if (ws) {
+		scale *= layout_scale_enabled(ws) ? layout_scale_get(ws) : 1.0f;
+	}
+	e->scale = scale;
 
 	container_raise_floating(con);
 	transaction_commit_dirty();

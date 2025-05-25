@@ -1247,11 +1247,11 @@ void sway_scene_node_set_enabled(struct sway_scene_node *node, bool enabled) {
 }
 
 // Find a parent of the current node that is a popup or view. If it finds one,
-// fill scale (content scale), vx and vy (coordinates of the view, or popup's
-// parent view).
-// Returns: true if the current node is a popup or view, else false
-static bool scene_node_get_parent_view_content_scale_and_pos(struct sway_scene_node *node,
-		float *scale, int *vx, int *vy) {
+// fill scale (content scale and workspace scale)
+// Returns: true if the current node is a popup or view (parent view), else false
+// (children surfaces or popups)
+static bool scene_node_get_parent_view_content_scale(struct sway_scene_node *node,
+		float *scale) {
 	struct sway_scene_tree *tree;
 	if (node->type == SWAY_SCENE_NODE_TREE) {
 		tree = sway_scene_tree_from_node(node);
@@ -1265,16 +1265,22 @@ static bool scene_node_get_parent_view_content_scale_and_pos(struct sway_scene_n
 		if (!view) {
 			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_POPUP);
 			if (desc && desc->view) {
+				struct sway_workspace *ws = desc->view->container->pending.workspace;
+				*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
 				if (view_is_content_scaled(desc->view)) {
-					sway_scene_node_coords(desc->relative, vx, vy);
-					*scale = view_get_content_scale(desc->view);
+					*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(desc->view);
+				}
+				if (*scale > 0.0f) {
 					return &tree->node == node;
 				}
 			}
-		} else {
+		} else if (view->container) {
+			struct sway_workspace *ws = view->container->pending.workspace;
+			*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
 			if (view_is_content_scaled(view)) {
-				sway_scene_node_coords(&tree->node, vx, vy);
-				*scale = view_get_content_scale(view);
+				*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(view);
+			}
+			if (*scale > 0.0f) {
 				return &tree->node == node;
 			}
 		}
@@ -1287,8 +1293,7 @@ static bool scene_node_get_parent_view_content_scale_and_pos(struct sway_scene_n
 void sway_scene_node_set_position(struct sway_scene_node *node, int x, int y) {
 	// Check if there is a scaled popup/view parent
 	float scale;
-	int vx, vy;
-	bool is_parent = scene_node_get_parent_view_content_scale_and_pos(node, &scale, &vx, &vy);
+	bool is_parent = scene_node_get_parent_view_content_scale(node, &scale);
 	if (scale > 0.0f && !is_parent) {
 		// We want to correct the coordinates of nodes descending from a popup/view,
 		// but not the popup/view node itself, because it contains the coordinates
@@ -1451,12 +1456,18 @@ static bool scene_node_at_iterator(struct sway_scene_node *node,
 	if (node->type == SWAY_SCENE_NODE_BUFFER) {
 		struct sway_scene_buffer *scene_buffer = sway_scene_buffer_from_node(node);
 
-		float scale = scene_node_get_parent_content_scale(node);
-		if (scale > 0.0f) {
-			// Correct the coordinates to buffer local from desktop logical
-			rx /= scale;
-			ry /= scale;
+		double total_scale = 1.0;
+		float content_scale = scene_node_get_parent_content_scale(node);
+		float scale = scene_node_get_parent_scale(&scene_buffer->node);
+		if (content_scale > 0.0f) {
+			total_scale *= content_scale;
 		}
+		if (scale > 0.0f) {
+			total_scale *= scale;
+		}
+		// Correct the coordinates to buffer local from desktop logical
+		rx /= total_scale;
+		ry /= total_scale;
 		if (scene_buffer->point_accepts_input &&
 				!scene_buffer->point_accepts_input(scene_buffer, &rx, &ry)) {
 			return false;
@@ -2620,11 +2631,14 @@ float scene_node_get_parent_content_scale(struct sway_scene_node *node) {
 		// Check scene descriptor
 		struct sway_view *view = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_VIEW);
 		if (!view) {
-			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_POPUP);
+			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_POPUP);
 			if (desc && desc->view) {
+				struct sway_workspace *ws = desc->view->container->pending.workspace;
+				float scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
 				if (view_is_content_scaled(desc->view)) {
-					return view_get_content_scale(desc->view);
+					return (scale > 0.0f ? scale : 1.0f) * view_get_content_scale(desc->view);
 				}
+				return scale;
 			}
 		} else {
 			if (view_is_content_scaled(view)) {
