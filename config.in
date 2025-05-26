@@ -422,6 +422,13 @@ bindgesture swipe:4:left workspace prev
 bindgesture swipe:4:up scale_workspace overview 
 
 #
+# Workspace rules:
+#
+# Opens a terminal when creating workspace 6
+# workspace 6 exec kitty
+
+
+#
 # Status Bar:
 #
 # Read `man 5 scroll-bar` for more information about this section.

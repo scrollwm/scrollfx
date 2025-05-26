@@ -689,6 +689,20 @@ full screen mode will keep full screen status for the new window. You can use
 overview/jump while in full screen mode to move to other window, making it
 full screen too.
 
+`align_reset_auto`: default is `no` (`false`). If `true`, every time you
+change focus, any active alignment (`align` command) will be reset automatically,
+without any need to call `align reset`, for a behavior similar to hyprscroller's.
+
+### Workspace Options
+
+Scroll adds another subcommand to Sway's `workspace`. You can create a rule
+that executes a command when creating a new named workspace. For example, to
+start `kitty` every time you create workspace 3, add this to your
+configuration:
+
+``` config
+workspace 3 exec kitty
+```
 
 ### Gesture Options
 

@@ -1278,6 +1278,11 @@ The default colors are:
 	criteria (non-empty workspaces only) or _workspace_ command (to switch
 	to the workspace before moving).
 
+*workspace* <name> exec <command>
+	Specifies a command to execute when a workspace with _name_ is created. You
+	can use it to open applications automatically when you create workspace
+	_name_.
+
 *workspace_auto_back_and_forth* yes|no
 	When _yes_, repeating a workspace switch command will switch back to the
 	prior workspace. For example, if you are currently on workspace 1,
