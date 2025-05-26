@@ -234,7 +234,11 @@ can always align any column to the *center*, *left* or *right* of the monitor
 (in *horizontal* mode), or *up* (top), *down* (bottom) or to the *center* in
 *vertical* mode. For example center a column for easier reading, regardless of
 what happens to the other columns. If you want to go back to automatic mode,
-you need to use the mode modifier `reorder_auto` or call `align reset`.
+you need to use the mode modifier `reorder_auto` or call `align reset`. The
+only time when alignment will be lost is if you open a new window. However,
+there is also a configuration option, `align_reset_auto yes|no`. It is `no` by
+default. If set to `yes`, every time you change focus, the alignment will be
+reset automatically, for a behavior similar to hyprscroller's.
 
 You can also center a window on your workspace using *middle*, it
 will center its column, and also the window within the column.

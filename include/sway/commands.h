@@ -96,6 +96,7 @@ sway_cmd cmd_exec_validate;
 sway_cmd cmd_exec_process;
 
 sway_cmd cmd_align;
+sway_cmd cmd_align_reset_auto;
 sway_cmd cmd_allow_tearing;
 sway_cmd cmd_animations;
 sway_cmd cmd_assign;

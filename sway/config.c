@@ -261,6 +261,7 @@ static void config_defaults(struct sway_config *config) {
 	config->jump_labels_scale = 0.5;
 	config->jump_labels_keys = strdup("1234");
 	config->fullscreen_movefocus = true;
+	config->align_reset_auto = false;
 	config->gesture_scroll_enable = true;
 	config->gesture_scroll_fingers = 3;
 	config->gesture_scroll_sentitivity = 1.0f;

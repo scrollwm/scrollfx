@@ -106,6 +106,7 @@ static const struct cmd_handler handlers[] = {
 
 /* Config-time only commands. Keep alphabetized */
 static const struct cmd_handler config_handlers[] = {
+	{ "align_reset_auto", cmd_align_reset_auto },
 	{ "animations", cmd_animations },
 	{ "default_orientation", cmd_default_orientation },
 	{ "fullscreen_movefocus", cmd_fullscreen_movefocus },

@@ -213,7 +213,11 @@ They are expected to be used with *bindsym* or at runtime through *scrollmsg*(1)
 	the center in vertical mode. For example center a column for easier
 	reading, regardless of what happens to the other columns. If you want to
 	go back to automatic mode, you need to use the _set_mode_ modifier
-	reorder_auto or call _align_ reset.
+	reorder_auto or call _align_ reset. The only time alignment is lost is if
+	you open a new window.
+
+	See *align_reset_auto* for a configuration command to also reset alignment
+	when changing focus.
 
 	You can also center a window on your workspace using _middle_, it will
 	center its column, and also the window within the column.

@@ -5,6 +5,16 @@
 #include "sway/tree/workspace.h"
 #include "sway/tree/layout.h"
 #include "sway/desktop/transaction.h"
+#include "util.h"
+
+struct cmd_results *cmd_align_reset_auto(int argc, char **argv) {
+	struct cmd_results *error;
+	if ((error = checkarg(argc, "align_reset_auto", EXPECTED_AT_LEAST, 1))) {
+		return error;
+	}
+	config->align_reset_auto = parse_boolean(argv[0], config->align_reset_auto);
+	return cmd_results_new(CMD_SUCCESS, NULL);
+}
 
 static bool parse_direction(const char *name,
 		enum sway_layout_direction *out) {
@@ -125,13 +135,13 @@ struct cmd_results *cmd_align(int argc, char **argv) {
 			if (mode == L_HORIZ) {
 				set_parent_x(parent, workspace->x + 0.5 * (workspace->width - scale * parent->pending.width));
 			} else {
-				set_container_y(container, workspace->x + 0.5 * (workspace->height - scale * container->pending.height));
+				set_container_y(container, workspace->y + 0.5 * (workspace->height - scale * container->pending.height));
 			}
 		} else {
 			if (mode == L_VERT) {
 				set_parent_y(parent, workspace->y + 0.5 * (workspace->height - scale * parent->pending.height));
 			} else {
-				set_container_x(container, workspace->y + 0.5 * (workspace->width - scale * container->pending.width));
+				set_container_x(container, workspace->x + 0.5 * (workspace->width - scale * container->pending.width));
 			}
 		}
 		break;

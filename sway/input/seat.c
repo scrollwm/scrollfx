@@ -1259,6 +1259,11 @@ static void seat_set_workspace_focus(struct sway_seat *seat, struct sway_node *n
 		// the workspace needs to be arranged
 		arrange_workspace(new_workspace);
 	}
+
+	if (config->align_reset_auto && last_workspace &&
+		last_workspace == new_workspace) {
+		layout_modifiers_set_reorder(last_workspace, REORDER_AUTO);
+	}
 }
 
 void seat_set_focus(struct sway_seat *seat, struct sway_node *node) {
