@@ -183,6 +183,8 @@ void layout_selection_workspace(struct sway_workspace *workspace);
 void layout_selection_reset();
 // Move the selection to workspace, with a location given by the current mode modifier
 bool layout_selection_move(struct sway_workspace *workspace);
+// Create a new, active, trail with the contents of the current selection, and reset selection.
+void layout_selection_to_trail();
 
 // Returns true if the container is selected
 bool layout_selection_enabled(struct sway_container *container);

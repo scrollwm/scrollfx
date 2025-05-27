@@ -482,8 +482,14 @@ to appear.
 So you can place the new containers `before`, `after`, at the beginning
 (`beg`) or `end` depending on the current mode.
 
+`selection to_trail` creates a new trail from the contents of the current
+selection list, and resets the selection. You can use that trail to navigate
+through those windows quickly, or as storage for the selection
+(`trail to_selection` can recover the selection from a stored trail).
+
+
 ```
-selection <toggle|reset|workspace|move>
+selection <toggle|reset|workspace|move|to_trail>
 ```
 
 

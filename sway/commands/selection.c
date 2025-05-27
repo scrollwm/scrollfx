@@ -34,8 +34,10 @@ struct cmd_results *cmd_selection(int argc, char **argv) {
 		if (!layout_selection_move(workspace)) {
 			return cmd_results_new(CMD_INVALID, "Need a selection to move");
 		}
+	} else if (strcasecmp(argv[0], "to_trail") == 0) {
+		layout_selection_to_trail();
 	} else {
-		return cmd_results_new(CMD_INVALID, "Unknown argument %s, expected 'selection <toggle|workspace|reset|move>'", argv[0]);
+		return cmd_results_new(CMD_INVALID, "Unknown argument %s, expected 'selection <toggle|workspace|reset|move|to_trail>'", argv[0]);
 	}
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }

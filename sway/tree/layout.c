@@ -2381,6 +2381,56 @@ void layout_selection_set(struct sway_container *container, bool selected) {
 	node_set_dirty(&container->node);
 }
 
+void layout_selection_to_trail() {
+	layout_trail_new();
+	for (int o = 0; o < root->outputs->length; ++o) {
+		struct sway_output *output = root->outputs->items[o];
+		for (int w = 0; w < output->current.workspaces->length; ++w) {
+			struct sway_workspace *workspace = output->current.workspaces->items[w];
+			for (int i = 0; i < workspace->floating->length; ++i) {
+				struct sway_container *con = workspace->floating->items[i];
+				bool selected = con->selected;
+				if (con->view && con->selected) {
+					con->selected = false;
+					layout_trailmark_toggle(con->view);
+					node_set_dirty(&con->node);
+				}
+				if (con->pending.children) {
+					for (int j = 0; j < con->pending.children->length; ++j) {
+						struct sway_container *child = con->pending.children->items[j];
+						if (child->view && (child->selected || selected)) {
+							child->selected = false;
+							layout_trailmark_toggle(child->view);
+							node_set_dirty(&child->node);
+						}
+					}
+				}
+			}
+			for (int i = 0; i < workspace->tiling->length; ++i) {
+				struct sway_container *con = workspace->tiling->items[i];
+				bool selected = false;
+				if (con->selected) {
+					con->selected = false;
+					selected = true;
+				}
+				if (con->pending.children) {
+					for (int j = 0; j < con->pending.children->length; ++j) {
+						struct sway_container *child = con->pending.children->items[j];
+						if (child->view && (child->selected || selected)) {
+							child->selected = false;
+							layout_trailmark_toggle(child->view);
+							node_set_dirty(&child->node);
+						}
+					}
+				}
+			}
+		}
+	}
+	if (layout_trails_active_length() == 0) {
+		layout_trail_delete();
+	}
+}
+
 struct sway_trails {
 	list_t *trails;
 	int active;

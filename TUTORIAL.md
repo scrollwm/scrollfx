@@ -173,6 +173,9 @@ called a trailmark. You can create trails and trailmarks and use them to
 navigate your favorite windows. See the README and the man page for more
 details.
 
+You can create selections from trails, and a new trail for the current
+selection. This also provides memory for selections, and a way to quickly
+navigate favorite windows.
 
 ## Working in Full Screen Mode
 

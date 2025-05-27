@@ -236,6 +236,7 @@ animations {
     bindsym --no-repeat $mod+Ctrl+Insert selection reset
     bindsym --no-repeat $mod+Shift+Insert selection move
     bindsym --no-repeat $mod+Ctrl+Shift+Insert selection workspace
+    bindsym --no-repeat $mod+Alt+Insert selection to_trail
 
     # Marks
     # bindsym $mod+m exec scroll-mark-toggle.sh

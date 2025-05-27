@@ -530,7 +530,7 @@ set|plus|minus|toggle <amount>
 	Shows a window from the scratchpad. Repeatedly using this command will
 	cycle through the windows in the scratchpad.
 
-*selection* toggle|reset|workspace|move
+*selection* toggle|reset|workspace|move|to_trail
 	This command manages window/container selections. You can select several
 	windows or containers at a time, even in different workspaces and/or
 	from overview mode. Those windows will change the border color to the one
@@ -560,6 +560,11 @@ set|plus|minus|toggle <amount>
 	If your new location has a different layout type (for example, vertical
 	instead of horizontal), your containers and windows will adapt, transposing
 	their positions to better fit their new destination.
+
+	_to_trail_ creates a new trail with the contents of the selection and makes
+	it active. You can create that trail to navigate through those windows
+	quickly, or as storage for the selection (_trail to_selection_ can recover
+	the selection from a stored trail).
 
 *set_mode* [<h|v|t> <after|before|end|beg> <focus|nofocus>
 <center_horiz|nocenter_horiz> <center_vert|nocenter_vert>
