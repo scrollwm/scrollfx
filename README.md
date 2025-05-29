@@ -312,7 +312,7 @@ Example configuration:
 
 ### Jump
 
-`jump` provides a shortcut-based quick focus mode for any window on
+`jump` provides a shortcut-based quick focus mode for any tiled window on
 the active workspaces, similar to [vim-easymotion](https://github.com/easymotion/vim-easymotion)
 and variations.
 
@@ -327,11 +327,16 @@ on the overlaid label.
 
 You can call `jump` from any mode: overview or normal mode.
 
-There are also two special `jump` modes:
+There are also three special `jump` modes:
 
 `jump workspaces` will show you a preview of all the available workspaces on
 their respective monitor. You can use this mode to preview and quickly jump
 to any workspace.
+
+`jump floating` will show you an overview of all the floating windows on the
+active workspaces of each monitor. The windows will move so they all show
+without overlap. You can use this mode to preview and quickly jump to any
+of them.
 
 `jump container` will show you all the windows in the active column
 (horizontal layout) or all the windows in the active row (vertical layout), so
@@ -342,6 +347,7 @@ you also see the content of the windows.
     bindsym --no-repeat $mod+slash jump
     bindsym --no-repeat $mod+Shift+slash jump container
     bindsym --no-repeat $mod+Ctrl+slash jump workspaces
+    bindsym --no-repeat $mod+Ctrl+Shift+slash jump floating
 ```
 
 
@@ -811,7 +817,7 @@ json_object *ipc_json_describe_scroller(struct sway_workspace *workspace) {
 	json_object *object = json_object_new_object();
 
 	json_object_object_add(object, "workspace", json_object_new_string(workspace->name));
-	json_object_object_add(object, "overview", json_object_new_boolean(layout_overview_enabled(workspace)));
+	json_object_object_add(object, "overview", json_object_new_boolean(layout_overview_mode(workspace) != OVERVIEW_DISABLED));
 	json_object_object_add(object, "scaled", json_object_new_boolean(layout_scale_enabled(workspace)));
 	json_object_object_add(object, "scale", json_object_new_double(layout_scale_get(workspace)));
 

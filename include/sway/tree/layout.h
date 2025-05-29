@@ -54,6 +54,13 @@ enum sway_layout_pin {
 	PIN_END
 };
 
+enum sway_layout_overview {
+	OVERVIEW_DISABLED,
+	OVERVIEW_TILING,
+	OVERVIEW_FLOATING,
+	OVERVIEW_ALL
+};
+
 struct sway_scroller {
 	enum sway_container_layout type;
 
@@ -66,7 +73,7 @@ struct sway_scroller {
 		bool center_vertical;
 	} modifiers;
 
-	bool overview;
+	enum sway_layout_overview overview;
 	float mem_scale; // Stores the current workspace scale when calling overview, so it can be restored later
 	struct sway_container *fullscreen;  // stores the full screen container when calling overview, so it can be restored later
 
@@ -86,6 +93,8 @@ struct sway_scroller {
 
 // Global functions
 enum wlr_direction layout_to_wlr_direction(enum sway_layout_direction dir);
+void layout_compute_bounding_box(list_t *children, double *minx, double *maxx,
+		double *miny, double *maxy);
 
 double layout_get_default_width(struct sway_workspace *workspace);
 double layout_get_default_height(struct sway_workspace *workspace);
@@ -99,12 +108,12 @@ enum sway_container_layout layout_get_type(struct sway_workspace *workspace);
 
 // Toggle overview will only trigger a workspace arrangement where it will call
 // layout_overview_recompute_scale()
-void layout_overview_toggle(struct sway_workspace *workspace);
+void layout_overview_toggle(struct sway_workspace *workspace, enum sway_layout_overview mode);
 // This can be called by the layout to recalculate the overview scale every
 // transaction that re-arranges the workspace. It will set it too
 void layout_overview_recompute_scale(struct sway_workspace *workspace, int gaps);
-// Return true if overview is on
-bool layout_overview_enabled(struct sway_workspace *workspace);
+// Return current overview mode
+enum sway_layout_overview layout_overview_mode(struct sway_workspace *workspace);
 
 bool layout_overview_workspaces_enabled();
 void layout_overview_workspaces_toggle();
@@ -150,6 +159,7 @@ void layout_toggle_pin(struct sway_scroller *layout);
 void layout_jump();
 void layout_jump_workspaces();
 void layout_jump_container(struct sway_container *container);
+void layout_jump_floating();
 
 // Gestures
 // Begin scrolling swipe gesture. Return true if scrolling, false if there are

@@ -327,7 +327,7 @@ static struct cmd_results *fit_size(uint32_t axis, enum sway_layout_fit_group fi
 
 	struct sway_workspace *workspace = config->handler_context.workspace;
 
-	if (current->pending.fullscreen_mode != FULLSCREEN_NONE || layout_overview_enabled(workspace)) {
+	if (current->pending.fullscreen_mode != FULLSCREEN_NONE || layout_overview_mode(workspace) != OVERVIEW_DISABLED) {
 		// Silently return if full screen or overview mode
 		return cmd_results_new(CMD_SUCCESS, NULL);
 	}

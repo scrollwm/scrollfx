@@ -86,7 +86,7 @@ struct cmd_results *cmd_align(int argc, char **argv) {
 	}
 
 	struct sway_workspace *workspace = container->pending.workspace;
-	if (layout_overview_enabled(workspace)) {
+	if (layout_overview_mode(workspace) != OVERVIEW_DISABLED) {
 		// Do nothing if in overview mode
 		return cmd_results_new(CMD_SUCCESS, NULL);
 	}

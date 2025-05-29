@@ -315,21 +315,27 @@ set|plus|minus|toggle <amount>
 	This can also be used with criteria to set an idle inhibitor for any
 	existing window or with _for_window_ to set idle inhibitors for future windows.
 
-*jump* [container|workspaces]
-	*jump* with no arguments starts an overview mode where all the windows of
-	the visible	workspaces fit in their monitors. Each window will have an
-	overlay with the combination of keys that will change focus to each of them
+*jump* [container|workspaces|floating|tiling]
+	*jump* with no arguments starts an overview mode where all the tiling
+	windows of the visible workspaces fit in their monitors. Each window will have
+	an overlay with the combination of keys that will change focus to each of them
 	and exit jump mode. Pressing any other combination of keys exits jump mode
 	with no change of focus. There are several options to modify the look and
 	content of the labels.
+
+	Using _tiling_ does the same as using no arguments.
 
 	The argument _workspaces_, instead creates an overview of the workspaces
 	available on each monitor for a quick preview and navigation to any workspace.
 
 	_container_ creates an overview of the windows of the active column
 	(horizontal layout) or row (vertical layout), so you can quickly jump to
-	any of them. It is a good replacement to tabbed	navigation, because it also
+	any of them. It is a good replacement to tabbed navigation, because it also
 	shows the content of the windows.
+
+	_floating_ starts a similar jump mode showing all the floating windows of
+	the	visible workspaces. Windows move so there are no overlaps for a better
+	preview.
 
 *layout_transpose*
 	Allows you to change from one type of layout to the other at runtime. For

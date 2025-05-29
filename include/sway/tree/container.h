@@ -93,6 +93,7 @@ struct sway_container {
 
 		struct sway_text_node *text;
 		bool jumping;
+		double x, y;	// original positions for floating windows
 	} jump;
 
 	struct sway_scene_tree *content_tree;

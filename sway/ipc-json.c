@@ -1480,7 +1480,7 @@ json_object *ipc_json_describe_scroller(struct sway_workspace *workspace) {
 	json_object *object = json_object_new_object();
 
 	json_object_object_add(object, "workspace", json_object_new_string(workspace->name));
-	json_object_object_add(object, "overview", json_object_new_boolean(layout_overview_enabled(workspace)));
+	json_object_object_add(object, "overview", json_object_new_boolean(layout_overview_mode(workspace) != OVERVIEW_DISABLED));
 	json_object_object_add(object, "scaled", json_object_new_boolean(layout_scale_enabled(workspace)));
 	json_object_object_add(object, "scale", json_object_new_double(layout_scale_get(workspace)));
 

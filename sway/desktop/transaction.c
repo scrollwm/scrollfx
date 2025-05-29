@@ -1019,6 +1019,23 @@ static void arrange_fullscreen(struct sway_scene_tree *tree,
 }
 
 static void arrange_workspace_floating(struct sway_workspace *ws) {
+	enum sway_layout_overview mode = layout_overview_mode(ws);
+	if (mode == OVERVIEW_ALL || mode == OVERVIEW_FLOATING) {
+		layout_overview_recompute_scale(ws, ws->gaps_inner);
+	}
+	float scale = 1.0f;;
+	double wsoffx = 0.0, wsoffy = 0.0;
+	double minx = 0.0, miny = 0.0;
+	if (layout_scale_enabled(ws)) {
+		scale = layout_scale_get(ws);
+		double maxx, maxy;
+		layout_compute_bounding_box(ws->floating, &minx, &maxx, &miny, &maxy);
+		const double width = maxx - minx;
+		const double height = maxy - miny;
+		wsoffx = ws->x + 0.5 * (ws->width - width * scale);
+		wsoffy = ws->y + 0.5 * (ws->height - height * scale);
+	}
+
 	for (int i = 0; i < ws->current.floating->length; i++) {
 		struct sway_container *floater = ws->current.floating->items[i];
 		struct sway_scene_tree *layer = root->layers.floating;
@@ -1044,8 +1061,14 @@ static void arrange_workspace_floating(struct sway_workspace *ws) {
 		}
 
 		sway_scene_node_reparent(&floater->scene_tree->node, layer);
-		sway_scene_node_set_position(&floater->scene_tree->node,
-			floater->current.x, floater->current.y);
+		if (layout_scale_enabled(ws)) {
+			sway_scene_node_set_position(&floater->scene_tree->node,
+				wsoffx + (floater->current.x - minx) * scale, wsoffy + (floater->current.y - miny) * scale);
+
+		} else {
+			sway_scene_node_set_position(&floater->scene_tree->node,
+				floater->current.x, floater->current.y);
+		}
 		sway_scene_node_set_enabled(&floater->scene_tree->node, true);
 		sway_scene_node_set_enabled(&floater->border.tree->node, true);
 
@@ -1059,7 +1082,8 @@ static void arrange_workspace_tiling(struct sway_workspace *ws,
 	if (ws->tiling->length == 0) {
 		return;
 	}
-	if (layout_overview_enabled(ws)) {
+	enum sway_layout_overview mode = layout_overview_mode(ws);
+	if (mode == OVERVIEW_ALL || mode == OVERVIEW_TILING) {
 		layout_overview_recompute_scale(ws, ws->gaps_inner);
 	}
 	arrange_children(layout_get_type(ws), ws->tiling,
@@ -1098,15 +1122,24 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 		sway_scene_node_reparent(&child->layers.tiling->node, output->layers.tiling);
 		sway_scene_node_reparent(&child->layers.fullscreen->node, output->layers.fullscreen);
 
+		bool floating = true;
+		if (layout_overview_mode(child) == OVERVIEW_TILING) {
+			floating = false;
+		}
+		bool tiling = true;
+		if (layout_overview_mode(child) == OVERVIEW_FLOATING) {
+			tiling = false;
+		}
+
 		for (int i = 0; i < child->current.floating->length; i++) {
 			struct sway_container *floater = child->current.floating->items[i];
 			sway_scene_node_reparent(&floater->scene_tree->node, root->layers.floating);
-			sway_scene_node_set_enabled(&floater->scene_tree->node, activated);
+			sway_scene_node_set_enabled(&floater->scene_tree->node, activated && floating);
 		}
 
 		if (activated) {
 			struct sway_container *fs = child->current.fullscreen;
-			sway_scene_node_set_enabled(&child->layers.tiling->node, !fs);
+			sway_scene_node_set_enabled(&child->layers.tiling->node, !fs && tiling);
 			sway_scene_node_set_enabled(&child->layers.fullscreen->node, fs);
 
 			sway_scene_node_set_enabled(&output->layers.shell_background->node, !fs);
@@ -1118,7 +1151,9 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 
 				sway_scene_rect_set_size(output->fullscreen_background, width, height);
 
-				arrange_workspace_floating(child);
+				if (floating) {
+					arrange_workspace_floating(child);
+				}
 				arrange_fullscreen(child->layers.fullscreen, fs, child,
 					width, height);
 			} else {
@@ -1128,10 +1163,14 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 				sway_scene_node_set_position(&child->layers.tiling->node,
 					gaps->left + area->x, gaps->top + area->y);
 
-				arrange_workspace_tiling(child,
-					area->width - gaps->left - gaps->right,
-					area->height - gaps->top - gaps->bottom);
-				arrange_workspace_floating(child);
+				if (tiling) {
+					arrange_workspace_tiling(child,
+						area->width - gaps->left - gaps->right,
+						area->height - gaps->top - gaps->bottom);
+				}
+				if (floating) {
+					arrange_workspace_floating(child);
+				}
 			}
 		} else {
 			sway_scene_node_set_enabled(&child->layers.tiling->node, false);
