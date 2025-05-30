@@ -84,8 +84,14 @@ static void handle_motion_postthreshold(struct sway_seat *seat) {
 		update_indicator(e, &drop_box);
 		return;
 	}
-	// Deny moving within own workspace if this is the only child
 	struct sway_container *con = node->sway_container;
+	// If tiling container, exit
+	if (container_is_floating(con)) {
+		e->target_node = NULL;
+		e->target_edge = WLR_EDGE_NONE;
+		return;
+	}
+	// Deny moving within own workspace if this is the only child
 	if (workspace_num_tiling_views(e->con->pending.workspace) == 1 &&
 			con->pending.workspace == e->con->pending.workspace) {
 		e->target_node = NULL;

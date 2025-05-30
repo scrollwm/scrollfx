@@ -352,6 +352,9 @@ void layout_overview_workspaces_toggle() {
 }
 
 void layout_scale_set(struct sway_workspace *workspace, float scale) {
+	if (!workspace) {
+		return;
+	}
 	workspace_set_scale(workspace, scale);
 	node_set_dirty(&workspace->node);
 	recreate_buffers(workspace);
@@ -359,6 +362,9 @@ void layout_scale_set(struct sway_workspace *workspace, float scale) {
 }
 
 void layout_scale_reset(struct sway_workspace *workspace) {
+	if (!workspace) {
+		return;
+	}
 	workspace_set_scale(workspace, -1.0f);
 	node_set_dirty(&workspace->node);
 	recreate_buffers(workspace);
@@ -370,6 +376,9 @@ float layout_scale_get(struct sway_workspace *workspace) {
 }
 
 bool layout_scale_enabled(struct sway_workspace *workspace) {
+	if (!workspace) {
+		return false;
+	}
 	return workspace->layers.tiling->node.scale > 0.0f;
 }
 
@@ -1843,7 +1852,7 @@ void layout_jump_container(struct sway_container *container) {
 	if (container->pending.parent) {
 		container = container->pending.parent;
 	}
-	if (container->pending.children->length <= 1) {
+	if (!container->pending.children || container->pending.children->length <= 1) {
 		return;
 	}
 	struct jump_container_data *jump_data = calloc(1, sizeof(struct jump_container_data));
