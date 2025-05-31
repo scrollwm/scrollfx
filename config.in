@@ -202,7 +202,7 @@ animations {
     bindsym --no-repeat $mod+slash jump
     bindsym --no-repeat $mod+Shift+slash jump container
     bindsym --no-repeat $mod+Ctrl+slash jump workspaces
-    bindsym --no-repeat $mod+Ctrl+Shift+slash jump floating
+    bindsym --no-repeat $mod+Alt+slash jump floating
 
     # Content
     bindsym $mod+comma scale_content incr -0.05
