@@ -99,7 +99,7 @@ workspace.
     bindsym --no-repeat $mod+slash jump
     bindsym --no-repeat $mod+Shift+slash jump container
     bindsym --no-repeat $mod+Ctrl+slash jump workspaces
-    bindsym --no-repeat $mod+Ctrl+Shift+slash jump floating
+    bindsym --no-repeat $mod+Alt+slash jump floating
 ```
 
 2. Pressing your `mod` key and `/` will show an overview of your windows on
@@ -116,7 +116,7 @@ If your focus is on a column with more than one window, you can press `mod`,
 `Shift` and `/`, and you will get a jump overview of only all the windows in that
 column instead.
 
-If you use floating windows, `mod+Ctrl+Shift+/` will show you an overview of
+If you use floating windows, `mod+Alt+/` will show you an overview of
 all your floating windows without overlaps, so you can select one even if it
 was hidden behind.
 
