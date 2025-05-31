@@ -120,6 +120,8 @@ If you use floating windows, `mod+Alt+/` will show you an overview of
 all your floating windows without overlaps, so you can select one even if it
 was hidden behind.
 
+[Jump](https://github.com/user-attachments/assets/33bec595-148f-4449-bcd6-e1cc9e5b9a1a)
+
 
 ## Content Scaling
 
