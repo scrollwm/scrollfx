@@ -145,7 +145,7 @@ bindsym --whole-window $mod+Shift+button4 scale_workspace incr -0.05
 bindsym --whole-window $mod+Shift+button5 scale_workspace incr 0.05
 ```
 
-[scroll](https://github.com/user-attachments/assets/4a063bed-5c14-4c71-88a8-1ccfaa009ff5)
+[scale](https://github.com/user-attachments/assets/a222e9f9-1d60-4c39-aaee-ca68aeabd1ea)
 
 
 ## Pins
