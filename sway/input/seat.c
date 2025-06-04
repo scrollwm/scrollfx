@@ -1726,3 +1726,9 @@ keyboard_shortcuts_inhibitor_get_for_focused_surface(
 	return keyboard_shortcuts_inhibitor_get_for_surface(seat,
 		seat->wlr_seat->keyboard_state.focused_surface);
 }
+
+void sway_seat_set_button_cb(struct sway_seat *seat,
+		sway_seat_button_cb_fn callback, void *callbak_data) {
+	seat->button_cb_data = callbak_data;
+	seat->button_cb = callback;
+}

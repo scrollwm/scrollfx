@@ -339,6 +339,12 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 	struct sway_node *node = node_at_coords(seat,
 			cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
 
+	if (seat->button_cb) {
+		if (seat->button_cb(seat, time_msec, device, button, state, node, seat->button_cb_data)) {
+			return;
+		}
+	}
+
 	struct sway_container *cont = node && node->type == N_CONTAINER ?
 		node->sway_container : NULL;
 	bool is_floating = cont && container_is_floating(cont);

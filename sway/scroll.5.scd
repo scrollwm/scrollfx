@@ -320,8 +320,8 @@ set|plus|minus|toggle <amount>
 	windows of the visible workspaces fit in their monitors. Each window will have
 	an overlay with the combination of keys that will change focus to each of them
 	and exit jump mode. Pressing any other combination of keys exits jump mode
-	with no change of focus. There are several options to modify the look and
-	content of the labels.
+	with no change of focus. Clicking on an item will also select it. There are
+	several options to modify the look and content of the labels.
 
 	Using _tiling_ does the same as using no arguments.
 

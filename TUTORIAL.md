@@ -105,7 +105,7 @@ workspace.
 2. Pressing your `mod` key and `/` will show an overview of your windows on
    each monitor.
 3. Now press the numbers shown on the overlay for the window you want to change
-   focus to.
+   focus to, or click on it.
 4. `jump` will exit, and the focus will be on the window you selected.
 
 If instead you press `mod`, `Ctrl` and `/`, you will see a bird's eye view of

@@ -350,6 +350,8 @@ you also see the content of the windows.
     bindsym --no-repeat $mod+Ctrl+Shift+slash jump floating
 ```
 
+You can also click on the item (container, workspace etc.) to exit jump mode
+and focus on that element.
 
 ### Content Scaling
 

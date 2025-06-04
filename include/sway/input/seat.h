@@ -14,6 +14,11 @@
 
 struct sway_seat;
 
+// Return true if the callback handled the button event, otherwise false.
+typedef bool (*sway_seat_button_cb_fn)(struct sway_seat *seat, uint32_t time_msec,
+		struct wlr_input_device *device, uint32_t button,
+		enum wl_pointer_button_state state, struct sway_node *node, void *data);
+
 struct sway_seatop_impl {
 	void (*button)(struct sway_seat *seat, uint32_t time_msec,
 			struct wlr_input_device *device, uint32_t button,
@@ -105,6 +110,10 @@ struct sway_seat {
 	// Last touch point
 	int32_t touch_id;
 	double touch_x, touch_y;
+
+	// Button callback
+	void *button_cb_data;
+	sway_seat_button_cb_fn button_cb;
 
 	// Seat operations (drag and resize)
 	const struct sway_seatop_impl *seatop_impl;
@@ -371,5 +380,11 @@ keyboard_shortcuts_inhibitor_get_for_surface(const struct sway_seat *seat,
  */
 struct sway_keyboard_shortcuts_inhibitor *
 keyboard_shortcuts_inhibitor_get_for_focused_surface(const struct sway_seat *seat);
+
+/**
+ * Seat a user callback function when a button is pressed or released
+ */
+void sway_seat_set_button_cb(struct sway_seat *seat,
+		sway_seat_button_cb_fn callback, void *callbak_data);
 
 #endif

@@ -656,7 +656,8 @@ static double compute_active_offset(struct sway_workspace *workspace,
 	}
 }
 
-static void arrange_children(enum sway_container_layout layout, list_t *children,
+static void arrange_children(struct sway_workspace *workspace,
+		enum sway_container_layout layout, list_t *children,
 		struct sway_container *active, struct sway_scene_tree *content,
 		int width, int height, int gaps) {
 
@@ -669,7 +670,6 @@ static void arrange_children(enum sway_container_layout layout, list_t *children
 		active_idx = 0;
 		active = children->items[active_idx];
 	}
-	struct sway_workspace *workspace = active->current.workspace;
 	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 
 	struct sway_container *pin = layout_pin_enabled(workspace) ?
@@ -977,9 +977,9 @@ static void arrange_container(struct sway_container *con,
 			sway_scene_node_set_enabled(&con->title_bar.tree->node, false);
 		}
 
-		arrange_children(con->current.layout, con->current.children,
-			con->current.focused_inactive_child, con->content_tree,
-			round(dwidth), round(dheight), gaps);
+		arrange_children(con->current.workspace, con->current.layout,
+			con->current.children, con->current.focused_inactive_child,
+			con->content_tree, round(dwidth), round(dheight), gaps);
 	}
 }
 
@@ -1086,7 +1086,7 @@ static void arrange_workspace_tiling(struct sway_workspace *ws,
 	if (mode == OVERVIEW_ALL || mode == OVERVIEW_TILING) {
 		layout_overview_recompute_scale(ws, ws->gaps_inner);
 	}
-	arrange_children(layout_get_type(ws), ws->tiling,
+	arrange_children(ws, layout_get_type(ws), ws->tiling,
 		ws->current.focused_inactive_child, ws->layers.tiling,
 		width, height, ws->gaps_inner);
 }
