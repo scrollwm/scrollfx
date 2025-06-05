@@ -2073,6 +2073,10 @@ static enum scene_direct_scanout_result scene_entry_try_direct_scanout(
 	struct sway_scene_output *scene_output = data->output;
 	struct sway_scene_node *node = entry->node;
 
+	if (root->fullscreen_global) {
+		return SCANOUT_INELIGIBLE;
+	}
+
 	if (!scene_output->scene->direct_scanout) {
 		return SCANOUT_INELIGIBLE;
 	}
