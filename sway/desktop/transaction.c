@@ -288,7 +288,8 @@ static void disable_container(struct sway_container *con) {
 }
 
 static void arrange_container(struct sway_container *con,
-		double width, double height, bool title_bar, int gaps);
+		double width, double height, bool title_bar, int gaps,
+		struct sway_workspace *workspace);
 
 static double get_active_position_pin(struct sway_workspace *workspace,
 		enum sway_container_layout layout, list_t *children, int active_idx,
@@ -727,7 +728,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			}
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
-			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps);
+			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 			off += scale * (child->pending.height + 2 * gaps);
 		}
 		off = offset;
@@ -760,7 +761,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
-			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps);
+			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 		}
 	} else if (layout == L_HORIZ) {
 		double off = offset;
@@ -796,7 +797,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			}
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
-			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps);
+			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 			off += scale * (child->pending.width + 2 * gaps);
 		}
 		off = offset;
@@ -829,7 +830,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
-			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps);
+			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 		}
 	} else {
 		sway_assert(false, "unreachable");
@@ -869,7 +870,8 @@ static void animation_clip_container(struct sway_container *con) {
 }
 
 static void arrange_container(struct sway_container *con,
-		double dwidth, double dheight, bool title_bar, int gaps) {
+		double dwidth, double dheight, bool title_bar, int gaps,
+		struct sway_workspace *workspace) {
 	// this container might have previously been in the scratchpad,
 	// make sure it's enabled for viewing
 	sway_scene_node_set_enabled(&con->scene_tree->node, true);
@@ -879,7 +881,6 @@ static void arrange_container(struct sway_container *con,
 	}
 
 	if (con->view) {
-		struct sway_workspace *workspace = con->current.workspace;
 		float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 		int border_top = round(container_titlebar_height() * scale);
 		int border_width = max(1, round(con->current.border_thickness * scale));
@@ -977,7 +978,7 @@ static void arrange_container(struct sway_container *con,
 			sway_scene_node_set_enabled(&con->title_bar.tree->node, false);
 		}
 
-		arrange_children(con->current.workspace, con->current.layout,
+		arrange_children(workspace, con->current.layout,
 			con->current.children, con->current.focused_inactive_child,
 			con->content_tree, round(dwidth), round(dheight), gaps);
 	}
@@ -999,7 +1000,7 @@ static void arrange_fullscreen(struct sway_scene_tree *tree,
 		sway_scene_node_set_enabled(&fs->scene_tree->node, false);
 	} else {
 		fs_node = &fs->scene_tree->node;
-		arrange_container(fs, width, height, true, container_get_gaps(fs));
+		arrange_container(fs, width, height, true, container_get_gaps(fs), fs->current.workspace);
 	}
 
 	// When we change focus in full screen mode, we avoid disabling and enabling
@@ -1073,7 +1074,7 @@ static void arrange_workspace_floating(struct sway_workspace *ws) {
 		sway_scene_node_set_enabled(&floater->border.tree->node, true);
 
 		arrange_container(floater, floater->current.width, floater->current.height,
-			true, ws->gaps_inner);
+			true, ws->gaps_inner, ws);
 	}
 }
 
