@@ -291,12 +291,22 @@ void view_autoconfigure(struct sway_view *view) {
 		con->pending.content_y = output->ly;
 		con->pending.content_width = output->width;
 		con->pending.content_height = output->height;
+		if (view_is_content_scaled(view)) {
+			float scale = view_get_content_scale(view);
+			con->pending.content_width /= scale;
+			con->pending.content_height /= scale;
+		}
 		return;
 	} else if (con->pending.fullscreen_mode == FULLSCREEN_GLOBAL) {
 		con->pending.content_x = root->x;
 		con->pending.content_y = root->y;
 		con->pending.content_width = root->width;
 		con->pending.content_height = root->height;
+		if (view_is_content_scaled(view)) {
+			float scale = view_get_content_scale(view);
+			con->pending.content_width /= scale;
+			con->pending.content_height /= scale;
+		}
 		return;
 	}
 
