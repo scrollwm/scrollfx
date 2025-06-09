@@ -227,7 +227,7 @@ siblings in that column.
 ### Resizing
 
 ``` config
-cycle_size <h|v> <next}prev>
+cycle_size <h|v> <next|prev>
 ```
 
 `cycle_size <h|v>` cycles forward or backward through a number of column
@@ -362,7 +362,7 @@ you also see the content of the windows.
     bindsym --no-repeat $mod+slash jump
     bindsym --no-repeat $mod+Shift+slash jump container
     bindsym --no-repeat $mod+Ctrl+slash jump workspaces
-    bindsym --no-repeat $mod+Ctrl+Shift+slash jump floating
+    bindsym --no-repeat $mod+Alt+slash jump floating
 ```
 
 You can also click on the item (container, workspace etc.) to exit jump mode
