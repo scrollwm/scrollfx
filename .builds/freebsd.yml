@@ -31,7 +31,7 @@ packages:
 - misc/hwdata
 sources:
 - https://github.com/dawsers/scroll
-- https://gitlab.freedesktop.org/wlroots/wlroots.git
+- https://gitlab.freedesktop.org/wlroots/wlroots.git#0.19
 tasks:
 - setup: |
     cd scroll
