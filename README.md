@@ -67,16 +67,31 @@ same and the executables are renamed to *scroll*, "scrollmsg", "scrollnag" and
 
 ### Arch Linux
 
-If you are using Arch Linux, there is an AUR package you can install:
+If you are using Arch Linux, there are two AUR package you can install:
 
-`sway-scroll-git`
+* Stable version: `sway-scroll-stable`. This package follows *sway's*
+  versioning, and there is one version per stable *sway* version, currently at
+  1.11. You should be able to have both `sway` and `scroll` installed on the
+  same system and start any of them without problems, as their dependencies
+  are the same, but the executable and file names are not (*scroll* vs
+  *sway*).
+
+``` sh
+paru -S sway-scroll-stable
+```
+
+* Unstable, development version: `sway-scroll-git`. This has all the newest
+  changes and features, and it is compatible with `sway-git`. It normally uses
+  the development version of `wlroots`.
 
 ``` sh
 paru -S sway-scroll-git
 ```
 
-Now prepare a configuration file `~/.config/scroll/config` using the provided
-example (`/etc/scroll/config`), and you can start *scroll* from a tty.
+After installing either package, prepare a configuration file
+`~/.config/scroll/config` using the provided example (`/etc/scroll/config`),
+and you can start *scroll* from a tty. You can also start *scroll* from your
+display manager using the provided `/usr/share/wayland-sessions/scroll.desktop`.
 
 
 ### Requirements
