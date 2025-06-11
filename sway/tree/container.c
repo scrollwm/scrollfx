@@ -1250,8 +1250,12 @@ void container_end_mouse_operation(struct sway_container *container) {
 	}
 }
 
-static void set_fullscreen(struct sway_container *con, bool enable) {
+static void set_fullscreen(struct sway_container *con, bool enable, bool force) {
 	if (!con->view) {
+		return;
+	}
+	if (con->pending.fullscreen_application != FULLSCREEN_APP_DEFAULT &&
+		!force) {
 		return;
 	}
 	if (con->view->impl->set_fullscreen) {
@@ -1268,7 +1272,7 @@ static void container_fullscreen_workspace(struct sway_container *con) {
 				"Expected a non-fullscreen container")) {
 		return;
 	}
-	set_fullscreen(con, true);
+	set_fullscreen(con, true, false);
 	con->pending.fullscreen_mode = FULLSCREEN_WORKSPACE;
 
 	con->saved_x = con->pending.x;
@@ -1302,7 +1306,7 @@ static void container_fullscreen_global(struct sway_container *con) {
 				"Expected a non-fullscreen container")) {
 		return;
 	}
-	set_fullscreen(con, true);
+	set_fullscreen(con, true, false);
 
 	root->fullscreen_global = con;
 	con->saved_x = con->pending.x;
@@ -1328,7 +1332,7 @@ void container_fullscreen_disable(struct sway_container *con) {
 				"Expected a fullscreen container")) {
 		return;
 	}
-	set_fullscreen(con, false);
+	set_fullscreen(con, false, false);
 
 	if (container_is_floating(con)) {
 		con->pending.x = con->saved_x;
@@ -1437,6 +1441,32 @@ void container_pass_fullscreen(struct sway_container *src, struct sway_container
 		arrange_root();
 		container_fullscreen_global(dst);
 		arrange_root();
+		break;
+	}
+}
+
+void container_set_fullscreen_application(struct sway_container *con,
+		enum sway_fullscreen_app_mode mode) {
+	if (con->pending.fullscreen_application == mode) {
+		return;
+	}
+	switch (mode) {
+	case FULLSCREEN_APP_DEFAULT:
+		bool full = con->pending.fullscreen_mode != FULLSCREEN_NONE;
+		bool full_app = con->pending.fullscreen_application == FULLSCREEN_APP_ENABLED ||
+			(con->pending.fullscreen_application == FULLSCREEN_APP_DEFAULT && full);
+		con->pending.fullscreen_application = mode;
+		if (full != full_app) {
+			set_fullscreen(con, full, true);
+		}
+		break;
+	case FULLSCREEN_APP_DISABLED:
+		con->pending.fullscreen_application = mode;
+		set_fullscreen(con, false, true);
+		break;
+	case FULLSCREEN_APP_ENABLED:
+		con->pending.fullscreen_application = mode;
+		set_fullscreen(con, true, true);
 		break;
 	}
 }

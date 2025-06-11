@@ -193,6 +193,9 @@ position to a different application.
 
 [Full Screen](https://github.com/user-attachments/assets/fed977a0-8e87-4f94-bd68-7159578499ba)
 
+You can also use `fullscreen_application` to toggle a full screen UI for any
+application, while still having its content fit in the assigned container. You
+can also combine this with content scaling.
 
 ## Touchpad Gestures
 
