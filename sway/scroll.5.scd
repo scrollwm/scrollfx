@@ -292,9 +292,16 @@ They are expected to be used with *bindsym* or at runtime through *scrollmsg*(1)
 	Moves focus between the floating and tiled layers.
 
 *fullscreen* [enable|disable|toggle] [global]
-	Makes focused window fullscreen, non-fullscreen, or the opposite of what it
+	Makes the focused window fullscreen, non-fullscreen, or the opposite of what it
 	is now. If no argument is given, it does the same as _toggle_. If _global_
 	is specified, the window will be fullscreen across all outputs.
+
+*fullscreen_application* [enable|disable|toggle|reset]
+	Makes the focused window's application work in fullscreen UI mode, while
+	still fitting its container. If no argument is given, it does the same as
+	_toggle_. _reset_ resets the stored _fullscreen_application_ mode for the
+	window and from then on, it takes the one set by _fullscreen_ until modified
+	again with this command.
 
 *gaps* inner|outer|horizontal|vertical|top|right|bottom|left all|current
 set|plus|minus|toggle <amount>

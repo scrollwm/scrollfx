@@ -388,6 +388,13 @@ Add these key bindings to your config:
     bindsym $mod+Ctrl+period scale_content reset
 ```
 
+### Full Screen Modes
+
+Aside from sway's full screen workspace and full screen global modes, *scroll*
+also supports the command `fullscreen_application`. You can toggle an application's
+interface to be in full screen mode, while the content still fits in a container.
+
+You can combine this with content scaling too.
 
 ### Touchpad and Mouse Drag Scrolling
 
