@@ -1471,6 +1471,39 @@ void container_set_fullscreen_application(struct sway_container *con,
 	}
 }
 
+void container_handle_fullscreen_request(struct sway_container *con, bool enable) {
+	enum sway_fullscreen_app_mode mode = con->pending.fullscreen_application;
+	if (enable) {
+		// Enable app FS
+		set_fullscreen(con, true, true);
+		if (con->pending.fullscreen_mode != FULLSCREEN_NONE) {
+			// Container is FS
+			// Set app FS to default if disabled
+			if (mode == FULLSCREEN_APP_DISABLED) {
+				con->pending.fullscreen_application = FULLSCREEN_APP_DEFAULT;
+			}
+		} else {
+			// Container !FS
+			if (mode != FULLSCREEN_APP_DISABLED) {
+				container_set_fullscreen(con, enable);
+			}
+		}
+	} else {
+		// Disable app FS
+		set_fullscreen(con, false, true);
+		if (con->pending.fullscreen_mode != FULLSCREEN_NONE) {
+			// Container is FS
+			// Set container !FS
+			container_set_fullscreen(con, enable);
+		} else {
+			// Set app FS to default if enabled
+			if (mode == FULLSCREEN_APP_ENABLED) {
+				con->pending.fullscreen_application = FULLSCREEN_APP_DEFAULT;
+			}
+		}
+	}
+}
+
 struct sway_container *container_toplevel_ancestor(
 		struct sway_container *container) {
 	while (container->pending.parent) {
