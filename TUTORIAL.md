@@ -7,6 +7,10 @@
 Consult the [README](https://github.com/dawsers/scroll/blob/master/README.md)
 for more details beyond this quick tutorial.
 
+This tutorial uses the default key bindings you can find in
+`/etc/scroll/config` or in this repo in
+[config.in](https://github.com/dawsers/scroll/blob/master/config.in).
+
 ## Rows and Columns
 
 *scroll* supports multiple workspaces per monitor. Each workspace is a
@@ -26,6 +30,11 @@ There are two working modes that can be changed at any time:
    column containing only that window.
 2. *vertical*: a new window will be placed in the current *column*,
    right below the active window.
+
+``` config
+    bindsym $mod+bracketleft set_mode h
+    bindsym $mod+bracketright set_mode v
+```
 
 If your monitor is in landscape mode (the usual one), you will probably work
 mostly in *horizontal* mode. If you are using a monitor in portrait mode, *scroll*
@@ -55,15 +64,111 @@ You can toggle different window widths and heights in real-time using
 `cycle_size`. It will go through your list of selected fractions defined in the
 configuration, and resize the active window accordingly.
 
+``` config
+bindsym $mod+minus cycle_size h prev
+bindsym $mod+equal cycle_size h next
+bindsym $mod+Shift+minus cycle_size v prev
+bindsym $mod+Shift+equal cycle_size v next
+```
+
 Of course you can also manually define exactly the size of a window with
 `resize` or use `set_size` to directly choose a fraction without having to
 cycle through them.
+
+``` config
+mode "setsizeh" {
+    bindsym 1 set_size h 0.125; mode default
+    bindsym 2 set_size h 0.1666666667; mode default
+    bindsym 3 set_size h 0.25; mode default
+    bindsym 4 set_size h 0.333333333; mode default
+    bindsym 5 set_size h 0.375; mode default
+    bindsym 6 set_size h 0.5; mode default
+    bindsym 7 set_size h 0.625; mode default
+    bindsym 8 set_size h 0.6666666667; mode default
+    bindsym 9 set_size h 0.75; mode default
+    bindsym 0 set_size h 0.833333333; mode default
+    bindsym minus set_size h 0.875; mode default
+    bindsym equal set_size h 1.0; mode default
+
+    # Return to default mode
+    #bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+b mode "setsizeh"
+
+mode "setsizev" {
+    bindsym 1 set_size v 0.125; mode default
+    bindsym 2 set_size v 0.1666666667; mode default
+    bindsym 3 set_size v 0.25; mode default
+    bindsym 4 set_size v 0.333333333; mode default
+    bindsym 5 set_size v 0.375; mode default
+    bindsym 6 set_size v 0.5; mode default
+    bindsym 7 set_size v 0.625; mode default
+    bindsym 8 set_size v 0.6666666667; mode default
+    bindsym 9 set_size v 0.75; mode default
+    bindsym 0 set_size v 0.833333333; mode default
+    bindsym minus set_size v 0.875; mode default
+    bindsym equal set_size v 1.0; mode default
+
+    # Return to default mode
+    #bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+Shift+b mode "setsizev"
+
+mode "resize" {
+    # left will shrink the containers width
+    # right will grow the containers width
+    # up will shrink the containers height
+    # down will grow the containers height
+    bindsym $left resize shrink width 100px
+    bindsym $down resize grow height 100px
+    bindsym $up resize shrink height 100px
+    bindsym $right resize grow width 100px
+
+    # Return to default mode
+    #bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+Shift+r mode "resize"
+
+```
 
 If you want to quickly fit a series of windows in a column or columns in a
 row, you can use `fit_size`. It will ignore fractions, and re-scale all the
 affected windows to fit in the screen.
 
 [cycle_size and fit_view](https://github.com/user-attachments/assets/3a034369-5246-4868-a696-bfeb044c7c0d)
+
+``` config
+mode "fit_size" {
+    bindsym w fit_size h visible proportional; mode default
+    bindsym Shift+w fit_size v visible proportional; mode default
+    bindsym Ctrl+w fit_size h visible equal; mode default
+    bindsym Ctrl+Shift+w fit_size v visible equal; mode default
+
+    bindsym $right fit_size h toend proportional; mode default
+    bindsym Shift+$right fit_size v toend proportional; mode default
+    bindsym Ctrl+$right fit_size h toend equal; mode default
+    bindsym Ctrl+Shift+$right fit_size v toend equal; mode default
+
+    bindsym $left fit_size h tobeg proportional; mode default
+    bindsym Shift+$left fit_size v tobeg proportional; mode default
+    bindsym Ctrl+$left fit_size h tobeg equal; mode default
+    bindsym Ctrl+Shift+$left fit_size v tobeg equal; mode default
+
+    bindsym $up fit_size h active proportional; mode default
+    bindsym Shift+$up fit_size v active proportional; mode default
+    #bindsym Ctrl+$up fit_size h active equal; mode default
+    #bindsym Ctrl+Shift+$up fit_size v active equal; mode default
+
+    bindsym $down fit_size h all proportional; mode default
+    bindsym Shift+$down fit_size v all proportional; mode default
+    bindsym Ctrl+$down fit_size h all equal; mode default
+    bindsym Ctrl+Shift+$down fit_size v all equal; mode default
+}
+bindsym $mod+w mode "fit_size"
+```
 
 
 ## Focusing and Alignment
@@ -75,12 +180,75 @@ window manually; `align` does exactly that.
 
 [align](https://github.com/user-attachments/assets/974f0916-0a0e-453a-bdb2-09e2674c9a7a)
 
+``` config
+mode "align" {
+    bindsym c align center; mode default
+    bindsym m align middle; mode default
+    bindsym r align reset; mode default
+    bindsym $left align left; mode default
+    bindsym $right align right; mode default
+    bindsym $up align up; mode default
+    bindsym $down align down; mode default
+    bindsym Escape mode "default"
+}
+bindsym $mod+c mode "align"
+```
+
+
+## Moving Columns/Windows Around.
+
+There are several ways to move windows and columns:
+
+``` config
+    bindsym $mod+Ctrl+$left move left
+    bindsym $mod+Ctrl+$down move down
+    bindsym $mod+Ctrl+$up move up
+    bindsym $mod+Ctrl+$right move right
+    bindsym $mod+Ctrl+home move beginning
+    bindsym $mod+Ctrl+end move end
+    # nomode
+    bindsym $mod+Alt+$left move left nomode
+    bindsym $mod+Alt+$down move down nomode
+    bindsym $mod+Alt+$up move up nomode
+    bindsym $mod+Alt+$right move right nomode
+    bindsym $mod+Alt+home move beginning nomode
+    bindsym $mod+Alt+end move end nomode
+```
+
+When using `mod+Ctrl+cursor_keys` you move a window, a row or a column
+depending on which mode you are on. Instead, `mod+Alt+cursor_keys` uses
+`nomode`, which bypasses the mode, and moves individual windows, extracting
+them from the row/column or inserting them when needed.
+
+To be able to re-organize windows and columns more easily, you can use
+`selection toggle` to select and deselect windows. Those windows can be in
+any workspace, and can also be selected from overview mode. After you are
+done with your selection, go to the place where you want to move them (same
+or different workspace), and call `selection move`. All the selected
+windows/containers will move to your current location. If you want to select
+a full workspace, use `selection workspace`, or `selection reset` to undo a
+multiple selection. You can control more precisely where the selection will
+end up by changing mode modifiers (after, before, end,...)
+
+``` config
+    # Selection
+    bindsym --no-repeat $mod+Insert selection toggle
+    bindsym --no-repeat $mod+Ctrl+Insert selection reset
+    bindsym --no-repeat $mod+Shift+Insert selection move
+    bindsym --no-repeat $mod+Ctrl+Shift+Insert selection workspace
+    bindsym --no-repeat $mod+Alt+Insert selection to_trail
+```
+
 
 ## Overview Mode
 
 When you have too many windows in a workspace, it can be hard to know where
 things are. `scale_workspace overview` helps with that by creating a bird's eye view
 of the whole workspace.
+
+``` config
+    bindsym --no-repeat $mod+tab scale_workspace overview
+```
 
 [Overview](https://github.com/user-attachments/assets/618fa129-f3db-4970-8dff-4d2ed7ed5ae2)
 
@@ -157,20 +325,13 @@ documentation browser windows. You can pin a column to the right or left
 (top or bottom) of the monitor, and it will stay at that location until you
 call pin again.
 
+``` config
+    # Toggle pin
+    bindsym --no-repeat $mod+a pin beginning
+    bindsym --no-repeat $mod+Shift+a pin end
+```
+
 [Pin](https://github.com/user-attachments/assets/5d0ea318-832e-441c-be16-e0e6af278fc4)
-
-
-## Moving Columns/Windows Around.
-
-To be able to re-organize windows and columns more easily, you can use
-`selection toggle` to select and deselect windows. Those windows can be in
-any workspace, and can also be selected from overview mode. After you are
-done with your selection, go to the place where you want to move them (same
-or different workspace), and call `selection move`. All the selected
-windows/containers will move to your current location. If you want to select
-a full workspace, use `selection workspace`, or `selection reset` to undo a
-multiple selection. You can control more precisely where the selection will
-end up by changing mode modifiers (after, before, end,...)
 
 
 ## Trails and Trailmarks
@@ -179,6 +340,27 @@ Aside from sway's marks, *scroll* supports a special kind of anonymous mark
 called a trailmark. You can create trails and trailmarks and use them to
 navigate your favorite windows. See the README and the man page for more
 details.
+
+``` config
+mode "trailmark" {
+    bindsym bracketright trailmark next
+    bindsym bracketleft trailmark prev
+    bindsym semicolon trailmark toggle; mode default
+    bindsym Escape mode "default"
+}
+bindsym $mod+semicolon mode "trailmark"
+
+mode "trail" {
+    bindsym bracketright trail next
+    bindsym bracketleft trail prev
+    bindsym semicolon trail new; mode default
+    bindsym d trail delete; mode default
+    bindsym c trail clear; mode default
+    bindsym insert trail to_selection; mode default
+    bindsym Escape mode "default"
+}
+bindsym $mod+Shift+semicolon mode "trail"
+```
 
 You can create selections from trails, and a new trail for the current
 selection. This also provides memory for selections, and a way to quickly
@@ -194,8 +376,20 @@ position to a different application.
 [Full Screen](https://github.com/user-attachments/assets/fed977a0-8e87-4f94-bd68-7159578499ba)
 
 You can also use `fullscreen_application` to toggle a full screen UI for any
-application, while still having its content fit in the assigned container. You
-can also combine this with content scaling.
+application, while still having its content fit in the assigned container.
+
+With different combinations of `fullscreen` and `fullscreen_application` you
+can have several "fake" full screen modes, like full screen YouTube videos
+within a container, full screen UI within a container, or a regular UI in a
+full screen container. You can always return to the usual behavior by calling
+`fullscreen_application reset`.
+
+``` config
+    bindsym $mod+f fullscreen
+    bindsym $mod+Ctrl+f fullscreen global
+    bindsym $mod+Alt+f fullscreen_application toggle
+    bindsym $mod+Ctrl+Alt+f fullscreen_application reset
+```
 
 ## Touchpad Gestures
 
