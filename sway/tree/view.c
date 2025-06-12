@@ -709,8 +709,7 @@ static void handle_foreign_fullscreen_request(
 		}
 	}
 
-	container_set_fullscreen(container,
-		event->fullscreen ? FULLSCREEN_WORKSPACE : FULLSCREEN_NONE);
+	container_handle_fullscreen_request(container, event->fullscreen);
 	if (event->fullscreen) {
 		arrange_root();
 	} else {

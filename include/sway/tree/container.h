@@ -282,6 +282,8 @@ void container_set_fullscreen(struct sway_container *con,
 void container_set_fullscreen_application(struct sway_container *con,
 		enum sway_fullscreen_app_mode mode);
 
+void container_handle_fullscreen_request(struct sway_container *con, bool enable);
+
 /**
  * Convenience function.
  */
