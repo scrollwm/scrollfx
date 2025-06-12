@@ -394,7 +394,17 @@ Aside from sway's full screen workspace and full screen global modes, *scroll*
 also supports the command `fullscreen_application`. You can toggle an application's
 interface to be in full screen mode, while the content still fits in a container.
 
-You can combine this with content scaling too.
+`fullscreen_application` basically decouples the synchronization between the
+application's UI full screen mode and the container's. With different combinations
+of `fullscreen` and `fullscreen_application` you can have several "fake" full
+screen modes, like full screen YouTube videos within a container, full screen
+UI within a container, or a regular UI in a full screen container. You can
+always return to the usual behavior by calling `fullscreen_application reset`.
+
+You can also change focus while in full screen mode, and the new window will
+still be in full screen mode. See the `fullscreen_movefocus` option. This way
+you can work normally in full screen mode, even using `jump` to move to
+different containers quickly.
 
 ### Touchpad and Mouse Drag Scrolling
 

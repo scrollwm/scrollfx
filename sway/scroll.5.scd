@@ -303,6 +303,12 @@ They are expected to be used with *bindsym* or at runtime through *scrollmsg*(1)
 	window and from then on, it takes the one set by _fullscreen_ until modified
 	again with this command.
 
+	_fullscreen_application_ basically decouples the synchronization between the
+	application's UI full screen mode and the container's. With different
+	combinations of _fullscreen_ and _fullscreen_application_ you can have
+	several "fake" full screen modes. You can always return to the usual
+	behavior by calling _fullscreen_application_ _reset_.
+
 *gaps* inner|outer|horizontal|vertical|top|right|bottom|left all|current
 set|plus|minus|toggle <amount>
 	Changes the _inner_ or _outer_ gaps for either _all_ workspaces or the
