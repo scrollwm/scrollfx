@@ -248,6 +248,10 @@ static void relay_send_im_state(struct sway_input_method_relay *relay,
 static void handle_text_input_enable(struct wl_listener *listener, void *data) {
 	struct sway_text_input *text_input = wl_container_of(listener, text_input,
 		text_input_enable);
+	if (text_input->input->focused_surface == NULL) {
+		sway_log(SWAY_DEBUG, "Enabling text input, but no longer focused");
+		return;
+	}
 	if (text_input->relay->input_method == NULL) {
 		sway_log(SWAY_INFO, "Enabling text input when input method is gone");
 		return;
@@ -260,6 +264,10 @@ static void handle_text_input_commit(struct wl_listener *listener,
 		void *data) {
 	struct sway_text_input *text_input = wl_container_of(listener, text_input,
 		text_input_commit);
+	if (text_input->input->focused_surface == NULL) {
+		sway_log(SWAY_DEBUG, "Unfocused text input tried to commit an update");
+		return;
+	}
 	if (!text_input->input->current_enabled) {
 		sway_log(SWAY_INFO, "Inactive text input tried to commit an update");
 		return;
