@@ -88,13 +88,18 @@ paru -S sway-scroll-stable
 paru -S sway-scroll-git
 ```
 
+### Fedora Linux
+
+Thanks to @mecattaf, [scroll stable is also available on the Fedora Copr](https://copr.fedorainfracloud.org/coprs/mecattaf/duoRPM/).
+
+### Post-Installation
+
 After installing either package, prepare a configuration file
 `~/.config/scroll/config` using the provided example (`/etc/scroll/config`),
 and you can start *scroll* from a tty. You can also start *scroll* from your
 display manager using the provided `/usr/share/wayland-sessions/scroll.desktop`.
 
-
-### Requirements
+### Building Requirements
 
 If you want to compile *scroll* yourself, [sway compiling instructions](https://github.com/swaywm/sway#compiling-from-source)
 apply to *scroll*.
