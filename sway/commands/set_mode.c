@@ -23,34 +23,44 @@ struct cmd_results *cmd_set_mode(int argc, char **argv) {
 	}
 
 	bool success = false;
+	bool update_container = false;
+	struct sway_container *container =  config->handler_context.container;
 	for (int i = 0; i < argc; ++i) {
 		if (strcasecmp(argv[i], "h") == 0) {
 			layout_modifiers_set_mode(current, L_HORIZ);
 			success = true;
+			update_container = true;
 		} else if (strcasecmp(argv[i], "v") == 0) {
 			layout_modifiers_set_mode(current, L_VERT);
 			success = true;
+			update_container = true;
 		} else if (strcasecmp(argv[i], "t") == 0) {
 			if (layout_modifiers_get_mode(current) == L_HORIZ) {
 				layout_modifiers_set_mode(current, L_VERT);
 				success = true;
+				update_container = true;
 			} else {
 				layout_modifiers_set_mode(current, L_HORIZ);
 				success = true;
+				update_container = true;
 			}
 		}
         if (strcasecmp(argv[i], "after") == 0) {
 			layout_modifiers_set_insert(current, INSERT_AFTER);
 			success = true;
+			update_container = true;
 		} else if (strcasecmp(argv[i], "before") == 0) {
 			layout_modifiers_set_insert(current, INSERT_BEFORE);
 			success = true;
+			update_container = true;
 		} else if (strcasecmp(argv[i], "end") == 0) {
 			layout_modifiers_set_insert(current, INSERT_END);
 			success = true;
+			update_container = true;
 		} else if (strcasecmp(argv[i], "beginning") == 0 || strcasecmp(argv[i], "beg") == 0) {
 			layout_modifiers_set_insert(current, INSERT_BEGINNING);
 			success = true;
+			update_container = true;
 		}
 
         if (strcasecmp(argv[i], "focus") == 0) {
@@ -86,6 +96,9 @@ struct cmd_results *cmd_set_mode(int argc, char **argv) {
 	}
 
 	if (success) {
+		if (update_container && container) {
+			container_update(container);
+		}
 		return cmd_results_new(CMD_SUCCESS, NULL);
 	}
 
