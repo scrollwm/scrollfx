@@ -179,7 +179,9 @@ set_mode [<h|v|t> <after|before|end|beg> <focus|nofocus> <center_horiz|nocenter_
 2. `position`: It is one of `after` (default), `before`, `end`, `beg`.
 This parameter decides the position of new windows: *after* the current one
 (default value), *before* the current one, at the *end* of the row/column, or
-at the *beginning* of the row/column.
+at the *beginning* of the row/column. The currently focused window will have
+the corresponding border painted with the `indicator` color to show where the
+new window would open.
 3. `focus`: One of `focus` (default) or `nofocus`. When creating a new window,
 this parameter decides whether it will get focus or not.
 4. Reorder automatic mode: `reorder_auto` (default) or `noreorder_auto`. By

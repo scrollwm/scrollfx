@@ -285,34 +285,47 @@ static void scene_rect_set_color(struct sway_scene_rect *rect,
 
 void container_update(struct sway_container *con) {
 	struct border_colors *colors = container_get_current_colors(con);
-	list_t *siblings = NULL;
-	enum sway_container_layout layout = L_NONE;
 	float alpha = con->alpha;
 
-	if (con->current.parent) {
-		siblings = con->current.parent->current.children;
-		layout = con->current.parent->current.layout;
-	} else if (con->current.workspace) {
-		siblings = con->current.workspace->current.tiling;
-		layout = layout_modifiers_get_mode(con->current.workspace);
-	}
-
-	float bottom[4], right[4];
+	float top[4], bottom[4], left[4], right[4], title_border[4];
+	memcpy(top, colors->child_border, sizeof(top));
 	memcpy(bottom, colors->child_border, sizeof(bottom));
+	memcpy(left, colors->child_border, sizeof(left));
 	memcpy(right, colors->child_border, sizeof(right));
+	memcpy(title_border, colors->border, sizeof(title_border));
 
-	if (!container_is_current_floating(con) && siblings && siblings->length == 1) {
-		if (layout == L_HORIZ) {
-			memcpy(right, colors->indicator, sizeof(right));
-		} else if (layout == L_VERT) {
-			memcpy(bottom, colors->indicator, sizeof(bottom));
+	if (!container_is_current_floating(con)) {
+		struct sway_workspace *workspace = con->current.workspace;
+		if (workspace && con->current.focused) {
+			enum sway_container_layout mode = layout_modifiers_get_mode(workspace);
+			enum sway_layout_insert insert = layout_modifiers_get_insert(workspace);
+			switch (insert) {
+			case INSERT_BEFORE:
+			case INSERT_BEGINNING:
+				if (mode == L_HORIZ) {
+					memcpy(left, colors->indicator, sizeof(left));
+				} else if (mode == L_VERT) {
+					memcpy(top, colors->indicator, sizeof(top));
+					memcpy(title_border, colors->indicator, sizeof(title_border));
+				}
+				break;
+			case INSERT_AFTER:
+			case INSERT_END:
+				if (mode == L_HORIZ) {
+					memcpy(right, colors->indicator, sizeof(right));
+				} else if (mode == L_VERT) {
+					memcpy(bottom, colors->indicator, sizeof(bottom));
+				}
+				break;
+				break;
+			}
 		}
 	}
 
 	struct sway_scene_node *node;
 	wl_list_for_each(node, &con->title_bar.border->children, link) {
 		struct sway_scene_rect *rect = sway_scene_rect_from_node(node);
-		scene_rect_set_color(rect, colors->border, alpha);
+		scene_rect_set_color(rect, title_border, alpha);
 	}
 
 	wl_list_for_each(node, &con->title_bar.background->children, link) {
@@ -321,9 +334,9 @@ void container_update(struct sway_container *con) {
 	}
 
 	if (con->view) {
-		scene_rect_set_color(con->border.top, colors->child_border, alpha);
+		scene_rect_set_color(con->border.top, top, alpha);
 		scene_rect_set_color(con->border.bottom, bottom, alpha);
-		scene_rect_set_color(con->border.left, colors->child_border, alpha);
+		scene_rect_set_color(con->border.left, left, alpha);
 		scene_rect_set_color(con->border.right, right, alpha);
 	}
 

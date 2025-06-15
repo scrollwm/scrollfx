@@ -938,8 +938,11 @@ runtime.
 
 	_indicator_
 		The color used to indicate where a new window will open. In a tiled
-		container, this would paint the right border of the current window if a
-		new window would be opened to the right.
+		container, depending on the mode (_horizontal_ or _vertical_) and the
+		insert mode modifier (_before_, _after_, _begin_, _end_), the
+		corresponding border will be painted with this color, overriding the
+		title border color too if there is one. This only applies to the
+		currently focused window.
 
 	_child_border_
 		The border around the window itself.
