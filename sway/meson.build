@@ -241,6 +241,8 @@ sway_sources = files(
 	'tree/scene/output_layout.c',
 	'tree/scene/xdg_shell.c',
 	'tree/scene/debug.c',
+	'tree/scene/output.c',
+	'tree/scene/ext_image_capture_source_v1.c',
 )
 
 sway_deps = [

@@ -127,6 +127,10 @@ struct sway_scene_surface {
 	struct {
 		struct wlr_box clip;
 
+		// Output used for frame pacing (surface frame callbacks, presentation
+		// time feedback, etc), may be NULL
+		struct wlr_output *frame_pacing_output;
+
 		struct wlr_addon addon;
 
 		struct wl_listener outputs_update;
@@ -156,6 +160,11 @@ struct sway_scene_output_sample_event {
 	bool direct_scanout;
 };
 
+struct sway_scene_frame_done_event {
+	struct sway_scene_output *output;
+	struct timespec when;
+};
+
 /** A scene-graph node displaying a buffer */
 struct sway_scene_buffer {
 	struct sway_scene_node node;
@@ -168,7 +177,7 @@ struct sway_scene_buffer {
 		struct wl_signal output_enter; // struct sway_scene_output
 		struct wl_signal output_leave; // struct sway_scene_output
 		struct wl_signal output_sample; // struct sway_scene_output_sample_event
-		struct wl_signal frame_done; // struct timespec
+		struct wl_signal frame_done; // struct sway_scene_frame_done_event
 	} events;
 
 	// May be NULL
@@ -177,8 +186,7 @@ struct sway_scene_buffer {
 	/**
 	 * The output that the largest area of this buffer is displayed on.
 	 * This may be NULL if the buffer is not currently displayed on any
-	 * outputs. This is the output that should be used for frame callbacks,
-	 * presentation feedback, etc.
+	 * outputs.
 	 */
 	struct sway_scene_output *primary_output;
 
@@ -421,6 +429,12 @@ struct sway_scene_surface *sway_scene_surface_try_from_buffer(
 	struct sway_scene_buffer *scene_buffer);
 
 /**
+ * Call wlr_surface_send_frame_done() if the surface is visible.
+ */
+void sway_scene_surface_send_frame_done(struct sway_scene_surface *scene_surface,
+	const struct timespec *when);
+
+/**
  * Add a node displaying a solid-colored rectangle to the scene-graph.
  *
  * The color argument must be a premultiplied color value.
@@ -535,7 +549,7 @@ void sway_scene_buffer_set_filter_mode(struct sway_scene_buffer *scene_buffer,
  * Calls the buffer's frame_done signal.
  */
 void sway_scene_buffer_send_frame_done(struct sway_scene_buffer *scene_buffer,
-	struct timespec *now);
+	struct sway_scene_frame_done_event *event);
 
 /**
  * Add a viewport for the specified output to the scene-graph.
@@ -694,6 +708,8 @@ struct sway_scene_tree *sway_scene_drag_icon_create(
 	struct sway_scene_tree *parent, struct wlr_drag_icon *drag_icon);
 
 struct sway_scene *scene_node_get_root(struct sway_scene_node *node);
+
+void scene_node_get_size(struct sway_scene_node *node, int *width, int *height);
 
 void scene_surface_set_clip(struct sway_scene_surface *surface, struct wlr_box *clip);
 

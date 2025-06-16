@@ -20,6 +20,7 @@
 #include "sway/scene_descriptor.h"
 #include "sway/tree/debug.h"
 #include "sway/output.h"
+#include "output.h"
 
 #include <wlr/config.h>
 
@@ -29,26 +30,6 @@
 
 #define DMABUF_FEEDBACK_DEBOUNCE_FRAMES  30
 #define HIGHLIGHT_DAMAGE_FADEOUT_TIME   250
-
-static void output_pending_resolution(struct wlr_output *output,
-		const struct wlr_output_state *state, int *width, int *height) {
-	if (state->committed & WLR_OUTPUT_STATE_MODE) {
-		switch (state->mode_type) {
-		case WLR_OUTPUT_STATE_MODE_FIXED:
-			*width = state->mode->width;
-			*height = state->mode->height;
-			return;
-		case WLR_OUTPUT_STATE_MODE_CUSTOM:
-			*width = state->custom_mode.width;
-			*height = state->custom_mode.height;
-			return;
-		}
-		abort();
-	} else {
-		*width = output->width;
-		*height = output->height;
-	}
-}
 
 struct sway_scene_tree *sway_scene_tree_from_node(struct sway_scene_node *node) {
 	assert(node->type == SWAY_SCENE_NODE_TREE);
@@ -232,8 +213,6 @@ struct sway_scene_tree *sway_scene_tree_create(struct sway_scene_tree *parent) {
 	scene_tree_init(tree, parent);
 	return tree;
 }
-
-static void scene_node_get_size(struct sway_scene_node *node, int *lx, int *ly);
 
 typedef bool (*scene_node_box_iterator_func_t)(struct sway_scene_node *node,
 	int sx, int sy, void *data);
@@ -449,6 +428,8 @@ static void update_node_update_outputs(struct sway_scene_node *node,
 	size_t count = 0;
 	uint64_t active_outputs = 0;
 
+	uint32_t visible_area = region_area(&node->visible);
+
 	// let's update the outputs in two steps:
 	//  - the primary outputs
 	//  - the enter/leave signals
@@ -476,9 +457,12 @@ static void update_node_update_outputs(struct sway_scene_node *node,
 		pixman_region32_init(&intersection);
 		pixman_region32_intersect_rect(&intersection, &node->visible,
 			output_box.x, output_box.y, output_box.width, output_box.height);
+		uint32_t overlap = region_area(&intersection);
+		pixman_region32_fini(&intersection);
 
-		if (!pixman_region32_empty(&intersection)) {
-			uint32_t overlap = region_area(&intersection);
+		// If the overlap accounts for less than 10% of the visible node area,
+		// ignore this output
+		if (overlap >= 0.1 * visible_area) {
 			if (overlap >= largest_overlap) {
 				largest_overlap = overlap;
 				scene_buffer->primary_output = scene_output;
@@ -487,8 +471,6 @@ static void update_node_update_outputs(struct sway_scene_node *node,
 			active_outputs |= 1ull << scene_output->index;
 			count++;
 		}
-
-		pixman_region32_fini(&intersection);
 	}
 
 	if (old_primary_output != scene_buffer->primary_output) {
@@ -1153,9 +1135,9 @@ void sway_scene_buffer_set_transform(struct sway_scene_buffer *scene_buffer,
 }
 
 void sway_scene_buffer_send_frame_done(struct sway_scene_buffer *scene_buffer,
-		struct timespec *now) {
+		struct sway_scene_frame_done_event *event) {
 	if (!pixman_region32_empty(&scene_buffer->node.visible)) {
-		wl_signal_emit_mutable(&scene_buffer->events.frame_done, now);
+		wl_signal_emit_mutable(&scene_buffer->events.frame_done, event);
 	}
 }
 
@@ -1202,7 +1184,7 @@ static struct wlr_texture *scene_buffer_get_texture(
 	return texture;
 }
 
-static void scene_node_get_size(struct sway_scene_node *node,
+void scene_node_get_size(struct sway_scene_node *node,
 		int *width, int *height) {
 	*width = 0;
 	*height = 0;
@@ -2048,6 +2030,14 @@ static void scene_buffer_send_dmabuf_feedback(const struct sway_scene *scene,
 		return;
 	}
 
+	enum wl_output_transform preferred_buffer_transform = WL_OUTPUT_TRANSFORM_NORMAL;
+	if (options->scanout_primary_output != NULL) {
+		preferred_buffer_transform = options->scanout_primary_output->transform;
+	}
+
+	// TODO: also send wl_surface.preferred_buffer_transform when running with
+	// pure software rendering
+	wlr_surface_set_preferred_buffer_transform(surface->surface, preferred_buffer_transform);
 	wlr_linux_dmabuf_v1_set_surface_feedback(scene->linux_dmabuf_v1,
 		surface->surface, &feedback);
 
@@ -2566,9 +2556,11 @@ static void scene_node_send_frame_done(struct sway_scene_node *node,
 		struct sway_scene_buffer *scene_buffer =
 			sway_scene_buffer_from_node(node);
 
-		if (scene_buffer->primary_output == scene_output) {
-			sway_scene_buffer_send_frame_done(scene_buffer, now);
-		}
+		struct sway_scene_frame_done_event event = {
+			.output = scene_output,
+			.when = *now,
+		};
+		sway_scene_buffer_send_frame_done(scene_buffer, &event);
 	} else if (node->type == SWAY_SCENE_NODE_TREE) {
 		struct sway_scene_tree *scene_tree = sway_scene_tree_from_node(node);
 		struct sway_scene_node *child;
