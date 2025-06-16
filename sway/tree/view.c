@@ -49,6 +49,11 @@ bool view_init(struct sway_view *view, enum sway_view_type type,
 		failed = true;
 	}
 
+	view->image_capture_scene = sway_scene_create();
+	if (view->image_capture_scene == NULL) {
+		failed = true;
+	}
+
 	if (failed) {
 		sway_scene_node_destroy(&view->scene_tree->node);
 		return false;
@@ -81,6 +86,7 @@ void view_destroy(struct sway_view *view) {
 	list_free(view->executed_criteria);
 
 	view_assign_ctx(view, NULL);
+	sway_scene_node_destroy(&view->image_capture_scene->tree.node);
 	sway_scene_node_destroy(&view->scene_tree->node);
 	if (view->impl->destroy) {
 		view->impl->destroy(view);
@@ -808,6 +814,7 @@ void view_map(struct sway_view *view, struct wlr_surface *wlr_surface,
 	};
 	view->ext_foreign_toplevel =
 		wlr_ext_foreign_toplevel_handle_v1_create(server.foreign_toplevel_list, &foreign_toplevel_state);
+	view->ext_foreign_toplevel->data = view;
 
 	view->foreign_toplevel =
 		wlr_foreign_toplevel_handle_v1_create(server.foreign_toplevel_manager);
@@ -1225,7 +1232,11 @@ bool view_can_tear(struct sway_view *view) {
 static void send_frame_done_iterator(struct sway_scene_buffer *scene_buffer,
 		int x, int y, void *data) {
 	struct timespec *when = data;
-	wl_signal_emit_mutable(&scene_buffer->events.frame_done, when);
+	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(scene_buffer);
+	if (scene_surface == NULL) {
+		return;
+	}
+	sway_scene_surface_send_frame_done(scene_surface, when);
 }
 
 void view_send_frame_done(struct sway_view *view) {

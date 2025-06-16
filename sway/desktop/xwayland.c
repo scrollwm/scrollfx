@@ -497,6 +497,9 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 	wl_list_remove(&xwayland_view->commit.link);
 	wl_list_remove(&xwayland_view->surface_tree_destroy.link);
 
+	sway_scene_node_destroy(&xwayland_view->image_capture_scene_surface->buffer->node);
+	xwayland_view->image_capture_scene_surface = NULL;
+
 	if (xwayland_view->surface_tree) {
 		sway_scene_node_destroy(&xwayland_view->surface_tree->node);
 		xwayland_view->surface_tree = NULL;
@@ -538,6 +541,9 @@ static void handle_map(struct wl_listener *listener, void *data) {
 		wl_signal_add(&xwayland_view->surface_tree->node.events.destroy,
 			&xwayland_view->surface_tree_destroy);
 	}
+
+	xwayland_view->image_capture_scene_surface =
+		sway_scene_surface_create(&xwayland_view->view.image_capture_scene->tree, xsurface->surface);
 
 	transaction_commit_dirty();
 }
