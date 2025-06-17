@@ -375,6 +375,25 @@ you also see the content of the windows.
 You can also click on the item (container, workspace etc.) to exit jump mode
 and focus on that element.
 
+
+### Scratchpad
+
+*scroll* adds some functionality to *sway*'s scratchpad. By using `scratchpad jump`
+you will see an overview similar to `jump floating` for your scratchpad windows.
+You can use this to quickly select one of them instead of having to cycle.
+
+``` config
+    # Move the currently focused window to the scratchpad
+    bindsym $mod+Shift+z move scratchpad
+
+    # Show the next scratchpad window or hide the focused scratchpad window.
+    # If there are multiple scratchpad windows, this command cycles through them.
+    bindsym $mod+z scratchpad show
+    # Show all the scratchpad windows to quickly change focus to one of them
+    bindsym --no-repeat $mod+Alt+z scratchpad jump
+```
+
+
 ### Content Scaling
 
 *scroll* lets you scale the content of a window independently of the current

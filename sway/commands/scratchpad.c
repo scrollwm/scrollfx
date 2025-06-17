@@ -8,6 +8,37 @@
 #include "sway/tree/root.h"
 #include "sway/tree/workspace.h"
 
+static struct cmd_results *scratchpad_jump() {
+	if (!root->outputs->length) {
+		return cmd_results_new(CMD_INVALID,
+				"Can't run this command while there's no outputs connected.");
+	}
+	if (!root->scratchpad->length) {
+		return cmd_results_new(CMD_INVALID, "Scratchpad is empty");
+	}
+	struct sway_seat *seat = input_manager_current_seat();
+	struct sway_workspace *ws = seat_get_focused_workspace(seat);
+	if (!ws) {
+		return cmd_results_new(CMD_INVALID, "No focused workspace to show scratchpad windows jump");
+	}
+	// If there is a visible scratchpad window on another workspace, hide it.
+	for (int i = 0; i < root->scratchpad->length; ++i) {
+		struct sway_container *con = root->scratchpad->items[i];
+		if (con->pending.workspace && con->pending.workspace != ws) {
+			root_scratchpad_hide(con);
+		}
+	}
+
+	// If only one window in the scratchpad, show it
+	if (root->scratchpad->length == 1) {
+		root_scratchpad_show(root->scratchpad->items[0]);
+	} else {
+		layout_jump_scratchpad(ws);
+	}
+
+	return cmd_results_new(CMD_SUCCESS, NULL);
+}
+
 static void scratchpad_toggle_auto(void) {
 	struct sway_seat *seat = input_manager_current_seat();
 	struct sway_container *focus = seat_get_focused_container(seat);
@@ -52,7 +83,7 @@ static void scratchpad_toggle_auto(void) {
 	// In this case we move it to the current workspace.
 	for (int i = 0; i < root->scratchpad->length; ++i) {
 		struct sway_container *con = root->scratchpad->items[i];
-		if (con->pending.parent) {
+		if (con->pending.workspace) {
 			sway_log(SWAY_DEBUG,
 					"Moving a visible scratchpad window (%s) to this workspace",
 					con->title);
@@ -72,10 +103,32 @@ static void scratchpad_toggle_auto(void) {
 	ipc_event_window(con, "move");
 }
 
+static void scratchpad_hide_focused() {
+	struct sway_seat *seat = input_manager_current_seat();
+	struct sway_container *focus = seat_get_focused_container(seat);
+
+	// Check if the currently focused window is a scratchpad window and should
+	// be hidden.
+	if (focus && focus->scratchpad) {
+		root_scratchpad_hide(focus);
+		return;
+	}
+
+	// Check if there is a visible scratchpad window on another workspace.
+	for (int i = 0; i < root->scratchpad->length; ++i) {
+		struct sway_container *con = root->scratchpad->items[i];
+		if (con->pending.workspace) {
+			root_scratchpad_hide(con);
+			return;
+		}
+	}
+}
+
 static void scratchpad_toggle_container(struct sway_container *con) {
 	if (!sway_assert(con->scratchpad, "Container isn't in the scratchpad")) {
 		return;
 	}
+	scratchpad_hide_focused();
 
 	struct sway_seat *seat = input_manager_current_seat();
 	struct sway_workspace *ws = seat_get_focused_workspace(seat);
@@ -93,6 +146,9 @@ struct cmd_results *cmd_scratchpad(int argc, char **argv) {
 	struct cmd_results *error = NULL;
 	if ((error = checkarg(argc, "scratchpad", EXPECTED_EQUAL_TO, 1))) {
 		return error;
+	}
+	if (strcmp(argv[0], "jump") == 0) {
+		return scratchpad_jump();
 	}
 	if (strcmp(argv[0], "show") != 0) {
 		return cmd_results_new(CMD_INVALID, "Expected 'scratchpad show'");
