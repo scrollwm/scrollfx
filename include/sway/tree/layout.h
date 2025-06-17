@@ -160,6 +160,7 @@ void layout_jump();
 void layout_jump_workspaces();
 void layout_jump_container(struct sway_container *container);
 void layout_jump_floating();
+void layout_jump_scratchpad(struct sway_workspace *workspace);
 
 // Gestures
 // Begin scrolling swipe gesture. Return true if scrolling, false if there are

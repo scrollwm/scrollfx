@@ -545,9 +545,13 @@ set|plus|minus|toggle <amount>
 	move windows, create or destroy them, type in them etc.). Use it as a way
 	to see where things are and move the active focus, or reposition windows.
 
-*scratchpad* show
-	Shows a window from the scratchpad. Repeatedly using this command will
+*scratchpad* show|jump
+	_show_ shows a window from the scratchpad. Repeatedly using this command will
 	cycle through the windows in the scratchpad.
+
+	_jump_ will show all the scratchpad windows in a jump overview mode. As with
+	the *jump* command, you can press the keys shown on a label, or click on the
+	window to change focus.
 
 *selection* toggle|reset|workspace|move|to_trail
 	This command manages window/container selections. You can select several

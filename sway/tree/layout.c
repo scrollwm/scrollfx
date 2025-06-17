@@ -190,14 +190,14 @@ void layout_overview_recompute_scale(struct sway_workspace *workspace, int gaps)
 		return;
 	}
 	double fw = 0.0, fh = 0.0;
-	if (mode != OVERVIEW_TILING) {
+	if (mode == OVERVIEW_FLOATING || mode == OVERVIEW_ALL) {
 		double minx, maxx, miny, maxy;
 		layout_compute_bounding_box(workspace->floating, &minx, &maxx, &miny, &maxy);
 		fw = maxx - minx;
 		fh = maxy - miny;
 	}
 	double w = gaps, maxh = 0.0;
-	if (mode != OVERVIEW_FLOATING) {
+	if (mode == OVERVIEW_TILING || mode == OVERVIEW_ALL) {
 		for (int i = 0; i < workspace->tiling->length; ++i) {
 			const struct sway_container *con = workspace->tiling->items[i];
 			w += con->pending.width + 2 * gaps;
@@ -1234,8 +1234,8 @@ static void switch_workspace(struct sway_workspace *workspace) {
 	seat_consider_warp_to_focus(seat);
 }
 
-static void container_toggle_jump_decoration(struct sway_container *con, char *text,
-		double width, double height) {
+static void container_toggle_jump_decoration(struct sway_workspace *workspace,
+		struct sway_container *con, char *text,	double width, double height) {
 	if (!text) {
 		if (con->jump.text) {
 			sway_scene_node_destroy(con->jump.text->node);
@@ -1250,7 +1250,6 @@ static void container_toggle_jump_decoration(struct sway_container *con, char *t
 	}
 	sway_text_node_set_background(con->jump.text, config->jump_labels_background);
 	double jscale = config->jump_labels_scale;
-	struct sway_workspace *workspace = con->pending.workspace;
 	float wscale = workspace && layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 	float scale = fmin(width / con->jump.text->width, height / con->jump.text->height);
 	sway_text_node_scale(con->jump.text, jscale * scale * wscale);
@@ -1320,13 +1319,13 @@ static void jump_handle_keyboard_key_end(struct jump_data *jump_data, bool focus
 				struct sway_container *container = workspace->tiling->items[i];
 				for (int j = 0; j < container->pending.children->length; ++j) {
 					struct sway_container *view = container->pending.children->items[j];
-					container_toggle_jump_decoration(view, NULL, 0, 0);
+					container_toggle_jump_decoration(workspace, view, NULL, 0, 0);
 				}
 			}
 		} else {
 			for (int i = 0; i < workspace->floating->length; ++i) {
 				struct sway_container *view = workspace->floating->items[i];
-				container_toggle_jump_decoration(view, NULL, 0, 0);
+				container_toggle_jump_decoration(workspace, view, NULL, 0, 0);
 			}
 		}
 	}
@@ -1472,7 +1471,7 @@ void layout_jump() {
 			for (int j = 0; j < container->pending.children->length; ++j) {
 				struct sway_container *view = container->pending.children->items[j];
 				char *label = generate_label(n++, config->jump_labels_keys, nkeys);
-				container_toggle_jump_decoration(view, label, view->pending.width, view->pending.height);
+				container_toggle_jump_decoration(workspace, view, label, view->pending.width, view->pending.height);
 				free(label);
 			}
 		}
@@ -1555,20 +1554,20 @@ static void move_overlapping(list_t *children, struct sway_container *container)
 	}
 }
 
-static void organize_floating_windows(struct sway_workspace *workspace) {
+static void organize_floating_windows(list_t *children) {
 	// Save positions
-	for (int i = 0; i < workspace->floating->length; ++i) {
-		struct sway_container *con = workspace->floating->items[i];
+	for (int i = 0; i < children->length; ++i) {
+		struct sway_container *con = children->items[i];
 		con->jump.x = con->pending.x;
 		con->jump.y = con->pending.y;
 	}
 	// Find minx container with lowest y (if more than one)
 	list_t *done = create_list();
 	while (true) {
-		struct sway_container *container = find_minx(workspace->floating, done);
+		struct sway_container *container = find_minx(children, done);
 		if (container) {
 			list_add(done, container);
-			move_overlapping(workspace->floating, container);
+			move_overlapping(children, container);
 		} else {
 			break;
 		}
@@ -1576,14 +1575,13 @@ static void organize_floating_windows(struct sway_workspace *workspace) {
 	list_free(done);
 	// Move bounding box to origin
 	double minx, maxx, miny, maxy;
-	layout_compute_bounding_box(workspace->floating, &minx, &maxx, &miny, &maxy);
-	for (int i = 0; i < workspace->floating->length; ++i) {
-		struct sway_container *con = workspace->floating->items[i];
+	layout_compute_bounding_box(children, &minx, &maxx, &miny, &maxy);
+	for (int i = 0; i < children->length; ++i) {
+		struct sway_container *con = children->items[i];
 		con->pending.x -= minx;
 		con->pending.y -= miny;
 		node_set_dirty(&con->node);
 	}
-	transaction_commit_dirty();
 }
 
 void layout_jump_floating() {
@@ -1607,7 +1605,7 @@ void layout_jump_floating() {
 	for (int i = 0; i < jump_data->workspaces->length; ++i) {
 		struct sway_workspace *workspace = jump_data->workspaces->items[i];
 		// Move windows so they don't overlap and scale the workspace to fit
-		organize_floating_windows(workspace);
+		organize_floating_windows(workspace->floating);
 		enum sway_layout_overview mode = layout_overview_mode(workspace);
 		if (mode != OVERVIEW_FLOATING) {
 			if (mode != OVERVIEW_DISABLED) {
@@ -1627,11 +1625,175 @@ void layout_jump_floating() {
 		for (int i = 0; i < workspace->floating->length; ++i) {
 			struct sway_container *view = workspace->floating->items[i];
 			char *label = generate_label(n++, config->jump_labels_keys, nkeys);
-			container_toggle_jump_decoration(view, label, view->pending.width, view->pending.height);
+			container_toggle_jump_decoration(workspace, view, label, view->pending.width, view->pending.height);
 			free(label);
 		}
 	}
 	override_input(true, jump_handle_keyboard_key, jump_data, jump_handle_button, jump_data);
+}
+
+struct jump_scratchpad_data {
+	struct sway_workspace *workspace;
+	list_t *floating;
+	struct sway_container *focused;
+	uint32_t keys_pressed;
+	uint32_t nkeys;
+	uint32_t window_number;
+	uint32_t nwindows;
+};
+
+static void jump_scratchpad_handle_keyboard_key_end(struct jump_scratchpad_data *jump_data, bool focus) {
+	// Finished, remove decorations
+	struct sway_workspace *workspace = jump_data->workspace;
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = workspace->floating->items[i];
+		container_toggle_jump_decoration(workspace, view, NULL, 0, 0);
+	}
+
+	// Restore original view
+	layout_overview_toggle(workspace, OVERVIEW_DISABLED);
+	// Restore floating windows positions
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = workspace->floating->items[i];
+		view->pending.x = view->jump.x;
+		view->pending.y = view->jump.y;
+		node_set_dirty(&view->node);
+		// And restore scratchpad's NULL workspace
+		view->pending.workspace = NULL;
+	}
+	// Now restore the original floating windows, and enable the focused
+	// scratchpad container
+	workspace->floating = jump_data->floating;
+	// When calling jump:
+	// 1. If only one window in the scratchpad, focus that one
+	// 2. If cancelling jump: Do nothing (keep scratchpad on or off like before)
+	// 3. If selecting one, hide the previous one and show the new one
+
+	// Restore the previous state
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = workspace->floating->items[i];
+		// Restore workspace we deleted earlier
+		view->pending.workspace = workspace;
+		if (view->scratchpad) {
+			if (focus) {
+				// If we will change focus, hide any scratchpad windows shown
+				root_scratchpad_hide(view);
+			}
+		} else {
+			// Re-enable the non-scratchpad floating windows in the scene graph
+			sway_scene_node_reparent(&view->scene_tree->node, root->layers.floating);
+		}
+	}
+	if (focus) {
+		root_scratchpad_show(jump_data->focused);
+	}
+	node_set_dirty(&workspace->node);
+
+	free(jump_data);
+	transaction_commit_dirty();
+	override_input(false, NULL, NULL, NULL, NULL);
+}
+
+static void jump_scratchpad_handle_keyboard_key(struct sway_keyboard *keyboard,
+		struct wlr_keyboard_key_event *event, void *data) {
+	struct jump_scratchpad_data *jump_data = data;
+
+	uint32_t keycode = event->keycode + 8; // Because to xkbcommon it's +8 from libinput
+	const xkb_keysym_t keysym = xkb_state_key_get_one_sym(keyboard->wlr->xkb_state, keycode);
+
+	if (event->state != WL_KEYBOARD_KEY_STATE_PRESSED) {
+		return;
+	}
+	// Check if key is valid, otherwise exit
+	bool valid = false;
+	for (uint32_t i = 0; i < strlen(config->jump_labels_keys); ++i) {
+		char keyname[2] = { config->jump_labels_keys[i], 0x0 };
+		xkb_keysym_t key = xkb_keysym_from_name(keyname, XKB_KEYSYM_NO_FLAGS);
+		if (key && key == keysym) {
+			jump_data->window_number = jump_data->window_number * strlen(config->jump_labels_keys) + i;
+			valid = true;
+			break;
+		}
+	}
+	bool focus = false;
+	if (valid) {
+		jump_data->keys_pressed++;
+		if (jump_data->keys_pressed == jump_data->nkeys) {
+			if (jump_data->window_number < jump_data->nwindows) {
+				focus = true;
+				jump_data->focused = jump_data->workspace->floating->items[jump_data->window_number];
+			}
+		} else {
+			return;
+		}
+	}
+	jump_scratchpad_handle_keyboard_key_end(jump_data, focus);
+}
+
+static bool jump_scratchpad_handle_button(struct sway_seat *seat, uint32_t time_msec,
+		struct wlr_input_device *device, uint32_t button,
+		enum wl_pointer_button_state state, struct sway_node *node, void *data) {
+	if (state == WL_POINTER_BUTTON_STATE_PRESSED && button == BTN_LEFT) {
+		struct sway_container *con = seat_get_focused_container(seat);
+		if (con) {
+			struct jump_scratchpad_data *jump_data = data;
+			jump_data->focused = con;
+			jump_scratchpad_handle_keyboard_key_end(data, true);
+		} else {
+			jump_scratchpad_handle_keyboard_key_end(data, false);
+		}
+		return true;
+	}
+	return false;
+}
+
+void layout_jump_scratchpad(struct sway_workspace *workspace) {
+	if (root->scratchpad->length == 0) {
+		return;
+	}
+	struct jump_scratchpad_data *jump_data = calloc(1, sizeof(struct jump_scratchpad_data));
+
+	jump_data->workspace = workspace;
+	jump_data->floating = workspace->floating;
+	// Disable all the floating windows in the workspace
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = workspace->floating->items[i];
+		view->pending.workspace = NULL;
+		if (!view->scratchpad) {
+			sway_scene_node_reparent(&view->scene_tree->node, root->staging);
+		}
+	}
+
+	// Make the scratchpad look like the workspace's floating windows
+	workspace->floating = root->scratchpad;
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = root->scratchpad->items[i];
+		view->pending.workspace = workspace;
+	}
+
+	// Move windows so they don't overlap and scale the workspace to fit
+	organize_floating_windows(workspace->floating);
+	enum sway_layout_overview mode = layout_overview_mode(workspace);
+	if (mode != OVERVIEW_FLOATING) {
+		if (mode != OVERVIEW_DISABLED) {
+			layout_overview_toggle(workspace, OVERVIEW_DISABLED);
+		}
+		layout_overview_toggle(workspace, OVERVIEW_FLOATING);
+	}
+	transaction_commit_dirty();
+
+	uint32_t nwindows = workspace->floating->length;
+	uint32_t nkeys = nwindows == 1 ? 1 : ceil(log10(nwindows) / log10(strlen(config->jump_labels_keys)));
+	jump_data->nwindows = nwindows;
+	jump_data->nkeys = nkeys;
+
+	for (int i = 0; i < workspace->floating->length; ++i) {
+		struct sway_container *view = workspace->floating->items[i];
+		char *label = generate_label(i, config->jump_labels_keys, nkeys);
+		container_toggle_jump_decoration(workspace, view, label, view->pending.width, view->pending.height);
+		free(label);
+	}
+	override_input(true, jump_scratchpad_handle_keyboard_key, jump_data, jump_scratchpad_handle_button, jump_data);
 }
 
 static void workspace_toggle_jump_decoration(struct sway_workspace *ws, char *text) {
@@ -1805,7 +1967,7 @@ static void container_jump(struct jump_container_data *jump_data) {
 		layout_modifiers_set_reorder(workspace, reorder);
 		for (int i = 0; i < container->pending.children->length; ++i) {
 			struct sway_container *con = container->pending.children->items[i];
-			container_toggle_jump_decoration(con, NULL, 0, 0);
+			container_toggle_jump_decoration(workspace, con, NULL, 0, 0);
 		}
 	} else {
 		jump_data->jumping = true;
@@ -1829,7 +1991,7 @@ static void container_jump(struct jump_container_data *jump_data) {
 				struct sway_container *con = container->pending.children->items[i];
 				double cheight = con->pending.height / height * workspace->height;
 				char *label = generate_label(i, config->jump_labels_keys, jump_data->nkeys);
-				container_toggle_jump_decoration(con, label, container->pending.width, cheight);
+				container_toggle_jump_decoration(workspace, con, label, container->pending.width, cheight);
 				free(label);
 			}
 		} else {
@@ -1849,7 +2011,7 @@ static void container_jump(struct jump_container_data *jump_data) {
 				struct sway_container *con = container->pending.children->items[i];
 				double cwidth = con->pending.width / width * workspace->width;
 				char *label = generate_label(i, config->jump_labels_keys, jump_data->nkeys);
-				container_toggle_jump_decoration(con, label, cwidth, container->pending.height);
+				container_toggle_jump_decoration(workspace, con, label, cwidth, container->pending.height);
 				free(label);
 			}
 		}
