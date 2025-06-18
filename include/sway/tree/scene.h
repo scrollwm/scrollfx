@@ -196,6 +196,8 @@ struct sway_scene_buffer {
 	int dst_width, dst_height;
 	enum wl_output_transform transform;
 	pixman_region32_t opaque_region;
+	enum wlr_color_transfer_function transfer_function;
+	enum wlr_color_named_primaries primaries;
 
 	struct {
 		uint64_t active_outputs;
@@ -544,6 +546,12 @@ void sway_scene_buffer_set_opacity(struct sway_scene_buffer *scene_buffer,
 */
 void sway_scene_buffer_set_filter_mode(struct sway_scene_buffer *scene_buffer,
 	enum wlr_scale_filter_mode filter_mode);
+
+void sway_scene_buffer_set_transfer_function(struct sway_scene_buffer *scene_buffer,
+	enum wlr_color_transfer_function transfer_function);
+
+void sway_scene_buffer_set_primaries(struct sway_scene_buffer *scene_buffer,
+	enum wlr_color_named_primaries primaries);
 
 /**
  * Calls the buffer's frame_done signal.

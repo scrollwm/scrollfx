@@ -21,6 +21,7 @@
 #include "sway/tree/debug.h"
 #include "sway/output.h"
 #include "output.h"
+#include "color.h"
 
 #include <wlr/config.h>
 
@@ -1162,6 +1163,26 @@ void sway_scene_buffer_set_filter_mode(struct sway_scene_buffer *scene_buffer,
 	scene_node_update(&scene_buffer->node, NULL);
 }
 
+void sway_scene_buffer_set_transfer_function(struct sway_scene_buffer *scene_buffer,
+		enum wlr_color_transfer_function transfer_function) {
+	if (scene_buffer->transfer_function == transfer_function) {
+		return;
+	}
+
+	scene_buffer->transfer_function = transfer_function;
+	scene_node_update(&scene_buffer->node, NULL);
+}
+
+void sway_scene_buffer_set_primaries(struct sway_scene_buffer *scene_buffer,
+		enum wlr_color_named_primaries primaries) {
+	if (scene_buffer->primaries == primaries) {
+		return;
+	}
+
+	scene_buffer->primaries = primaries;
+	scene_node_update(&scene_buffer->node, NULL);
+}
+
 static struct wlr_texture *scene_buffer_get_texture(
 		struct sway_scene_buffer *scene_buffer, struct wlr_renderer *renderer) {
 	if (scene_buffer->buffer == NULL || scene_buffer->texture != NULL) {
@@ -1598,6 +1619,11 @@ static void scene_entry_render(struct render_list_entry *entry, const struct ren
 			wlr_output_transform_invert(scene_buffer->transform);
 		transform = wlr_output_transform_compose(transform, data->transform);
 
+		struct wlr_color_primaries primaries = {0};
+		if (scene_buffer->primaries != 0) {
+			sway_color_primaries_from_named(&primaries, scene_buffer->primaries);
+		}
+
 		wlr_render_pass_add_texture(data->render_pass, &(struct wlr_render_texture_options) {
 			.texture = texture,
 			.src_box = scene_buffer->src_box,
@@ -1609,6 +1635,8 @@ static void scene_entry_render(struct render_list_entry *entry, const struct ren
 			.blend_mode = !data->output->scene->calculate_visibility ||
 					!pixman_region32_empty(&opaque) ?
 				WLR_RENDER_BLEND_MODE_PREMULTIPLIED : WLR_RENDER_BLEND_MODE_NONE,
+			.transfer_function = scene_buffer->transfer_function,
+			.primaries = scene_buffer->primaries != 0 ? &primaries : NULL,
 			.wait_timeline = scene_buffer->wait_timeline,
 			.wait_point = scene_buffer->wait_point,
 		});
@@ -2102,6 +2130,12 @@ static enum scene_direct_scanout_result scene_entry_try_direct_scanout(
 
 	if (buffer->transform != data->transform) {
 		return SCANOUT_INELIGIBLE;
+	}
+	if (buffer->transfer_function != 0 && buffer->transfer_function != WLR_COLOR_TRANSFER_FUNCTION_SRGB) {
+		return false;
+	}
+	if (buffer->primaries != 0 && buffer->primaries != WLR_COLOR_NAMED_PRIMARIES_SRGB) {
+		return false;
 	}
 
 	// We want to ensure optimal buffer selection, but as direct-scanout can be enabled and disabled
