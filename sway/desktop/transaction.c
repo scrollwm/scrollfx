@@ -1521,7 +1521,7 @@ static void children_save_animation_variables(list_t *children) {
 }
 
 static void workspace_save_animation_variables(struct sway_workspace *ws) {
-	if (ws->tiling->length == 0 && ws->floating->length) {
+	if (ws->tiling->length == 0 && ws->floating->length == 0) {
 		return;
 	}
 	children_save_animation_variables(ws->tiling);
@@ -1537,12 +1537,7 @@ static void save_animation_variables() {
 
 			for (int i = 0; i < output->current.workspaces->length; i++) {
 				struct sway_workspace *child = output->current.workspaces->items[i];
-
-				bool activated = output->current.active_workspace == child && output->wlr_output->enabled;
-
-				if (activated) {
-					workspace_save_animation_variables(child);
-				}
+				workspace_save_animation_variables(child);
 			}
 		}
 	}
