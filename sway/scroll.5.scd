@@ -1137,8 +1137,12 @@ The default colors are:
 *seat* <seat> <seat-subcommands...>
 	For details on seat subcommands, see *scroll-input*(5).
 
-*kill*
-	Kills (closes) the currently focused container and all of its children.
+*kill* <focused>|unfocused|all
+	_focused_ or no argument kills (closes) the currently focused container
+	and all of its children.
+	_unfocused_ kills (closes) every container in the workspace except the
+	currently focused one.
+	_all_ kills every container from every workspace, including the scratchpad.
 
 *smart_borders* on|no_gaps|off
 	If smart_borders are _on_, borders will only be enabled if the workspace

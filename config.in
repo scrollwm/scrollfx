@@ -99,6 +99,8 @@ animations {
 
     # Kill focused window
     bindsym $mod+Backspace kill
+    bindsym $mod+Shift+Backspace kill unfocused
+    bindsym $mod+Ctrl+Backspace kill all
 
     # Start your launcher
     bindsym $mod+r exec $menu
