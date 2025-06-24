@@ -98,7 +98,15 @@ struct sway_node *node_at_coords(
 			}
 
 			if (con && (!con->view || con->view->surface)) {
-				return &con->node;
+				// Verify cursor is really inside the container. sway_scene_node_at()
+				// may send false positives because it uses the size of the buffer
+				// but the coordinates are displaced by the border
+				if (lx >= con->pending.x && lx < con->pending.x + con->pending.width &&
+					ly >= con->pending.y && ly < con->pending.y + con->pending.height) {
+					return &con->node;
+				} else {
+					return NULL;
+				}
 			}
 
 			if (scene_descriptor_try_get(current, SWAY_SCENE_DESC_LAYER_SHELL)) {
