@@ -578,6 +578,11 @@ void sway_scene_output_set_position(struct sway_scene_output *scene_output,
 
 struct sway_scene_output_state_options {
 	struct sway_scene_timer *timer;
+
+	/**
+	 * Color transform to apply before the output's color transform. Cannot be
+	 * used when the output has a non-NULL image description set.
+	 */
 	struct wlr_color_transform *color_transform;
 
 	/**
