@@ -105,6 +105,7 @@ void root_scratchpad_add_container(struct sway_container *con, struct sway_works
 
 	struct sway_container *parent = con->pending.parent;
 	struct sway_workspace *workspace = con->pending.workspace;
+	bool only_child = parent ? parent->pending.children->length == 1 : true;
 
 	set_container_transform(workspace, con);
 
@@ -121,8 +122,7 @@ void root_scratchpad_add_container(struct sway_container *con, struct sway_works
 	}
 
 	container_detach(con);
-	if (parent && parent->pending.children->length == 0) {
-		container_reap_empty(parent);
+	if (only_child) {
 		parent = NULL;
 	}
 	con->scratchpad = true;
