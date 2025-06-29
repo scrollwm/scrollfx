@@ -220,10 +220,16 @@ depending on which mode you are on. Instead, `mod+Alt+cursor_keys` uses
 `nomode`, which bypasses the mode, and moves individual windows, extracting
 them from the row/column or inserting them when needed.
 
+[Movement](https://github.com/user-attachments/assets/c2ede07a-f94a-4f88-be66-8da469a65d0c)
+
 To be able to re-organize windows and columns more easily, you can use
 `selection toggle` to select and deselect windows. Those windows can be in
 any workspace, and can also be selected from overview mode. After you are
-done with your selection, go to the place where you want to move them (same
+done with your selection, go to the p
+
+https://github.com/user-attachments/assets/65062263-f0e7-4daf-8c1e-73089058415d
+
+lace where you want to move them (same
 or different workspace), and call `selection move`. All the selected
 windows/containers will move to your current location. If you want to select
 a full workspace, use `selection workspace`, or `selection reset` to undo a
