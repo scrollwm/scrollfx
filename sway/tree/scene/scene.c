@@ -2469,7 +2469,7 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 	struct wlr_render_pass *render_pass = wlr_renderer_begin_buffer_pass(output->renderer, buffer,
 			&(struct wlr_buffer_pass_options){
 		.timer = timer ? timer->render_timer : NULL,
-		.color_transform = options->color_transform,
+		.color_transform = color_transform,
 		.primaries = primaries,
 		.signal_timeline = scene_output->in_timeline,
 		.signal_point = scene_output->in_point,
