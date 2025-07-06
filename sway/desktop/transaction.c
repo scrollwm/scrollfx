@@ -1333,6 +1333,8 @@ static void transaction_progress(void) {
 	server.queued_transaction = NULL;
 
 	if (!server.pending_transaction) {
+		struct sway_seat *seat = input_manager_get_default_seat();
+		seat_consider_warp_to_focus(seat);
 		sway_idle_inhibit_v1_check_active();
 		return;
 	}

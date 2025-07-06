@@ -1175,9 +1175,6 @@ void cursor_warp_to_container(struct sway_cursor *cursor,
 		return;
 	}
 
-	// We need to have the focused container in the correct position before
-	// getting its box and warping the cursor
-	transaction_commit_dirty();
 	struct wlr_box box;
 	container_get_box(container, &box);
 	struct sway_workspace *workspace = container->pending.workspace;
