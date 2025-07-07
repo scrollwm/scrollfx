@@ -1324,6 +1324,10 @@ The default colors are:
 	switch to workspace 2, then invoke the *workspace 2* command again, you
 	will be returned to workspace 1. Default is _no_.
 
+*lua* script
+	Loads and executes the lua script. See *LUA* for details about the API and
+	some examples.
+
 # CRITERIA
 
 A criteria is a string in the form of, for example:
@@ -1456,6 +1460,190 @@ The following attributes may be matched with:
 	Can be a regular expression. If the value is \_\_focused\_\_, then the
 	sandbox instance ID must be the same as that of the currently focused
 	window.
+
+# LUA
+
+scroll provides a Lua API to enable scripting of the window manager. You can
+access properties of the window manager, execute commands or add callbacks to
+window events.
+
+You can assign scripts to keyboard bindings, or add them to your configuration
+file for execution when it loads.
+
+The module is called *scroll*.
+
+This is the current supported API:
+
+*command(container|nil, command)*
+	Execute a scroll _command_ with _container_ as its context. If _container_ 
+	is _nil_, use the default context, usually the focused container or
+	workspace. Returns all the results/errors in an array.
+
+```
+scroll.command(nil, "set_size v 0.33333333; move left nomode")
+```
+
+*focused_view()*
+	Returns the focused view pointer or nil if none
+
+*focused_container()*
+	Returns the focused container pointer or nil if none
+
+*focused_workspace()*
+	Returns the focused workspace pointer or nil if none
+
+*urgent_view()*
+	Returns the current urgent view pointer or nil if none.
+
+*view_get_container(view)*
+	Returns the container pointer associated to _view_.
+
+*view_get_app_id(view)*
+	Returns the _app_id_ string for _view_, or nil if any error happens.
+
+*view_get_title(view)*
+	Returns the _title_ string for _view_, or nil if any error happens.
+
+*view_get_pid(view)*
+	Returns the _pid_ number for the program running in _view_, or nil if any
+	error happens.
+
+*view_get_urgent(view)*
+	If the _view_ has the _urgent_ attribute set, return _true_, else _false_.
+
+*view_set_urgent(view, true|false)*
+	Sets the _view's_ _urgent_ attribute.
+
+*view_get_shell(view)*
+	Returns the _xdg_shell_ string if the application running in _view_ is a
+	Wayland application. If it is an X windows application, returns _xwayland_.
+
+*view_close(view)*
+	Close/kill _view_.
+
+*container_get_workspace(container)*
+	Returns the _container's_ parent workspace pointer, or NULL if none.
+
+*container_get_marks(container)*
+	Returns an array with all the marks associated to _container_.
+
+*container_get_floating(container)*
+	Returns _true_ if the _container_ is floating, _false_ if it is tiled.
+
+*container_get_opacity(container)*
+	Returns the numerical value for the _container's_ opacity.
+
+*container_get_sticky(container)*
+	Returns _true_ if the container is sticky, otherwise _false_.
+
+*container_get_views(container)*
+	Returns an array with all the views inside the _container_.
+
+*workspace_get_name(workspace)*
+	Returns a string with the name of the _workspace_, or nil if error.
+
+*workspace_get_tiling(workspace)*
+	Returns an array with all the tiling containers inside the _workspace_.
+
+*workspace_get_floating(workspace)*
+	Returns an array with all the floating containers inside the _workspace_.
+
+*add_callback(event, cb_func, cb_data)*
+	Sets a _cb_func_ callback function for _event_, passing _cb_data_ data to
+	it.
+
+	_event_ can be "view_map" (application's window creation), "view_unmap"
+	(application's window destruction), or "view_urgent" (a window gets the
+	urgent attribute set).
+
+	_cb_func_ is a Lua function with two parameters, _view_ (the view triggering
+	the event) and _data_, the _cb_data_ value passed when creating the
+	callback.
+
+	_cb_data_ can be any Lua variable, including a table with multiple values.
+
+	This function returns an _id_ you need to store if you want to be able to
+	remove the callback later.
+
+*remove__callback(id)*
+	Removes a callback set earlier using *add_callback*. _id_ is the unique
+	identifier returned by *add_callback*.
+
+Examples:
+
+Calling this script from the configuration file, you will get focus on every
+window that gets the *urgent* attribute:
+
+```
+local function on_urgent(view, _)
+  local container = scroll.view_get_container(view)
+  local workspace = scroll.container_get_workspace(container)
+  scroll.command(nil, "workspace " .. scroll.workspace_get_name(workspace))
+  scroll.command(container, "focus")
+end
+
+scroll.add_callback("view_urgent", on_urgent, nil)
+```
+
+If the current focused window is a neovim instance, when called, this script
+resizes neovim's window height to 0.66667, and opens a kitty terminal under
+it with height 0.33333. When you close the neovim window, the terminal is
+also automatically closed.
+
+```
+local id_map
+local id_unmap
+local data = {}
+
+local on_create = function (cbview, cbdata)
+  if scroll.view_get_app_id(cbview) == "kitty" then
+    cbdata.view = cbview
+    scroll.command(nil, "set_size v 0.33333333; move left nomode")
+  end
+  scroll.remove_callback(id_map)
+end
+
+local on_destroy = function (cbview, cbdata)
+  if scroll.view_get_pid(cbview) == cbdata.pid then
+    scroll.view_close(cbdata.view)
+  end
+  scroll.remove_callback(id_unmap)
+end
+
+local view = scroll.focused_view()
+
+data.pid = scroll.view_get_pid(view)
+
+id_map = scroll.add_callback("view_map", on_create, data)
+id_unmap = scroll.add_callback("view_unmap", on_destroy, data)
+
+if view then
+  if string.find(scroll.view_get_title(view), "^nvim") then
+    scroll.command(nil, 'set_size v 0.66666667; exec kitty')
+  end
+end
+```
+
+Select and move every tiling kitty terminal from the focused workspace to
+workspace number 2.
+
+```
+local workspace = scroll.focused_workspace()
+local containers = scroll.workspace_get_tiling(workspace)
+
+for _, container in ipairs(containers) do
+  local views = scroll.container_get_views(container)
+  for _, view in ipairs(views) do
+    local app_id = scroll.view_get_app_id(view)
+    if app_id == "kitty" then
+      local con = scroll.view_get_container(view)
+      scroll.command(con, "selection toggle")
+    end
+  end
+end
+
+scroll.command(nil, "workspace number 2; selection move")
+```
 
 # SEE ALSO
 

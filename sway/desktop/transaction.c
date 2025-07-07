@@ -1537,8 +1537,8 @@ static void save_animation_variables() {
 		for (int j = 0; j < root->outputs->length; j++) {
 			struct sway_output *output = root->outputs->items[j];
 
-			for (int i = 0; i < output->current.workspaces->length; i++) {
-				struct sway_workspace *child = output->current.workspaces->items[i];
+			for (int i = 0; i < output->workspaces->length; i++) {
+				struct sway_workspace *child = output->workspaces->items[i];
 				workspace_save_animation_variables(child);
 			}
 		}

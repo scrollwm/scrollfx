@@ -6,6 +6,7 @@ sway_sources = files(
 	'ipc-json.c',
 	'ipc-server.c',
 	'lock.c',
+	'lua.c',
 	'main.c',
 	'realtime.c',
 	'scene_descriptor.c',
@@ -80,6 +81,7 @@ sway_sources = files(
 	'commands/inhibit_idle.c',
 	'commands/jump.c',
 	'commands/kill.c',
+	'commands/lua.c',
 	'commands/mark.c',
 	'commands/max_render_time.c',
 	'commands/opacity.c',
@@ -260,6 +262,7 @@ sway_deps = [
 	xkbcommon,
 	xcb,
 	xcb_icccm,
+	lua,
 ]
 
 if wlroots_features['xwayland']

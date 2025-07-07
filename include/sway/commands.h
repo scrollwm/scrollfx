@@ -166,6 +166,7 @@ sway_cmd cmd_layout_heights;
 sway_cmd cmd_layout_transpose;
 sway_cmd cmd_layout_widths;
 sway_cmd cmd_log_colors;
+sway_cmd cmd_lua;
 sway_cmd cmd_mark;
 sway_cmd cmd_max_render_time;
 sway_cmd cmd_mode;
