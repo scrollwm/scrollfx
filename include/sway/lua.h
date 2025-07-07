@@ -1,0 +1,24 @@
+#ifndef _SWAY_LUA_H
+#define _SWAY_LUA_H
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
+#include "list.h"
+
+struct sway_lua_closure {
+	int cb_function;
+	int cb_data;
+};
+
+struct sway_lua {
+	lua_State *state;
+	list_t *cbs_view_map;
+	list_t *cbs_view_unmap;
+	list_t *cbs_view_urgent;
+};
+
+int luaopen_scroll(lua_State *L);
+
+#endif

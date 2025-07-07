@@ -906,10 +906,28 @@ void view_map(struct sway_view *view, struct wlr_surface *wlr_surface,
 		wlr_foreign_toplevel_handle_v1_set_app_id(view->foreign_toplevel, class);
 	}
 
+	// Lua callbacks
+	for (int i = 0; i < config->lua.cbs_view_map->length; ++i) {
+		struct sway_lua_closure *closure = config->lua.cbs_view_map->items[i];
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+		lua_pushlightuserdata(config->lua.state, view);
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+		lua_call(config->lua.state, 2, 0);
+	}
+
 	animation_create(ANIM_WINDOW_OPEN);
 }
 
 void view_unmap(struct sway_view *view) {
+	// Lua callbacks
+	for (int i = 0; i < config->lua.cbs_view_unmap->length; ++i) {
+		struct sway_lua_closure *closure = config->lua.cbs_view_unmap->items[i];
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+		lua_pushlightuserdata(config->lua.state, view);
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+		lua_call(config->lua.state, 2, 0);
+	}
+
 	wl_signal_emit_mutable(&view->events.unmap, view);
 
 	view->executed_criteria->length = 0;
@@ -1140,6 +1158,15 @@ void view_set_urgent(struct sway_view *view, bool enable) {
 		}
 		clock_gettime(CLOCK_MONOTONIC, &view->urgent);
 		container_update_itself_and_parents(view->container);
+
+		// Lua callbacks
+		for (int i = 0; i < config->lua.cbs_view_urgent->length; ++i) {
+			struct sway_lua_closure *closure = config->lua.cbs_view_urgent->items[i];
+			lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+			lua_pushlightuserdata(config->lua.state, view);
+			lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+			lua_call(config->lua.state, 2, 0);
+		}
 	} else {
 		view->urgent = (struct timespec){ 0 };
 		if (view->urgent_timer) {

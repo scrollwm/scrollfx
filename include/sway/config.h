@@ -21,6 +21,7 @@
 #include "wlr-layer-shell-unstable-v1-protocol.h"
 #include <pango/pangocairo.h>
 #include "sway/desktop/animation.h"
+#include "sway/lua.h"
 
 // TODO: Refactor this shit
 
@@ -622,6 +623,8 @@ struct sway_config {
 	float gesture_scroll_sentitivity;
 
 	struct sway_animations_config animations;
+
+	struct sway_lua lua;
 
 	// floating view
 	int32_t floating_maximum_width;

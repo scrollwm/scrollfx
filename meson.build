@@ -81,6 +81,7 @@ math = cc.find_library('m')
 rt = cc.find_library('rt')
 xcb_icccm = wlroots_features['xwayland'] ? dependency('xcb-icccm') : null_dep
 threads = dependency('threads') # for pthread_setschedparam and pthread_atfork
+lua = dependency('lua', version: '>=5.4')
 
 if get_option('sd-bus-provider') == 'auto'
 	if not get_option('tray').disabled()

@@ -25,6 +25,8 @@ supports some added features:
 * Workspace scaling: Apart from overview, you can scale the workspace to any
   scale, and continue working.
 
+* Lua scripting: scroll provides a lua API to script the window manager.
+
 * Trackpad/Mouse scrolling: You can use the trackpad or mouse dragging to
   navigate/scroll the workspace windows.
 
@@ -102,8 +104,8 @@ display manager using the provided `/usr/share/wayland-sessions/scroll.desktop`.
 ### Building Requirements
 
 If you want to compile *scroll* yourself, [sway compiling instructions](https://github.com/swaywm/sway#compiling-from-source)
-apply to *scroll*.
-
+apply to *scroll*. You will also need to install the lua package (version >= 5.4)
+to enable lua scripting.
 
 ## Configuration
 
@@ -851,6 +853,95 @@ animations {
     window_size yes 300 var 3 [ -0.35 0 0 0.5 ]
 }
 ```
+
+## Lua Scripting
+
+scroll provides a Lua API to enable scripting of the window manager. The API
+is evolving. Read the manual's (`man 5 scroll`) Lua section for all the
+details.
+
+Using the command `lua` you can run Lua scripts that access window manager
+properties, execute commands or add callbacks to window events.
+
+You can assign scripts to keyboard bindings, or add them to your
+configuration for execution when the configuration loads.
+
+For example, if you wanted to focus on every window that gets the *urgent*
+attribute, you could call this script from your `config` file:
+
+``` lua
+local function on_urgent(view, _)
+  local container = scroll.view_get_container(view)
+  local workspace = scroll.container_get_workspace(container)
+  scroll.command(nil, "workspace " .. scroll.workspace_get_name(workspace))
+  scroll.command(container, "focus")
+end
+
+scroll.add_callback("view_urgent", on_urgent, nil)
+```
+
+If the current focused window is a *neovim* instance, when called, this script
+resizes *neovim's* window height to 0.66667, and opens a *kitty* terminal under
+it with height 0.33333. When you close the *neovim* window, the terminal is
+also automatically closed.
+
+``` lua
+local id_map
+local id_unmap
+local data = {}
+
+local on_create = function (cbview, cbdata)
+  if scroll.view_get_app_id(cbview) == "kitty" then
+    cbdata.view = cbview
+    scroll.command(nil, "set_size v 0.33333333; move left nomode")
+  end
+  scroll.remove_callback(id_map)
+end
+
+local on_destroy = function (cbview, cbdata)
+  if scroll.view_get_pid(cbview) == cbdata.pid then
+    scroll.view_close(cbdata.view)
+  end
+  scroll.remove_callback(id_unmap)
+end
+
+local view = scroll.focused_view()
+
+data.pid = scroll.view_get_pid(view)
+
+id_map = scroll.add_callback("view_map", on_create, data)
+id_unmap = scroll.add_callback("view_unmap", on_destroy, data)
+
+if view then
+  if string.find(scroll.view_get_title(view), "^nvim") then
+    scroll.command(nil, 'set_size v 0.66666667; exec kitty')
+  end
+end
+```
+
+Select and move every tiling *kitty* terminal from the focused workspace to
+workspace number 2.
+
+``` lua
+local workspace = scroll.focused_workspace()
+local containers = scroll.workspace_get_tiling(workspace)
+
+for _, container in ipairs(containers) do
+  local views = scroll.container_get_views(container)
+  for _, view in ipairs(views) do
+    local app_id = scroll.view_get_app_id(view)
+    if app_id == "kitty" then
+      local con = scroll.view_get_container(view)
+      scroll.command(con, "selection toggle")
+    end
+  end
+end
+
+scroll.command(nil, "workspace number 2; selection move")
+```
+
+These are just a few examples. Read the manual to know more about the
+API.
 
 
 ## IPC
