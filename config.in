@@ -384,6 +384,7 @@ mode "fit_size" {
     bindsym Shift+$down fit_size v all proportional; mode default
     bindsym Ctrl+$down fit_size h all equal; mode default
     bindsym Ctrl+Shift+$down fit_size v all equal; mode default
+    bindsym Escape mode "default"
 }
 bindsym $mod+w mode "fit_size"
 

@@ -1,7 +1,5 @@
 #include <limits.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 #include <strings.h>
 #include <wlr/util/edges.h>
 #include "sway/commands.h"
@@ -18,18 +16,20 @@ static bool is_horizontal(uint32_t axis) {
 	return axis & (WLR_EDGE_LEFT | WLR_EDGE_RIGHT);
 }
 
+static const double EPSILON = 0.001;
+
 static double get_closest_fraction(double cur, list_t *sizes, int inc) {
 	if (inc > 0) {
 		for (int i = 0; i < sizes->length; ++i) {
 			double *size = sizes->items[i];
-			if (*size > cur) {
+			if (*size > cur + EPSILON) {
 				return *size;
 			}
 		}
 	} else {
 		for (int i = sizes->length - 1; i >= 0; i--) {
 			double *size = sizes->items[i];
-			if (*size < cur) {
+			if (*size < cur - EPSILON) {
 				return *size;
 			}
 		}
@@ -61,7 +61,8 @@ static struct cmd_results *cycle_size_tiled(uint32_t axis, int inc) {
 	if (horizontal) {
 		double fraction;
 		if (current->free_size) {
-			fraction = current->pending.width / workspace->width;
+			fraction = (current->pending.width + 2 * workspace->gaps_inner) / workspace->width;
+			current->height_fraction = (current->pending.height + 2 * workspace->gaps_inner) / workspace->height;
 		} else {
 			if (current->width_fraction <= 0.0) {
 				current->width_fraction = output->scroller_options.default_width;
@@ -69,19 +70,23 @@ static struct cmd_results *cycle_size_tiled(uint32_t axis, int inc) {
 			fraction = current->width_fraction;
 		}
 		current->width_fraction = get_closest_fraction(fraction, layout_get_widths(output), inc);
-		current->free_size = false;
 		if (layout == L_HORIZ) {
 			// If it has children, propagate its width_fraction, overwriting whatever they had
 			for (int i = 0; i < current->pending.children->length; ++i) {
 				struct sway_container *con = current->pending.children->items[i];
 				con->width_fraction = current->width_fraction;
+				if (current->free_size) {
+					con->height_fraction = (con->pending.height + 2 * workspace->gaps_inner) / workspace->height;
+				}
 				con->free_size = false;
 			}
 		}
+		current->free_size = false;
 	} else {
 		double fraction;
 		if (current->free_size) {
-			fraction = current->pending.height / workspace->height;
+			fraction = (current->pending.height + 2 * workspace->gaps_inner) / workspace->height;
+			current->width_fraction = (current->pending.width + 2 * workspace->gaps_inner) / workspace->width;
 		} else {
 			if (current->height_fraction <= 0.0) {
 				current->height_fraction = output->scroller_options.default_height;
@@ -89,15 +94,18 @@ static struct cmd_results *cycle_size_tiled(uint32_t axis, int inc) {
 			fraction = current->height_fraction;
 		}
 		current->height_fraction = get_closest_fraction(fraction, layout_get_heights(output), inc);
-		current->free_size = false;
 		if (layout == L_VERT) {
 			// If it has children, propagate its width_fraction, overwriting whatever they had
 			for (int i = 0; i < current->pending.children->length; ++i) {
 				struct sway_container *con = current->pending.children->items[i];
 				con->height_fraction = current->height_fraction;
+				if (current->free_size) {
+					con->width_fraction = (con->pending.width + 2 * workspace->gaps_inner) / workspace->width;
+				}
 				con->free_size = false;
 			}
 		}
+		current->free_size = false;
 	}
 
 	animation_create(ANIM_WINDOW_SIZE);
