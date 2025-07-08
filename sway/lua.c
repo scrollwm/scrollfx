@@ -353,7 +353,8 @@ static int scroll_workspace_get_tiling(lua_State *L) {
 		return 1;
 	}
 	struct sway_workspace *workspace = lua_touserdata(L, -1);
-	if (!workspace || workspace->node.type != N_WORKSPACE) {
+	if (!workspace || workspace->node.type != N_WORKSPACE ||
+		workspace->tiling->length == 0) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}

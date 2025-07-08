@@ -543,6 +543,8 @@ static struct sway_container *layout_wrap_into_container(struct sway_container *
 	cont->pending.y = child->pending.y;
 	cont->pending.layout = layout;
 	cont->free_size = child->free_size;
+	cont->current.focused_inactive_child = child;
+	cont->pending.focused_inactive_child = child;
 
 	list_add(cont->pending.children, child);
 	child->pending.parent = cont;
@@ -1090,6 +1092,8 @@ static void layout_insert_into_container(struct sway_container *parent, struct s
 	list_insert(parent->pending.children, idx, child);
 	child->pending.parent = parent;
 	child->pending.workspace = parent->pending.workspace;
+	parent->current.focused_inactive_child = child;
+	parent->pending.focused_inactive_child = child;
 	container_update_representation(parent);
 	node_set_dirty(&child->node);
 	node_set_dirty(&parent->node);

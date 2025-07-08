@@ -313,6 +313,7 @@ static void fit_size_container(struct sway_container *container, enum sway_layou
 			}
 		}
 	}
+	container->free_size = true;
 	set_from_position(workspace, layout, children, scale, from, active_idx, workspace->gaps_inner);
 	
 	arrange_container(container);
