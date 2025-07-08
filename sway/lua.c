@@ -176,6 +176,55 @@ static int scroll_view_get_pid(lua_State *L) {
 	return 1;
 }
 
+static pid_t get_parent_pid(pid_t pid) {
+	unsigned int v = 0;
+	FILE *f;
+	char buf[256];
+	snprintf(buf, sizeof(buf) - 1, "/proc/%u/stat", (unsigned) pid);
+	if (!(f = fopen(buf, "r")))
+		return 0;
+	fscanf(f, "%*u %*s %*c %u", &v);
+	fclose(f);
+	return (pid_t) v;
+}
+
+static bool find_pid(struct sway_container *container, void *data) {
+	pid_t *pid = data;
+	return (container->view && container->view->pid == *pid);
+}
+
+static int scroll_view_get_parent_view(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_view *view = lua_touserdata(L, -1);
+	if (!view) {
+		lua_pushnil(L);
+		return 1;
+	}
+	pid_t pid = view->pid;
+	struct sway_container *container = NULL;
+	while (true) {
+		pid = get_parent_pid(pid);
+		if (pid == 0) {
+			break;
+		}
+		// Search for a view with pid
+		container = root_find_container(find_pid, &pid);
+		if (container) {
+			break;
+		}
+	};
+	if (container && container->view) {
+		lua_pushlightuserdata(L, container->view);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 static int scroll_view_get_urgent(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc == 0) {
@@ -471,6 +520,7 @@ static luaL_Reg const scroll_lib[] = {
 	{ "view_get_app_id", scroll_view_get_app_id },
 	{ "view_get_title", scroll_view_get_title },
 	{ "view_get_pid", scroll_view_get_pid },
+	{ "view_get_parent_view", scroll_view_get_parent_view },
 	{ "view_get_urgent", scroll_view_get_urgent },
 	{ "view_set_urgent", scroll_view_set_urgent },
 	{ "view_get_shell", scroll_view_get_shell },

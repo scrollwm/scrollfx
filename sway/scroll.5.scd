@@ -1508,6 +1508,10 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 	Returns the _pid_ number for the program running in _view_, or nil if any
 	error happens.
 
+*view_get_parent_view(view)*
+	Returns the view whose pid is the parent of the application running in
+	_view_, or nil if it has no parent view.
+
 *view_get_urgent(view)*
 	If the _view_ has the _urgent_ attribute set, return _true_, else _false_.
 
@@ -1547,6 +1551,9 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 
 *workspace_get_floating(workspace)*
 	Returns an array with all the floating containers inside the _workspace_.
+
+*scratchpad_get_containers()*
+	Returns an array with all the containers in the scratchpad.
 
 *add_callback(event, cb_func, cb_data)*
 	Sets a _cb_func_ callback function for _event_, passing _cb_data_ data to
