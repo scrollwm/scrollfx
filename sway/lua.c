@@ -34,6 +34,8 @@ static void stack_print(lua_State *L) {
 }
 #endif
 
+static const int STACK_MIN = 5;
+
 // scroll.command(container|nil, command)
 static int scroll_command(lua_State *L) {
 	int argc = lua_gettop(L);
@@ -45,6 +47,7 @@ static int scroll_command(lua_State *L) {
 	const char *lua_cmd = luaL_checkstring(L, 2);
 	char *cmd = strdup(lua_cmd);
 	list_t *results = execute_command(cmd, NULL, container);
+	lua_checkstack(L, results->length + STACK_MIN);
 	lua_createtable(L, results->length, 0);
 	for (int i = 0; i < results->length; ++i) {
 		struct cmd_results *result = results->items[i];
@@ -303,6 +306,7 @@ static int scroll_container_get_marks(lua_State *L) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}
+	lua_checkstack(L, container->marks->length + STACK_MIN);
 	lua_createtable(L, container->marks->length, 0);
 	for (int i = 0; i < container->marks->length; ++i) {
 		char *mark = container->marks->items[i];
@@ -370,6 +374,7 @@ static int scroll_container_get_views(lua_State *L) {
 		lua_rawseti(L, -2, 1);
 	} else {
 		int len = container->pending.children->length;
+		lua_checkstack(L, len + STACK_MIN);
 		lua_createtable(L, len, 0);
 		for (int i = 0; i < len; ++i) {
 			struct sway_container *con = container->pending.children->items[i];
@@ -407,6 +412,7 @@ static int scroll_workspace_get_tiling(lua_State *L) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}
+	lua_checkstack(L, workspace->tiling->length + STACK_MIN);
 	lua_createtable(L, workspace->tiling->length, 0);
 	for (int i = 0; i < workspace->tiling->length; ++i) {
 		struct sway_container *container = workspace->tiling->items[i];
@@ -427,6 +433,7 @@ static int scroll_workspace_get_floating(lua_State *L) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}
+	lua_checkstack(L, workspace->floating->length + STACK_MIN);
 	lua_createtable(L, workspace->floating->length, 0);
 	for (int i = 0; i < workspace->floating->length; ++i) {
 		struct sway_container *container = workspace->floating->items[i];
@@ -436,7 +443,135 @@ static int scroll_workspace_get_floating(lua_State *L) {
 	return 1;
 }
 
+static int scroll_workspace_get_mode(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	struct sway_workspace *workspace = lua_touserdata(L, -1);
+	if (!workspace || workspace->node.type != N_WORKSPACE) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	lua_newtable(L);
+	enum sway_container_layout mode = layout_modifiers_get_mode(workspace);
+	switch (mode) {
+	case L_NONE:
+		lua_pushstring(L, "none");
+		break;
+	case L_HORIZ:
+		lua_pushstring(L, "horizontal");
+		break;
+	case L_VERT:
+		lua_pushstring(L, "vertical");
+		break;
+	}
+	lua_setfield(L, -2, "mode");
+
+	enum sway_layout_insert insert = layout_modifiers_get_insert(workspace);
+	switch (insert) {
+	case INSERT_BEFORE:
+		lua_pushstring(L, "before");
+		break;
+	case INSERT_AFTER:
+		lua_pushstring(L, "after");
+		break;
+	case INSERT_BEGINNING:
+		lua_pushstring(L, "beginning");
+		break;
+	case INSERT_END:
+		lua_pushstring(L, "end");
+		break;
+	}
+	lua_setfield(L, -2, "insert");
+
+	enum sway_layout_reorder reorder = layout_modifiers_get_reorder(workspace);
+	switch (reorder) {
+	case REORDER_AUTO:
+		lua_pushstring(L, "auto");
+		break;
+	case REORDER_LAZY:
+		lua_pushstring(L, "lazy");
+		break;
+	}
+	lua_setfield(L, -2, "reorder");
+
+	lua_pushboolean(L, layout_modifiers_get_focus(workspace) ? 1 : 0);
+	lua_setfield(L, -2, "focus");
+
+	lua_pushboolean(L, layout_modifiers_get_center_horizontal(workspace) ? 1 : 0);
+	lua_setfield(L, -2, "center_horizontal");
+	
+	lua_pushboolean(L, layout_modifiers_get_center_vertical(workspace) ? 1 : 0);
+	lua_setfield(L, -2, "center_vertical");
+
+	return 1;
+}
+
+static int scroll_workspace_set_mode(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc < 2) {
+		return 0;
+	}
+	struct sway_workspace *workspace = lua_touserdata(L, 1);
+	if (!workspace || workspace->node.type != N_WORKSPACE) {
+		return 0;
+	}
+	if (lua_getfield(L, 2, "mode") == LUA_TSTRING) {
+		const char *mode = lua_tostring(L, 3);
+		if (strcmp(mode, "vertical") == 0) {
+			layout_modifiers_set_mode(workspace, L_VERT);
+		} else if (strcmp(mode, "horizontal") == 0) {
+			layout_modifiers_set_mode(workspace, L_HORIZ);
+		}
+	}
+	lua_pop(L, 1);
+
+	if (lua_getfield(L, 2, "insert") == LUA_TSTRING) {
+		const char *mode = lua_tostring(L, 3);
+		if (strcmp(mode, "before") == 0) {
+			layout_modifiers_set_insert(workspace, INSERT_BEFORE);
+		} else if (strcmp(mode, "after") == 0) {
+			layout_modifiers_set_insert(workspace, INSERT_AFTER);
+		} else if (strcmp(mode, "beginning") == 0) {
+			layout_modifiers_set_insert(workspace, INSERT_BEGINNING);
+		} else if (strcmp(mode, "end") == 0) {
+			layout_modifiers_set_insert(workspace, INSERT_END);
+		}
+	}
+	lua_pop(L, 1);
+	
+	if (lua_getfield(L, 2, "reorder") == LUA_TSTRING) {
+		const char *mode = lua_tostring(L, 3);
+		if (strcmp(mode, "auto") == 0) {
+			layout_modifiers_set_reorder(workspace, REORDER_AUTO);
+		} else if (strcmp(mode, "lazy") == 0) {
+			layout_modifiers_set_reorder(workspace, REORDER_LAZY);
+		}
+	}
+	lua_pop(L, 1);
+
+	if (lua_getfield(L, 2, "focus") == LUA_TBOOLEAN) {
+		layout_modifiers_set_focus(workspace, lua_toboolean(L, 3));
+	}
+	lua_pop(L, 1);
+
+	if (lua_getfield(L, 2, "center_horizontal") == LUA_TBOOLEAN) {
+		layout_modifiers_set_center_horizontal(workspace, lua_toboolean(L, 3));
+	}
+	lua_pop(L, 1);
+
+	if (lua_getfield(L, 2, "center_vertical") == LUA_TBOOLEAN) {
+		layout_modifiers_set_center_vertical(workspace, lua_toboolean(L, 3));
+	}
+	lua_pop(L, 1);
+
+	return 0;
+}
+
 static int scroll_scratchpad_get_containers(lua_State *L) {
+	lua_checkstack(L, root->scratchpad->length + STACK_MIN);
 	lua_createtable(L, root->scratchpad->length, 0);
 	for (int i = 0; i < root->scratchpad->length; ++i) {
 		struct sway_container *container = root->scratchpad->items[i];
@@ -534,6 +669,8 @@ static luaL_Reg const scroll_lib[] = {
 	{ "workspace_get_name", scroll_workspace_get_name },
 	{ "workspace_get_tiling", scroll_workspace_get_tiling },
 	{ "workspace_get_floating", scroll_workspace_get_floating },
+	{ "workspace_get_mode", scroll_workspace_get_mode },
+	{ "workspace_set_mode", scroll_workspace_set_mode },
 	{ "scratchpad_get_containers", scroll_scratchpad_get_containers },
 	{ "add_callback", scroll_add_callback },
 	{ "remove_callback", scroll_remove_callback },
