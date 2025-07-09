@@ -1552,6 +1552,39 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *workspace_get_floating(workspace)*
 	Returns an array with all the floating containers inside the _workspace_.
 
+*workspace_get_mode(workspace)*
+	Returns a table with all the current mode modifiers for _workspace_. The
+	keys and values of that table are:
+	
+	_mode_: "horizontal"|"vertical"|"none"
+
+	_insert_: "before"|"after"|"beginning"|"end"
+
+	_reorder_: "auto"|"lazy"
+
+	_focus_: true|false
+
+	_center_horizontal_: true|false
+
+	_center_vertical_: true|false
+
+*workspace_set_mode(workspace, modifiers)*
+	Sets the mode _modifiers_ for _workspace_. The _modifiers_ table can
+	override any number of modifiers. The keys and values that table can include
+	are at most:
+	
+	_mode_: "horizontal"|"vertical"
+
+	_insert_: "before"|"after"|"beginning"|"end"
+
+	_reorder_: "auto"|"lazy"
+
+	_focus_: true|false
+
+	_center_horizontal_: true|false
+
+	_center_vertical_: true|false
+
 *scratchpad_get_containers()*
 	Returns an array with all the containers in the scratchpad.
 
