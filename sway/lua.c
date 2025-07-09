@@ -8,7 +8,7 @@
 #include "sway/tree/workspace.h"
 
 #if 0
-static void stack_print(lua_State *L) {
+static void print_stack(lua_State *L) {
 	int top = lua_gettop(L);
 	sway_log(SWAY_DEBUG, "Printing Lua stack...");
 	for (int i = 1; i <= top; ++i) {
@@ -35,6 +35,61 @@ static void stack_print(lua_State *L) {
 #endif
 
 static const int STACK_MIN = 5;
+
+static int scroll_log(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc < 1) {
+		return 0;
+	}
+	const char *str = luaL_checkstring(L, -1);
+	if (str) {
+		sway_log(SWAY_DEBUG, "%s", str);
+	}
+	return 0;
+}
+
+static int scroll_state_get_value(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc < 2) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_lua_script *script = lua_touserdata(L, -2);
+	const char *key = luaL_checkstring(L, -1);
+	if (!script || !key) {
+		lua_pushnil(L);
+		return 1;
+	}
+	for (int i = 0; i < config->lua.scripts->length; ++i) {
+		if (script == config->lua.scripts->items[i]) {
+			lua_rawgeti(L, LUA_REGISTRYINDEX, script->state);
+			lua_getfield(L, -1, key);
+			return 1;
+		}
+	}
+	lua_pushnil(L);
+	return 1;
+}
+
+static int scroll_state_set_value(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc < 3) {
+		return 0;
+	}
+	struct sway_lua_script *script = lua_touserdata(L, -3);
+	const char *key = luaL_checkstring(L, -2);
+	if (!script || !key) {
+		return 0;
+	}
+	for (int i = 0; i < config->lua.scripts->length; ++i) {
+		if (script == config->lua.scripts->items[i]) {
+			lua_rawgeti(L, LUA_REGISTRYINDEX, script->state);
+			lua_pushvalue(L, -2);
+			lua_setfield(L, -2, key);
+		}
+	}
+	return 0;
+}
 
 // scroll.command(container|nil, command)
 static int scroll_command(lua_State *L) {
@@ -646,6 +701,9 @@ static int scroll_remove_callback(lua_State *L) {
 
 // Module functions
 static luaL_Reg const scroll_lib[] = {
+	{ "log", scroll_log },
+	{ "state_set_value", scroll_state_set_value },
+	{ "state_get_value", scroll_state_get_value },
 	{ "command", scroll_command },
 	{ "focused_view", scroll_focused_view },
 	{ "focused_container", scroll_focused_container },
