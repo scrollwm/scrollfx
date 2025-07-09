@@ -69,9 +69,11 @@ struct sway_output {
 	uint32_t refresh_nsec;
 	int max_render_time; // In milliseconds
 	struct wl_event_source *repaint_timer;
-	bool allow_tearing;
 
 	struct sway_scroller_output_options scroller_options;
+
+	bool allow_tearing;
+	bool hdr;
 };
 
 struct sway_output_non_desktop {
@@ -131,6 +133,8 @@ struct sway_container *output_find_container(struct sway_output *output,
 		bool (*test)(struct sway_container *con, void *data), void *data);
 
 void output_get_box(struct sway_output *output, struct wlr_box *box);
+
+bool output_supports_hdr(struct wlr_output *output, const char **unsupported_reason_ptr);
 
 enum sway_container_layout output_get_default_layout(
 		struct sway_output *output);

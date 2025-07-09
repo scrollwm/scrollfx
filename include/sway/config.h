@@ -275,7 +275,7 @@ enum scale_filter_mode {
 };
 
 enum render_bit_depth {
-	RENDER_BIT_DEPTH_DEFAULT, // the default is currently 8
+	RENDER_BIT_DEPTH_DEFAULT, // the default is currently 8 for SDR, 10 for HDR
 	RENDER_BIT_DEPTH_6,
 	RENDER_BIT_DEPTH_8,
 	RENDER_BIT_DEPTH_10,
@@ -305,6 +305,7 @@ struct output_config {
 	bool set_color_transform;
 	struct wlr_color_transform *color_transform;
 	int allow_tearing;
+	int hdr;
 
 	// scroller layout options
 	enum sway_container_layout layout_type;
