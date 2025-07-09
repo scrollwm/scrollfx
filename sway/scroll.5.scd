@@ -1472,7 +1472,52 @@ file for execution when it loads.
 
 The module is called *scroll*.
 
+A script should start by receiving its arguments and state, like:
+
+```
+local args, state = ...
+```
+
+You can call the same script many times with the same or different arguments,
+and you can check the arguments passed to the script on each invokation using
+the variable _args_ if you store it at startup.
+
+_state_ is another special variable that allows you to store script-local data
+preserved between script runs. These data are global to different runs of the
+same script (even if using different arguments), but local to that script (not
+shared with other scripts).
+
+```
+local args, state = ...
+
+for _, arg in ipairs(args) do
+  print(arg)
+end
+
+local val = scroll.state_get_value(state, "test")
+
+if val == nil then
+  scroll.state_set_value(state, "test", 1)
+else
+  scroll.state_set_value(state, "test", val + 1)
+end
+
+print(val)
+```
+
+Each time you run the script, it will increment and print the value for "test".
+
 This is the current supported API:
+
+*log(message)*
+	Add _message_ to the DEBUG log of scroll.
+
+*state_set_value(state, key, value)*
+	Sets _key_ = _value_ in the script's _state_. This value will be preserved
+	between script runs.
+
+*state_get_value(state, key)*
+	Returns the value stored at _key_ in the script's _state_.
 
 *command(container|nil, command)*
 	Execute a scroll _command_ with _container_ as its context. If _container_ 
