@@ -1347,7 +1347,7 @@ void container_fullscreen_disable(struct sway_container *con) {
 	}
 	set_fullscreen(con, false, false);
 
-	if (container_is_floating(con)) {
+	if (container_is_floating(con) || con->free_size) {
 		con->pending.x = con->saved_x;
 		con->pending.y = con->saved_y;
 		con->pending.width = con->saved_width;
