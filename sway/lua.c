@@ -6,6 +6,7 @@
 #include "sway/tree/view.h"
 #include "sway/tree/container.h"
 #include "sway/tree/workspace.h"
+#include "sway/output.h"
 
 #if 0
 static void print_stack(lua_State *L) {
@@ -346,7 +347,11 @@ static int scroll_container_get_workspace(lua_State *L) {
 		return 1;
 	}
 	struct sway_container *container = lua_touserdata(L, -1);
-	lua_pushlightuserdata(L, container ? container->pending.workspace : NULL);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushlightuserdata(L, container->pending.workspace);
 	return 1;
 }
 
@@ -357,7 +362,7 @@ static int scroll_container_get_marks(lua_State *L) {
 		return 1;
 	}
 	struct sway_container *container = lua_touserdata(L, -1);
-	if (!container) {
+	if (!container || container->node.type != N_CONTAINER) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}
@@ -378,7 +383,11 @@ static int scroll_container_get_floating(lua_State *L) {
 		return 1;
 	}
 	struct sway_container *container = lua_touserdata(L, -1);
-	lua_pushboolean(L, container ? container_is_floating(container) : false);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	lua_pushboolean(L, container_is_floating(container));
 	return 1;
 }
 
@@ -389,7 +398,7 @@ static int scroll_container_get_opacity(lua_State *L) {
 		return 1;
 	}
 	struct sway_container *container = lua_touserdata(L, -1);
-	if (!container) {
+	if (!container || container->node.type != N_CONTAINER) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -404,11 +413,106 @@ static int scroll_container_get_sticky(lua_State *L) {
 		return 1;
 	}
 	struct sway_container *container = lua_touserdata(L, -1);
-	if (!container) {
+	if (!container || container->node.type != N_CONTAINER) {
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 	lua_pushboolean(L, container->is_sticky);
+	return 1;
+}
+
+static int scroll_container_get_free_size(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	lua_pushboolean(L, container->free_size);
+	return 1;
+}
+
+static int scroll_container_get_width_fraction(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnumber(L, 0.0);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushnumber(L, 0.0);
+		return 1;
+	}
+	lua_pushnumber(L, container->width_fraction);
+	return 1;
+}
+
+static int scroll_container_get_height_fraction(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnumber(L, 0.0);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushnumber(L, 0.0);
+		return 1;
+	}
+	lua_pushnumber(L, container->height_fraction);
+	return 1;
+}
+
+static int scroll_container_get_fullscreen_mode(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushstring(L, "none");
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushstring(L, "none");
+		return 1;
+	}
+	switch (container->pending.fullscreen_mode) {
+	case FULLSCREEN_NONE:
+		lua_pushstring(L, "none");
+		break;
+	case FULLSCREEN_WORKSPACE:
+		lua_pushstring(L, "workspace");
+		break;
+	case FULLSCREEN_GLOBAL:
+		lua_pushstring(L, "global");
+		break;
+	}
+	return 1;
+}
+
+static int scroll_container_get_fullscreen_app_mode(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushstring(L, "default");
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushstring(L, "default");
+		return 1;
+	}
+	switch (container->pending.fullscreen_mode) {
+	case FULLSCREEN_APP_DEFAULT:
+		lua_pushstring(L, "default");
+		break;
+	case FULLSCREEN_APP_DISABLED:
+		lua_pushstring(L, "disabled");
+		break;
+	case FULLSCREEN_APP_ENABLED:
+		lua_pushstring(L, "enabled");
+		break;
+	}
 	return 1;
 }
 
@@ -636,6 +740,83 @@ static int scroll_scratchpad_get_containers(lua_State *L) {
 	return 1;
 }
 
+static int scroll_output_get_active_workspace(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_output *output = lua_touserdata(L, -1);
+	if (!output || output->node.type != N_OUTPUT) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushlightuserdata(L, output->current.active_workspace);
+	return 1;
+}
+
+static int scroll_output_get_enabled(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	struct sway_output *output = lua_touserdata(L, -1);
+	if (!output || output->node.type != N_OUTPUT) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	lua_pushboolean(L, output->enabled);
+	return 1;
+}
+
+static int scroll_output_get_name(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_output *output = lua_touserdata(L, -1);
+	if (!output || output->node.type != N_OUTPUT) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushstring(L, output->wlr_output->name);
+	return 1;
+}
+
+static int scroll_output_get_workspaces(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	struct sway_output *output = lua_touserdata(L, -1);
+	if (!output || output->node.type != N_OUTPUT) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	lua_checkstack(L, output->workspaces->length + STACK_MIN);
+	lua_createtable(L, output->workspaces->length, 0);
+	for (int i = 0; i < output->workspaces->length; ++i) {
+		struct sway_workspace *workspace = output->workspaces->items[i];
+		lua_pushlightuserdata(L, workspace);
+		lua_rawseti(L, -2, i + 1);
+	}
+	return 1;
+}
+
+static int scroll_root_get_outputs(lua_State *L) {
+	lua_checkstack(L, root->outputs->length + STACK_MIN);
+	lua_createtable(L, root->outputs->length, 0);
+	for (int i = 0; i < root->outputs->length; ++i) {
+		struct sway_output *output = root->outputs->items[i];
+		lua_pushlightuserdata(L, output);
+		lua_rawseti(L, -2, i + 1);
+	}
+	return 1;
+}
+
 // local id = scroll.add_callback(event, on_create, data)
 static int scroll_add_callback(lua_State *L) {
 	int argc = lua_gettop(L);
@@ -723,12 +904,22 @@ static luaL_Reg const scroll_lib[] = {
 	{ "container_get_floating", scroll_container_get_floating },
 	{ "container_get_opacity", scroll_container_get_opacity },
 	{ "container_get_sticky", scroll_container_get_sticky },
+	{ "container_get_free_size", scroll_container_get_free_size },
+	{ "container_get_width_fraction", scroll_container_get_width_fraction },
+	{ "container_get_height_fraction", scroll_container_get_height_fraction },
+	{ "container_get_fullscreen_mode", scroll_container_get_fullscreen_mode },
+	{ "container_get_fullscreen_app_mode", scroll_container_get_fullscreen_app_mode },
 	{ "container_get_views", scroll_container_get_views },
 	{ "workspace_get_name", scroll_workspace_get_name },
 	{ "workspace_get_tiling", scroll_workspace_get_tiling },
 	{ "workspace_get_floating", scroll_workspace_get_floating },
 	{ "workspace_get_mode", scroll_workspace_get_mode },
 	{ "workspace_set_mode", scroll_workspace_set_mode },
+	{ "output_get_enabled", scroll_output_get_enabled },
+	{ "output_get_name", scroll_output_get_name },
+	{ "output_get_active_workspace", scroll_output_get_active_workspace },
+	{ "output_get_workspaces", scroll_output_get_workspaces },
+	{ "root_get_outputs", scroll_root_get_outputs },
 	{ "scratchpad_get_containers", scroll_scratchpad_get_containers },
 	{ "add_callback", scroll_add_callback },
 	{ "remove_callback", scroll_remove_callback },
