@@ -92,14 +92,36 @@ static int scroll_state_set_value(lua_State *L) {
 	return 0;
 }
 
+static bool find_container(struct sway_container *container, void *data) {
+	struct sway_container *con = data;
+	return container == con;
+}
+
 // scroll.command(container|nil, command)
 static int scroll_command(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc < 2) {
-		lua_createtable(L, 0, 0);
+		lua_createtable(L, 1, 0);
+		lua_pushstring(L, "Error: scroll_command() received a wrong number of parameters");
+		lua_rawseti(L, -2, 1);
 		return 1;
 	}
 	struct sway_container *container = lua_isnil(L, 1) ? NULL : lua_touserdata(L, 1);
+	if (container && container->node.type != N_CONTAINER) {
+		lua_createtable(L, 1, 0);
+		lua_pushstring(L, "Error: scroll_command() received a parameter that is not a container");
+		lua_rawseti(L, -2, 1);
+		return 1;
+	}
+	if (container) {
+		struct sway_container *found = root_find_container(find_container, container);
+		if (!found) {
+			lua_createtable(L, 1, 0);
+			lua_pushstring(L, "Error: scroll_command() received a container parameter that does not exist");
+			lua_rawseti(L, -2, 1);
+			return 1;
+		}
+	}
 	const char *lua_cmd = luaL_checkstring(L, 2);
 	char *cmd = strdup(lua_cmd);
 	list_t *results = execute_command(cmd, NULL, container);
@@ -126,10 +148,14 @@ static struct sway_node *get_focused_node() {
 
 static int scroll_focused_view(lua_State *L) {
 	struct sway_node *node = get_focused_node();
+	if (!node) {
+		lua_pushnil(L);
+		return 1;
+	}
 	struct sway_container *container = node->type == N_CONTAINER ?
 		node->sway_container : NULL;
 
-	if (container->view) {
+	if (container && container->view) {
 		lua_pushlightuserdata(L, container->view);
 	} else {
 		lua_pushnil(L);
@@ -139,6 +165,10 @@ static int scroll_focused_view(lua_State *L) {
 
 static int scroll_focused_container(lua_State *L) {
 	struct sway_node *node = get_focused_node();
+	if (!node) {
+		lua_pushnil(L);
+		return 1;
+	}
 	struct sway_container *container = node->type == N_CONTAINER ?
 		node->sway_container : NULL;
 
@@ -152,8 +182,18 @@ static int scroll_focused_container(lua_State *L) {
 
 static int scroll_focused_workspace(lua_State *L) {
 	struct sway_node *node = get_focused_node();
-	struct sway_workspace *workspace = node->type == N_WORKSPACE ?
-		node->sway_workspace : node->sway_container->pending.workspace;
+	if (!node) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_workspace *workspace;
+	if (node->type == N_WORKSPACE) {
+		workspace = node->sway_workspace;
+	} else if (node->type == N_CONTAINER) {
+		workspace = node->sway_container->pending.workspace;
+	} else {
+		workspace = NULL;
+	}
 
 	if (workspace) {
 		lua_pushlightuserdata(L, workspace);
@@ -551,7 +591,7 @@ static int scroll_workspace_get_name(lua_State *L) {
 		return 1;
 	}
 	struct sway_workspace *workspace = lua_touserdata(L, -1);
-	if (!workspace) {
+	if (!workspace || workspace->node.type != N_WORKSPACE) {
 		lua_pushnil(L);
 		return 1;
 	}
@@ -588,7 +628,8 @@ static int scroll_workspace_get_floating(lua_State *L) {
 		return 1;
 	}
 	struct sway_workspace *workspace = lua_touserdata(L, -1);
-	if (!workspace || workspace->node.type != N_WORKSPACE) {
+	if (!workspace || workspace->node.type != N_WORKSPACE ||
+		workspace->floating->length == 0) {
 		lua_createtable(L, 0, 0);
 		return 1;
 	}
