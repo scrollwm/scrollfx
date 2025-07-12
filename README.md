@@ -495,6 +495,27 @@ animations {
 }
 ```
 
+### Spaces
+
+A *space* is a configuration of existing windows. You can control spaces with
+the command `space load|save|restore name`.
+
+Saving a *space* stores the current configuration of the workspace, including
+window geometry and positions, content scale etc.
+
+Loading a *space* recovers the windows that still exist from that space and
+applies the stored configuration to them. This only applies to windows that
+still exist, if you have closed any windows from the space, they won't be
+recovered. You can load a space in any workspace, it doesn't have to be the
+original one. Loading the space will gather all the windows in the saved space
+from any workspace where they may currently be.
+
+Restoring a *space* is like loading a space, but any window in the workspace
+where loading happens that doesn't belong to the space, will be closed. You
+can use this if you have opened several disposable applications in your
+workspace and want to remove the clutter by restoring your original
+configuration/space.
+
 
 ### Pins
 

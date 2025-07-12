@@ -199,6 +199,7 @@ sway_cmd cmd_shortcuts_inhibitor;
 sway_cmd cmd_show_marks;
 sway_cmd cmd_smart_borders;
 sway_cmd cmd_smart_gaps;
+sway_cmd cmd_space;
 sway_cmd cmd_sticky;
 sway_cmd cmd_swaybg_command;
 sway_cmd cmd_swaynag_command;

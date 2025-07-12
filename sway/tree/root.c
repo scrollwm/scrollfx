@@ -77,10 +77,13 @@ struct sway_root *root_create(struct wl_display *wl_display) {
 
 	root->overview = false;
 
+	root->spaces = create_list();
+
 	return root;
 }
 
 void root_destroy(struct sway_root *root) {
+	list_free(root->spaces);
 	list_free(root->scratchpad);
 	list_free(root->non_desktop_outputs);
 	list_free(root->outputs);
