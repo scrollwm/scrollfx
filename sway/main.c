@@ -226,7 +226,7 @@ static const struct option long_options[] = {
 };
 
 static const char usage[] =
-	"Usage: sway [options] [command]\n"
+	"Usage: scroll [options] [command]\n"
 	"\n"
 	"  -h, --help             Show help message and quit.\n"
 	"  -c, --config <config>  Specify a config file.\n"
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
 			allow_unsupported_gpu = true;
 			break;
 		case 'v': // version
-			printf("sway version " SWAY_VERSION "\n");
+			printf("scroll version " SWAY_VERSION "\n");
 			exit(EXIT_SUCCESS);
 			break;
 		case 'V': // verbose
@@ -282,7 +282,7 @@ int main(int argc, char **argv) {
 				printf("%s\n", getenv("SCROLLSOCK"));
 				exit(EXIT_SUCCESS);
 			} else {
-				fprintf(stderr, "sway socket not detected.\n");
+				fprintf(stderr, "scroll socket not detected.\n");
 				exit(EXIT_FAILURE);
 			}
 			break;
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
 		wlr_log_init(WLR_ERROR, handle_wlr_log);
 	}
 
-	sway_log(SWAY_INFO, "Sway version " SWAY_VERSION);
+	sway_log(SWAY_INFO, "Scroll version " SWAY_VERSION);
 	sway_log(SWAY_INFO, "wlroots version " WLR_VERSION_STR);
 	log_kernel();
 	log_distro();
@@ -330,9 +330,9 @@ int main(int argc, char **argv) {
 					"Detected both options and positional arguments. If you "
 					"are trying to use the IPC client, options are not "
 					"supported. Otherwise, check the provided arguments for "
-					"issues. See `man 1 sway` or `sway -h` for usage. If you "
+					"issues. See `man 1 scroll` or `scroll -h` for usage. If you "
 					"are trying to generate a debug log, use "
-					"`sway -d 2>sway.log`.");
+					"`scroll -d 2>scroll.log`.");
 			exit(EXIT_FAILURE);
 		}
 		char *socket_path = getenv("SCROLLSOCK");
@@ -348,7 +348,7 @@ int main(int argc, char **argv) {
 
 	increase_nofile_limit();
 
-	sway_log(SWAY_INFO, "Starting sway version " SWAY_VERSION);
+	sway_log(SWAY_INFO, "Starting scroll version " SWAY_VERSION);
 
 	if (!server_init(&server)) {
 		return 1;
@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
 	server_run(&server);
 
 shutdown:
-	sway_log(SWAY_INFO, "Shutting down sway");
+	sway_log(SWAY_INFO, "Shutting down scroll");
 
 	server_fini(&server);
 	root_destroy(root);
