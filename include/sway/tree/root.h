@@ -74,6 +74,8 @@ struct sway_root {
 	} events;
 
 	bool overview;
+
+	list_t *spaces;
 };
 
 struct sway_root *root_create(struct wl_display *display);

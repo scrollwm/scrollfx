@@ -631,6 +631,26 @@ set|plus|minus|toggle <amount>
 	established by the *seat* subcommand of the same name. See
 	*scroll-input*(5) for more ways to affect inhibitors.
 
+*space* save|load|restore name
+	A _space_ is a configuration of existing windows.
+
+	_save_ stores the configuration of the current workspace, including
+	window/container geometry and positions, content scale etc. under _name_.
+
+	_load_ recovers the windows that still exist from that space and
+	applies the configuration stored under _name_ to them. This only applies
+	to windows that still exist, if you have closed any windows from the space,
+	they won't be recovered. You can load a space in any workspace, it doesn't
+	have to be the original one. Loading the space will gather all the windows
+	in the saved space from any workspace where they may currently be, and set
+	them in the current workspace using the configuration under _name_.
+
+	_restore_ is like loading a space, but any window in the workspace where
+	loading happens that doesn't belong to the space, will be closed. You can
+	use this if you have opened several disposable applications in your
+	workspace and want to remove the clutter by restoring your original
+	configuration/space.
+
 *sticky* enable|disable|toggle
 	"Sticks" a floating window to the current output so that it shows up on all
 	workspaces.

@@ -222,4 +222,9 @@ int layout_trails_active();
 int layout_trails_active_length();
 bool layout_trails_trailmarked(struct sway_view *view);
 
+// Space
+struct sway_space;
+
+void layout_space_restore(struct sway_space *space, struct sway_workspace *workspace, bool reset);
+
 #endif // _SWAY_LAYOUT_H
