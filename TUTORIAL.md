@@ -338,6 +338,7 @@ mode "spaces" {
 bindsym $mod+g mode "spaces"
 ```
 
+[Spaces](https://github.com/user-attachments/assets/32a076db-5cf1-49d1-8132-3822a137d231)
 
 
 ## Scratchpad
