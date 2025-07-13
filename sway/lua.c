@@ -97,34 +97,50 @@ static bool find_container(struct sway_container *container, void *data) {
 	return container == con;
 }
 
-// scroll.command(container|nil, command)
+static bool find_workspace(struct sway_workspace *workspace, void *data) {
+	struct sway_workspace *ws = data;
+	return workspace == ws;
+}
+
+static int scroll_command_error(lua_State *L, const char *error) {
+	lua_createtable(L, 1, 0);
+	lua_pushstring(L, error);
+	lua_rawseti(L, -2, 1);
+	return 1;
+}
+
+// scroll.command(container|workspace|nil, command)
 static int scroll_command(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc < 2) {
-		lua_createtable(L, 1, 0);
-		lua_pushstring(L, "Error: scroll_command() received a wrong number of parameters");
-		lua_rawseti(L, -2, 1);
-		return 1;
+		return scroll_command_error(L, "Error: scroll_command() received a wrong number of parameters");
 	}
-	struct sway_container *container = lua_isnil(L, 1) ? NULL : lua_touserdata(L, 1);
-	if (container && container->node.type != N_CONTAINER) {
-		lua_createtable(L, 1, 0);
-		lua_pushstring(L, "Error: scroll_command() received a parameter that is not a container");
-		lua_rawseti(L, -2, 1);
-		return 1;
-	}
-	if (container) {
+	void *node = lua_isnil(L, 1) ? NULL : lua_touserdata(L, 1);
+	struct sway_seat *seat = input_manager_current_seat();
+	struct sway_container *container = node;
+	if (container && container->node.type == N_CONTAINER) {
 		struct sway_container *found = root_find_container(find_container, container);
 		if (!found) {
-			lua_createtable(L, 1, 0);
-			lua_pushstring(L, "Error: scroll_command() received a container parameter that does not exist");
-			lua_rawseti(L, -2, 1);
-			return 1;
+			return scroll_command_error(L, "Error: scroll_command() received a container parameter that does not exist");
+		}
+		seat_set_raw_focus(seat, &container->node);
+	} else {
+		struct sway_workspace *workspace = node;
+		if (workspace && workspace->node.type == N_WORKSPACE) {
+			struct sway_workspace *found = root_find_workspace(find_workspace, workspace);
+			if (!found) {
+				return scroll_command_error(L, "Error: scroll_command() received a workspace parameter that does not exist");
+			}
+			seat_set_raw_focus(seat, &workspace->node);
+		} else if (node == NULL) {
+			seat = NULL;
+		} else {
+			return scroll_command_error(L, "Error: scroll_command() received a parameter that is neither a container nor a workspace");
 		}
 	}
 	const char *lua_cmd = luaL_checkstring(L, 2);
 	char *cmd = strdup(lua_cmd);
-	list_t *results = execute_command(cmd, NULL, container);
+	list_t *results = execute_command(cmd, seat, NULL);
 	lua_checkstack(L, results->length + STACK_MIN);
 	lua_createtable(L, results->length, 0);
 	for (int i = 0; i < results->length; ++i) {
@@ -141,7 +157,7 @@ static int scroll_command(lua_State *L) {
 }
 
 static struct sway_node *get_focused_node() {
-	struct sway_seat *seat = input_manager_get_default_seat();
+	struct sway_seat *seat = input_manager_current_seat();
 	struct sway_node *node = seat_get_focus_inactive(seat, &root->node);
 	return node;
 }
@@ -770,6 +786,50 @@ static int scroll_workspace_set_mode(lua_State *L) {
 	return 0;
 }
 
+static int scroll_workspace_get_layout_type(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_workspace *workspace = lua_touserdata(L, -1);
+	if (!workspace || workspace->node.type != N_WORKSPACE) {
+		lua_pushnil(L);
+		return 1;
+	}
+	enum sway_container_layout type = layout_get_type(workspace);
+	switch (type) {
+	case L_HORIZ:
+		lua_pushstring(L, "horizontal");
+		break;
+	case L_VERT:
+		lua_pushstring(L, "vertical");
+		break;
+	default:
+		lua_pushnil(L);
+		break;
+	}
+	return 1;
+}
+
+static int scroll_workspace_set_layout_type(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc < 2) {
+		return 0;
+	}
+	struct sway_workspace *workspace = lua_touserdata(L, 1);
+	if (!workspace || workspace->node.type != N_WORKSPACE) {
+		return 0;
+	}
+	const char *layout = luaL_checkstring(L, 2);
+	if (strcmp(layout, "horizontal") == 0) {
+		layout_set_type(workspace, L_HORIZ);
+	} else if (strcmp(layout, "vertical") == 0) {
+		layout_set_type(workspace, L_VERT);
+	}
+	return 0;
+}
+
 static int scroll_scratchpad_get_containers(lua_State *L) {
 	lua_checkstack(L, root->scratchpad->length + STACK_MIN);
 	lua_createtable(L, root->scratchpad->length, 0);
@@ -875,6 +935,8 @@ static int scroll_add_callback(lua_State *L) {
 		list_add(config->lua.cbs_view_unmap, closure);
 	} else if (strcmp(event, "view_urgent") == 0) {
 		list_add(config->lua.cbs_view_urgent, closure);
+	} else if (strcmp(event, "workspace_create") == 0) {
+		list_add(config->lua.cbs_workspace_create, closure);
 	} else {
 		free(closure);
 		lua_pushnil(L);
@@ -912,6 +974,15 @@ static int scroll_remove_callback(lua_State *L) {
 	for (int i = 0; i < config->lua.cbs_view_urgent->length; ++i) {
 		if (config->lua.cbs_view_urgent->items[i] == closure) {
 			list_del(config->lua.cbs_view_urgent, i);
+			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+			free(closure);
+			return 0;
+		}
+	}
+	for (int i = 0; i < config->lua.cbs_workspace_create->length; ++i) {
+		if (config->lua.cbs_workspace_create->items[i] == closure) {
+			list_del(config->lua.cbs_workspace_create, i);
 			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
 			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
 			free(closure);
@@ -956,6 +1027,8 @@ static luaL_Reg const scroll_lib[] = {
 	{ "workspace_get_floating", scroll_workspace_get_floating },
 	{ "workspace_get_mode", scroll_workspace_get_mode },
 	{ "workspace_set_mode", scroll_workspace_set_mode },
+	{ "workspace_get_layout_type", scroll_workspace_get_layout_type },
+	{ "workspace_set_layout_type", scroll_workspace_set_layout_type },
 	{ "output_get_enabled", scroll_output_get_enabled },
 	{ "output_get_name", scroll_output_get_name },
 	{ "output_get_active_workspace", scroll_output_get_active_workspace },

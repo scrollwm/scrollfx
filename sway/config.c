@@ -183,6 +183,7 @@ void free_config(struct sway_config *config) {
 	list_free_items_and_destroy(config->lua.cbs_view_map);
 	list_free_items_and_destroy(config->lua.cbs_view_unmap);
 	list_free_items_and_destroy(config->lua.cbs_view_urgent);
+	list_free_items_and_destroy(config->lua.cbs_workspace_create);
 	for (int i = 0; i < config->lua.scripts->length; ++i) {
 		struct sway_lua_script *script = config->lua.scripts->items[i];
 		free(script->name);
@@ -296,6 +297,7 @@ static void config_defaults(struct sway_config *config) {
 	if (!(config->lua.cbs_view_map = create_list())) goto cleanup;
 	if (!(config->lua.cbs_view_unmap = create_list())) goto cleanup;
 	if (!(config->lua.cbs_view_urgent = create_list())) goto cleanup;
+	if (!(config->lua.cbs_workspace_create = create_list())) goto cleanup;
 	luaL_openlibs(config->lua.state);
 	luaL_requiref(config->lua.state, "scroll", luaopen_scroll, 1);
 	lua_pop(config->lua.state, 1);

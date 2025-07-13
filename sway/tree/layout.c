@@ -2789,6 +2789,7 @@ bool layout_selection_move(struct sway_workspace *new_workspace) {
 			if (tiling_selection->length + floating_selection->length > selected) {
 				arrange_workspace(workspace);
 				workspace_update_representation(workspace);
+				workspace_consider_destroy(workspace);
 				node_set_dirty(&workspace->node);
 			}
 			// Now finally remove the containers (and possibly the workspace)
