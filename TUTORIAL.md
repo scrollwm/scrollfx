@@ -293,6 +293,53 @@ was hidden behind.
 [Jump](https://github.com/user-attachments/assets/33bec595-148f-4449-bcd6-e1cc9e5b9a1a)
 
 
+## Spaces
+
+A space is a configuration of existing windows. You can set your workspace and
+save a named "space" with that configuration. You can later on recall that
+configuration on the same or any other workspace. scroll will gather the
+windows from their location and set them up as they were when you saved the
+space.
+
+``` config
+mode "spaces" {
+    bindsym 1 space load 1; mode default
+    bindsym 2 space load 2; mode default
+    bindsym 3 space load 3; mode default
+    bindsym 4 space load 4; mode default
+    bindsym 5 space load 5; mode default
+    bindsym 6 space load 6; mode default
+    bindsym 7 space load 7; mode default
+    bindsym 8 space load 8; mode default
+    bindsym 9 space load 9; mode default
+    bindsym 0 space load 0; mode default
+    bindsym Shift+1 space save 1; mode default
+    bindsym Shift+2 space save 2; mode default
+    bindsym Shift+3 space save 3; mode default
+    bindsym Shift+4 space save 4; mode default
+    bindsym Shift+5 space save 5; mode default
+    bindsym Shift+6 space save 6; mode default
+    bindsym Shift+7 space save 7; mode default
+    bindsym Shift+8 space save 8; mode default
+    bindsym Shift+9 space save 9; mode default
+    bindsym Shift+0 space save 0; mode default
+    bindsym Ctrl+1 space restore 1; mode default
+    bindsym Ctrl+2 space restore 2; mode default
+    bindsym Ctrl+3 space restore 3; mode default
+    bindsym Ctrl+4 space restore 4; mode default
+    bindsym Ctrl+5 space restore 5; mode default
+    bindsym Ctrl+6 space restore 6; mode default
+    bindsym Ctrl+7 space restore 7; mode default
+    bindsym Ctrl+8 space restore 8; mode default
+    bindsym Ctrl+9 space restore 9; mode default
+    bindsym Ctrl+0 space restore 0; mode default
+    bindsym Escape mode "default"
+}
+bindsym $mod+g mode "spaces"
+```
+
+
+
 ## Scratchpad
 
 *scroll* adds some functionality to *sway*'s scratchpad. By using `scratchpad jump`
@@ -418,6 +465,47 @@ gestures to scroll windows, call *overview* and switch workspaces.
 
 You can also scroll windows with the mouse. Press `mod` and the middle mouse
 button, and you can drag/scroll columns and windows.
+
+
+## Lua API
+
+scroll is programmable through an exposed Lua API. You can write scripts that
+access the internals of the window manager, listen to events and execute
+commands. Follow this [link](https://github.com/dawsers/scroll/issues/35) for
+examples and requests.
+
+``` lua
+local function candidate(view)
+  local app_id = scroll.view_get_app_id(view)
+  if app_id == "mpv" then
+    local pview = scroll.view_get_parent_view(view)
+    if pview ~= nil and pview ~= view then
+      local papp_id = scroll.view_get_app_id(pview)
+      if papp_id == "kitty" then
+        return scroll.view_get_container(pview)
+      end
+    end
+  end
+  return nil
+end
+
+local function on_create(view, _)
+  local parent = candidate(view)
+  if parent ~= nil then
+    scroll.command(parent, "move scratchpad")
+  end
+end
+
+local function on_destroy(view, _)
+  local parent = candidate(view)
+  if parent ~= nil then
+    scroll.command(nil, "scratchpad show; floating toggle")
+  end
+end
+
+scroll.add_callback("view_map", on_create, nil)
+scroll.add_callback("view_unmap", on_destroy, nil)
+```
 
 ## Example Configuration
 
