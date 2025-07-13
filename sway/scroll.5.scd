@@ -1539,10 +1539,10 @@ This is the current supported API:
 *state_get_value(state, key)*
 	Returns the value stored at _key_ in the script's _state_.
 
-*command(container|nil, command)*
-	Execute a scroll _command_ with _container_ as its context. If _container_ 
-	is _nil_, use the default context, usually the focused container or
-	workspace. Returns all the results/errors in an array.
+*command(container|workspace|nil, command)*
+	Execute a scroll _command_ with _container_ or _workspace_ as its context.
+	If the first parameter is _nil_, use the default context, usually the
+	focused container or workspace. Returns all the results/errors in an array.
 
 ```
 scroll.command(nil, "set_size v 0.33333333; move left nomode")

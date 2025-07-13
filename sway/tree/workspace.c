@@ -130,6 +130,15 @@ struct sway_workspace *workspace_create(struct sway_output *output,
 
 	layout_init(ws);
 
+	// Lua callbacks
+	for (int i = 0; i < config->lua.cbs_workspace_create->length; ++i) {
+		struct sway_lua_closure *closure = config->lua.cbs_workspace_create->items[i];
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+		lua_pushlightuserdata(config->lua.state, ws);
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+		lua_call(config->lua.state, 2, 0);
+	}
+
 	return ws;
 }
 
