@@ -48,8 +48,11 @@ documentation, as compatibility is very high.
 
 [Example configuration](https://github.com/dawsers/scroll/blob/master/config.in)
 
-You can also read *scroll's* man pages for details on the commands. They are
-mostly up to date.
+*scroll's* man pages are the best source of documentation for details on all
+the commands. They are up to date. Read `man 5 scroll` for reference on any
+command or the Lua API. If you haven't installed scroll yet, you can find the
+source for the manual
+[here](https://github.com/dawsers/scroll/blob/master/sway/scroll.5.scd).
 
 ``` bash
 man 5 scroll

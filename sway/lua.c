@@ -558,7 +558,7 @@ static int scroll_container_get_fullscreen_app_mode(lua_State *L) {
 		lua_pushstring(L, "default");
 		return 1;
 	}
-	switch (container->pending.fullscreen_mode) {
+	switch (container->pending.fullscreen_application) {
 	case FULLSCREEN_APP_DEFAULT:
 		lua_pushstring(L, "default");
 		break;
