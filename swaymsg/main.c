@@ -632,6 +632,8 @@ int main(int argc, char **argv) {
 		type = IPC_GET_SCROLLER;
 	} else if (strcasecmp(cmdtype, "get_trails") == 0) {
 		type = IPC_GET_TRAILS;
+	} else if (strcasecmp(cmdtype, "get_spaces") == 0) {
+		type = IPC_GET_SPACES;
 	} else {
 		if (quiet) {
 			exit(EXIT_FAILURE);
