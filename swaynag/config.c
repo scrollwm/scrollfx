@@ -105,7 +105,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 	};
 
 	const char *usage =
-		"Usage: swaynag [options...]\n"
+		"Usage: scrollnag [options...]\n"
 		"\n"
 		"  -b, --button <text> <action>  Create a button with text that "
 			"executes action in a terminal when pressed. Multiple buttons can "
@@ -113,7 +113,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		"  -B, --button-no-terminal <text> <action>  Like --button, but does"
 			"not run the action in a terminal.\n"
 		"  -z, --button-dismiss <text> <action>  Create a button with text that "
-			"dismisses swaynag, and executes action in a terminal when pressed. "
+			"dismisses scrollnag, and executes action in a terminal when pressed. "
 			"Multiple buttons can be defined.\n"
 		"  -Z, --button-dismiss-no-terminal <text> <action>  Like "
 			"--button-dismiss, but does not run the action in a terminal.\n"
@@ -275,7 +275,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 			}
 			break;
 		case 'v': // Version
-			printf("swaynag version " SWAY_VERSION "\n");
+			printf("scrollnag version " SWAY_VERSION "\n");
 			return -1;
 		case TO_COLOR_BACKGROUND: // Background color
 			if (type && !parse_color(optarg, &type->background)) {
@@ -437,7 +437,7 @@ int swaynag_load_config(char *path, struct swaynag *swaynag, list_t *types) {
 				return EXIT_FAILURE;
 			}
 			snprintf(flag, nread + 3, "--%s", line);
-			char *argv[] = {"swaynag", flag};
+			char *argv[] = {"scrollnag", flag};
 			result = swaynag_parse_options(2, argv, swaynag, types, type,
 					NULL, NULL);
 			free(flag);

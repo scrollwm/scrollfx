@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 		"\n"
 		"  -h, --help             Show help message and quit.\n"
 		"  -v, --version          Show the version number and quit.\n"
-		"  -s, --socket <socket>  Connect to sway via socket.\n"
+		"  -s, --socket <socket>  Connect to scroll via socket.\n"
 		"  -b, --bar_id <id>      Bar ID for which to get the configuration.\n"
 		"  -d, --debug            Enable debugging.\n"
 		"\n"
