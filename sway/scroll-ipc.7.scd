@@ -90,6 +90,9 @@ supported. *For all replies, any properties not listed are subject to removal.*
 |- 121
 :  GET_TRAILS
 :  Get information about trails
+|- 122
+:  GET_SPACES
+:  Get information about spaces
 
 ## 0. RUN_COMMAND
 
@@ -1555,6 +1558,22 @@ An object called "trails", containing the following properties:
 		"trail_length": 3
 	}
 }
+```
+
+## 122. GET_SPACES
+
+*MESSAGE*++
+Retrieve the names of the existing spaces
+
+*REPLY*++
+An array with the names of the existing spaces.
+
+*Example Reply:*
+```
+[
+	"1",
+	"2"
+]
 ```
 
 

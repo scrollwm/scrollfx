@@ -27,6 +27,7 @@
 #include "sway/tree/root.h"
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
+#include "sway/tree/space.h"
 #include "list.h"
 #include "log.h"
 #include "util.h"
@@ -978,6 +979,20 @@ void ipc_client_handle_command(struct ipc_client *client, uint32_t payload_lengt
 		ipc_send_reply(client, payload_type, json_string,
 			(uint32_t)strlen(json_string));
 		json_object_put(json); // free
+		goto exit_cleanup;
+	}
+
+	case IPC_GET_SPACES:
+	{
+		json_object *spaces = json_object_new_array();
+		for (int i = 0; i < root->spaces->length; ++i) {
+			struct sway_space *space = root->spaces->items[i];
+			json_object_array_add(spaces, json_object_new_string(space->name));
+		}
+		const char *json_string = json_object_to_json_string(spaces);
+		ipc_send_reply(client, payload_type, json_string,
+			(uint32_t)strlen(json_string));
+		json_object_put(spaces);
 		goto exit_cleanup;
 	}
 
