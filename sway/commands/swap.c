@@ -80,6 +80,9 @@ struct cmd_results *cmd_swap(int argc, char **argv) {
 			|| container_has_ancestor(other, current)) {
 		error = cmd_results_new(CMD_FAILURE,
 				"Cannot swap ancestor and descendant");
+	} else if (!current->view || !other->view) {
+		error = cmd_results_new(CMD_FAILURE,
+				"Can only swap low level containers with views");
 	}
 
 	free(value);

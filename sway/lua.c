@@ -600,6 +600,21 @@ static int scroll_container_get_views(lua_State *L) {
 	return 1;
 }
 
+static int scroll_container_get_id(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushinteger(L, container->node.id);
+	return 1;
+}
+
 static int scroll_workspace_get_name(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc == 0) {
@@ -1022,6 +1037,7 @@ static luaL_Reg const scroll_lib[] = {
 	{ "container_get_fullscreen_mode", scroll_container_get_fullscreen_mode },
 	{ "container_get_fullscreen_app_mode", scroll_container_get_fullscreen_app_mode },
 	{ "container_get_views", scroll_container_get_views },
+	{ "container_get_id", scroll_container_get_id },
 	{ "workspace_get_name", scroll_workspace_get_name },
 	{ "workspace_get_tiling", scroll_workspace_get_tiling },
 	{ "workspace_get_floating", scroll_workspace_get_floating },

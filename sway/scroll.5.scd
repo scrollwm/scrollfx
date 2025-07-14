@@ -1632,6 +1632,9 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *container_get_views(container)*
 	Returns an array with all the views inside the _container_.
 
+*container_get_id(container)*
+	Returns an integer value with the unique container id, or nil if error.
+
 *workspace_get_name(workspace)*
 	Returns a string with the name of the _workspace_, or nil if error.
 

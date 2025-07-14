@@ -519,6 +519,33 @@ can use this if you have opened several disposable applications in your
 workspace and want to remove the clutter by restoring your original
 configuration/space.
 
+You can use the keybindings in the default configuration to manage spaces
+named from 0 to 9, or you can assign key bindings to the following script to
+name and manage your own space names which can be arbitrary, multiword strings.
+
+``` config
+bindsym $mod+g exec scroll-spaces.sh load
+bindsym $mod+Shift+g exec scroll-spaces.sh save
+bindsym $mod+Ctrl+g exec scroll-spaces.sh restore
+```
+
+`scroll-spaces.sh`
+
+``` bash
+#!/bin/bash
+
+if [ $1 == "save" ]; then
+    space=$(scrollmsg -t get_spaces | jq -r '.[]' | rofi -p "Save a new or overwrite an existing space" -dmenu)
+    scrollmsg "space save" "\"$space\""
+elif [ $1 == "load" ]; then
+    space=$(scrollmsg -t get_spaces | jq -r '.[]' | rofi -p "Load a space" -dmenu)
+    scrollmsg "space load" "\"$space\""
+elif [ $1 == "restore" ]; then
+    space=$(scrollmsg -t get_spaces | jq -r '.[]' | rofi -p "Restore a space - Windows not belonging to the space will be closed" -dmenu)
+    scrollmsg "space restore" "\"$space\""
+fi
+```
+
 
 ### Pins
 
@@ -965,7 +992,8 @@ scroll.command(nil, "workspace number 2; selection move")
 ```
 
 These are just a few examples. Read the manual to know more about the
-API.
+API, or check [this](https://github.com/dawsers/scroll/issues/35) issue
+for more examples and API requests.
 
 
 ## IPC
