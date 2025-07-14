@@ -1605,6 +1605,30 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *container_get_sticky(container)*
 	Returns _true_ if the container is sticky, otherwise _false_.
 
+*container_get_free_size(container)*
+	Returns _true_ if the container has a custom size, otherwise _false_. A
+	custom size is one that is not a fraction set by *cycle_size* or *set_size*.
+	When a container's size is set by calling *resize* or *fit_size*, its
+	geometry is not given by a layout fraction, and this flag is set to _true_.
+
+*container_get_width_fraction(container)*
+	Returns the value for the container's width fraction. This value is used
+	to compute the width of the container when _free_size_ is _false_.
+
+*container_get_height_fraction(container)*
+	Returns the value for the container's height fraction. This value is used
+	to compute the height of the container when _free_size_ is _false_.
+
+*container_get_fullscreen_mode(container)*
+	Returns a string with the _fullscreen_ state for _container_. Values can be
+	"none", "workspace" (covers only its workspace extents) or "global" (covers
+	all outputs).
+
+*container_get_fullscreen_app_mode(container)*
+	Returns a string with the _fullscreen_application_ state for _container_.
+	Values can be "default", "disabled" or "enabled". See the
+	*fullscreen_application* command for details.
+
 *container_get_views(container)*
 	Returns an array with all the views inside the _container_.
 
@@ -1650,6 +1674,28 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 
 	_center_vertical_: true|false
 
+*workspace_get_layout_type(workspace)*
+	Returns the layout type, _"horizontal"_ or _"vertical"_.
+
+*workspace_set_layout_type(workspace, layout_type)*
+	Sets the workspace's layout type to _layout_type_, which can be
+	_"horizontal"_ or _"vertical"_.
+
+*output_get_enabled(output)*
+	Returns _true_ if the output (display) is enabled, or _false_ otherwise.
+
+*output_get_name(output)*
+	Returns the name of the _output_'s interface. For example 'DP-3'.
+
+*output_get_active_workspace(output)*
+	Returns the workspace currently active on _output_.
+
+*output_get_workspaces(output)*
+	Returns an array with all the existing workspaces assigned to _output_.
+
+*root_get_outputs()*
+	Returns an array with all the outputs (displays).
+
 *scratchpad_get_containers()*
 	Returns an array with all the containers in the scratchpad.
 
@@ -1658,8 +1704,9 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 	it.
 
 	_event_ can be "view_map" (application's window creation), "view_unmap"
-	(application's window destruction), or "view_urgent" (a window gets the
-	urgent attribute set).
+	(application's window destruction), "view_urgent" (a window gets the
+	urgent attribute set), or "workspace_create" (called when a workspace is
+	ceated).
 
 	_cb_func_ is a Lua function with two parameters, _view_ (the view triggering
 	the event) and _data_, the _cb_data_ value passed when creating the
