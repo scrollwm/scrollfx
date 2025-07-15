@@ -39,7 +39,7 @@ static struct sway_space_container *space_container_create(struct sway_container
 		space_container->view = space_view_create(container->view, space_container,
 			container->view->content_scale);
 	} else {
-		container->view = NULL;
+		space_container->view = NULL;
 	}
 	space_container->width_fraction = container->width_fraction;
 	space_container->height_fraction = container->height_fraction;
