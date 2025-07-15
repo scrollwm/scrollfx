@@ -125,6 +125,7 @@ static int scroll_command(lua_State *L) {
 		}
 		seat_set_raw_focus(seat, &container->node);
 	} else {
+		container = NULL;
 		struct sway_workspace *workspace = node;
 		if (workspace && workspace->node.type == N_WORKSPACE) {
 			struct sway_workspace *found = root_find_workspace(find_workspace, workspace);
@@ -140,7 +141,7 @@ static int scroll_command(lua_State *L) {
 	}
 	const char *lua_cmd = luaL_checkstring(L, 2);
 	char *cmd = strdup(lua_cmd);
-	list_t *results = execute_command(cmd, seat, NULL);
+	list_t *results = execute_command(cmd, seat, container);
 	lua_checkstack(L, results->length + STACK_MIN);
 	lua_createtable(L, results->length, 0);
 	for (int i = 0; i < results->length; ++i) {
