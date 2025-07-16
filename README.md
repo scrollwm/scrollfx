@@ -34,6 +34,9 @@ supports some added features:
   portrait or landscape monitors. You can define the layout orientation per
   output (monitor).
 
+For more videos explaining the different features, check the
+[TUTORIAL](https://github.com/dawsers/scroll/blob/master/TUTORIAL.md).
+
 ## Documentation
 
 This README explains the basic differences between *sway/i3* and *scroll*. For

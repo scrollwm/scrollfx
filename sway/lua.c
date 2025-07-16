@@ -124,6 +124,7 @@ static int scroll_command(lua_State *L) {
 			return scroll_command_error(L, "Error: scroll_command() received a container parameter that does not exist");
 		}
 		seat_set_raw_focus(seat, &container->node);
+		seat = NULL;
 	} else {
 		container = NULL;
 		struct sway_workspace *workspace = node;
@@ -569,6 +570,45 @@ static int scroll_container_get_fullscreen_app_mode(lua_State *L) {
 	case FULLSCREEN_APP_ENABLED:
 		lua_pushstring(L, "enabled");
 		break;
+	}
+	return 1;
+}
+
+static int scroll_container_get_parent(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER ||
+		container->pending.parent == NULL) {
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushlightuserdata(L, container->pending.parent);
+	return 1;
+}
+
+static int scroll_container_get_children(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	struct sway_container *container = lua_touserdata(L, -1);
+	if (!container || container->node.type != N_CONTAINER ||
+		container->pending.children == NULL) {
+		lua_createtable(L, 0, 0);
+		return 1;
+	}
+	int len = container->pending.children->length;
+	lua_checkstack(L, len + STACK_MIN);
+	lua_createtable(L, len, 0);
+	for (int i = 0; i < len; ++i) {
+		struct sway_container *con = container->pending.children->items[i];
+		lua_pushlightuserdata(L, con);
+		lua_rawseti(L, -2, i + 1);
 	}
 	return 1;
 }
@@ -1037,6 +1077,8 @@ static luaL_Reg const scroll_lib[] = {
 	{ "container_get_height_fraction", scroll_container_get_height_fraction },
 	{ "container_get_fullscreen_mode", scroll_container_get_fullscreen_mode },
 	{ "container_get_fullscreen_app_mode", scroll_container_get_fullscreen_app_mode },
+	{ "container_get_parent", scroll_container_get_parent },
+	{ "container_get_children", scroll_container_get_children },
 	{ "container_get_views", scroll_container_get_views },
 	{ "container_get_id", scroll_container_get_id },
 	{ "workspace_get_name", scroll_workspace_get_name },
