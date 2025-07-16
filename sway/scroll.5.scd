@@ -1625,6 +1625,12 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 	Returns the value for the container's height fraction. This value is used
 	to compute the height of the container when _free_size_ is _false_.
 
+*container_get_width(container)*
+	Returns a floating point value with the _container_'s width in pixels.
+
+*container_get_height(container)*
+	Returns a floating point value with the _container_'s height in pixels.
+
 *container_get_fullscreen_mode(container)*
 	Returns a string with the _fullscreen_ state for _container_. Values can be
 	"none", "workspace" (covers only its workspace extents) or "global" (covers
@@ -1698,6 +1704,12 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *workspace_set_layout_type(workspace, layout_type)*
 	Sets the workspace's layout type to _layout_type_, which can be
 	_"horizontal"_ or _"vertical"_.
+
+*workspace_get_width(workspace)*
+	Returns an integer number with the _workspace_'s width in pixels.
+
+*workspace_get_height(workspace)*
+	Returns an integer number with the _workspace_'s height in pixels.
 
 *output_get_enabled(output)*
 	Returns _true_ if the output (display) is enabled, or _false_ otherwise.
