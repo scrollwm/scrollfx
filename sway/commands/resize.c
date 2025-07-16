@@ -279,19 +279,20 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 /**
  * Implement `resize set` for a tiled container.
  */
-static struct cmd_results *resize_set_tiled(struct sway_container *con,
+static struct cmd_results *resize_set_tiled(struct sway_container *container,
 		struct movement_amount *width, struct movement_amount *height) {
 
-	if (container_is_scratchpad_hidden_or_child(con)) {
+	if (container_is_scratchpad_hidden_or_child(container)) {
 		return cmd_results_new(CMD_FAILURE, "Cannot resize a hidden scratchpad container");
 	}
 
-	struct sway_workspace *workspace = con->pending.workspace;
+	struct sway_workspace *workspace = container->pending.workspace;
 	enum sway_container_layout layout = layout_get_type(workspace);
 
 	bool fail = true;
 	int gaps = 2 * workspace->gaps_inner;
 	if (width->amount) {
+		struct sway_container *con = container;
 		if (layout == L_HORIZ && con->pending.parent) {
 			con = con->pending.parent;
 		}
@@ -327,6 +328,7 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 		}
 	}
 	if (height->amount) {
+		struct sway_container *con = container;
 		if (layout == L_VERT && con->pending.parent) {
 			con = con->pending.parent;
 		}
@@ -367,10 +369,10 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 
 	animation_create(ANIM_WINDOW_SIZE);
 
-	if (con->pending.parent) {
-		arrange_container(con->pending.parent);
+	if (container->pending.parent) {
+		arrange_container(container->pending.parent);
 	} else {
-		arrange_workspace(con->pending.workspace);
+		arrange_workspace(container->pending.workspace);
 	}
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
