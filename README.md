@@ -100,6 +100,11 @@ paru -S sway-scroll-git
 
 Thanks to @mecattaf, [scroll stable is also available on the Fedora Copr](https://copr.fedorainfracloud.org/coprs/mecattaf/duoRPM/).
 
+### Void Linux
+
+Thanks to @brihadeesh for setting up a Void linux template for the stable version of
+scroll on his repo, [here](https://git.sr.ht/~peregrinator/scroll-void-template).
+
 ### Post-Installation
 
 After installing either package, prepare a configuration file
