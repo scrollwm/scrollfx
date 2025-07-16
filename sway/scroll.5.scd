@@ -1590,6 +1590,9 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 	Returns the _xdg_shell_ string if the application running in _view_ is a
 	Wayland application. If it is an X windows application, returns _xwayland_.
 
+*view_get_tag(view)*
+	Returns the _tag_ string property for _view_, or nil if any error happens.
+
 *view_close(view)*
 	Close/kill _view_.
 

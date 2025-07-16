@@ -386,6 +386,26 @@ static int scroll_view_get_shell(lua_State *L) {
 	return 1;
 }
 
+static int scroll_view_get_tag(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushnil(L);
+		return 1;
+	}
+	struct sway_view *view = lua_touserdata(L, -1);
+	if (!view) {
+		lua_pushnil(L);
+		return 1;
+	}
+	const char *tag = view_get_tag(view);
+	if (tag) {
+		lua_pushstring(L, tag);
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
 static int scroll_view_close(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc == 0) {
@@ -1066,6 +1086,7 @@ static luaL_Reg const scroll_lib[] = {
 	{ "view_get_urgent", scroll_view_get_urgent },
 	{ "view_set_urgent", scroll_view_set_urgent },
 	{ "view_get_shell", scroll_view_get_shell },
+	{ "view_get_tag", scroll_view_get_tag },
 	{ "view_close", scroll_view_close },
 	{ "container_get_workspace", scroll_container_get_workspace },
 	{ "container_get_marks", scroll_container_get_marks },
