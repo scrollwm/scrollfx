@@ -631,7 +631,7 @@ set|plus|minus|toggle <amount>
 	established by the *seat* subcommand of the same name. See
 	*scroll-input*(5) for more ways to affect inhibitors.
 
-*space* save|load|restore name
+*space* <save|load|restore> <name>
 	A _space_ is a configuration of existing windows.
 
 	_save_ stores the configuration of the current workspace, including
@@ -1628,6 +1628,15 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 	Returns a string with the _fullscreen_application_ state for _container_.
 	Values can be "default", "disabled" or "enabled". See the
 	*fullscreen_application* command for details.
+
+*container_get_parent(container)*
+	Returns the container parent of _container_ or nil if it is a top level
+	container.
+
+*container_get_children(container)*
+	Returns an array with all the children containers of _container_, if any.
+	Only top level containers have children. Only bottom level containers have
+	views.
 
 *container_get_views(container)*
 	Returns an array with all the views inside the _container_.
