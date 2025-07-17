@@ -12,6 +12,7 @@
 #include "sway/tree/layout.h"
 #include "list.h"
 #include "log.h"
+#include "util.h"
 
 // For us, gaps_inner is applied to each container on both sides, regardless
 // of its position. So an edge container will have the same content size
@@ -41,11 +42,17 @@ static void apply_horiz_layout(list_t *children, struct sway_container *active, 
 		struct sway_container *child = children->items[i];
 		if (!child->free_size) {
 			child->pending.width = round(child->width_fraction * box->width - 2 * inner_gap);
-		}
-		if (parent && parent->free_size) {
-			child->pending.height = parent->pending.height;
 		} else {
-			child->pending.height = round((parent ? height : child->height_fraction) * box->height - 2 * inner_gap);
+			child->pending.width = round(min(child->pending.width, box->width - 2 * inner_gap));
+		}
+		if (parent) {
+			if (parent->free_size) {
+				child->pending.height = parent->pending.height;
+			} else {
+				child->pending.height = round(height * box->height - 2 * inner_gap);
+			}
+		} else {
+			child->pending.height = round(child->height_fraction * box->height - 2 * inner_gap);
 		}
 	}
 }
@@ -69,13 +76,19 @@ static void apply_vert_layout(list_t *children, struct sway_container *active, s
 	// box has already applied outer and inner gaps
 	for (int i = 0; i < children->length; ++i) {
 		struct sway_container *child = children->items[i];
-		if (parent && parent->free_size) {
-			child->pending.width = parent->pending.width;
-		} else {
-			child->pending.width = round((parent ? width : child->width_fraction) * box->width - 2 * inner_gap);
-		}
 		if (!child->free_size) {
 			child->pending.height = round(child->height_fraction * box->height - 2 * inner_gap);
+		} else {
+			child->pending.height = round(min(child->pending.height, box->height - 2 * inner_gap));
+		}
+		if (parent) {
+			if (parent->free_size) {
+				child->pending.width = parent->pending.width;
+			} else {
+				child->pending.width = round(width * box->width - 2 * inner_gap);
+			}
+		} else {
+			child->pending.width = round(child->width_fraction * box->width - 2 * inner_gap);
 		}
 	}
 }
