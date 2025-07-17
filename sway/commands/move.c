@@ -166,29 +166,6 @@ static void container_move_to_container(struct sway_container *container,
 	}
 }
 
-static bool container_move_to_next_output(struct sway_container *container,
-		struct sway_output *output, enum wlr_direction move_dir) {
-	struct sway_output *next_output =
-		output_get_in_direction(output, move_dir);
-	if (next_output) {
-		struct sway_workspace *ws = output_get_active_workspace(next_output);
-		if (!sway_assert(ws, "Expected output to have a workspace")) {
-			return false;
-		}
-		switch (container->pending.fullscreen_mode) {
-		case FULLSCREEN_NONE:
-			container_move_to_workspace(container, ws);
-			return true;
-		case FULLSCREEN_WORKSPACE:
-			container_move_to_workspace(container, ws);
-			return true;
-		case FULLSCREEN_GLOBAL:
-			return false;
-		}
-	}
-	return false;
-}
-
 // Returns true if moved
 static bool container_move_in_direction(struct sway_container *container,
 		enum sway_layout_direction move_dir, bool nomode) {
@@ -197,8 +174,6 @@ static bool container_move_in_direction(struct sway_container *container,
 	case FULLSCREEN_NONE:
 		break;
 	case FULLSCREEN_WORKSPACE:
-		return container_move_to_next_output(container,
-				container->pending.workspace->output, layout_to_wlr_direction(move_dir));
 	case FULLSCREEN_GLOBAL:
 		return false;
 	}
