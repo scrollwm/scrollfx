@@ -28,24 +28,24 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 		if (e->con) {
 			enum sway_container_layout layout = layout_get_type(e->con->pending.workspace);
 			struct sway_container *parent = e->con->pending.parent;
+			struct sway_workspace *workspace = parent->pending.workspace;
 			if (layout == L_HORIZ) {
 				parent->pending.width = e->con->pending.width;
-				parent->free_size = true;
+				parent->width_fraction = (parent->pending.width + 2.0 * workspace->gaps_inner) / workspace->width;
 				for (int i = 0; i < parent->pending.children->length; ++i) {
 					struct sway_container *child = parent->pending.children->items[i];
 					child->pending.width = parent->pending.width;
-					child->free_size = true;
+					child->width_fraction = parent->width_fraction;
 				}
 			} else {
 				parent->pending.height = e->con->pending.height;
-				parent->free_size = true;
+				parent->height_fraction = (parent->pending.height + 2.0 * workspace->gaps_inner) / workspace->height;
 				for (int i = 0; i < parent->pending.children->length; ++i) {
 					struct sway_container *child = parent->pending.children->items[i];
 					child->pending.height = parent->pending.height;
-					child->free_size = true;
+					child->height_fraction = parent->height_fraction;
 				}
 			}
-			e->con->free_size = true;
 			container_set_resizing(e->con, false);
 			arrange_workspace(e->con->pending.workspace);
 		}

@@ -139,8 +139,6 @@ struct sway_container {
 	// Fraction of the viewport size this container occupies
 	double width_fraction;
 	double height_fraction;
-	// The container doesn't use a fraction for size
-	bool free_size;
 
 	// Animation variables
 	struct {

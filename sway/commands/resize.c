@@ -133,7 +133,6 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 				fail = false;
 				current->width_fraction = new_width;
 				current->pending.width = workspace->width * current->width_fraction - gaps;
-				current->free_size = true;
 			}
 			if (layout == L_HORIZ) {
 				// If it has children, propagate its width_fraction, overwriting whatever they had
@@ -141,7 +140,6 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 					struct sway_container *con = current->pending.children->items[i];
 					con->width_fraction = current->width_fraction;
 					con->pending.width = workspace->width * con->width_fraction - gaps;
-					con->free_size = true;
 				}
 			}
 		} else {
@@ -150,7 +148,6 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 				fail = false;
 				current->height_fraction = new_height;
 				current->pending.height = workspace->height * current->height_fraction - gaps;
-				current->free_size = true;
 			}
 			if (layout == L_VERT) {
 				// If it has children, propagate its height_fraction, overwriting whatever they had
@@ -158,7 +155,6 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 					struct sway_container *con = current->pending.children->items[i];
 					con->height_fraction = current->height_fraction;
 					con->pending.height = workspace->height * con->height_fraction - gaps;
-					con->free_size = true;
 				}
 			}
 		}
@@ -168,14 +164,14 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 			if (new_width <= workspace->width - gaps && new_width >= MIN_SANE_W + gaps) {
 				fail = false;
 				current->pending.width = new_width;
-				current->free_size = true;
+				current->width_fraction = (current->pending.width + gaps) / workspace->width;
 			}
 			if (layout == L_HORIZ) {
 				// If it has children, propagate its width, overwriting whatever they had
 				for (int i = 0; i < current->pending.children->length; ++i) {
 					struct sway_container *con = current->pending.children->items[i];
 					con->pending.width = current->pending.width;
-					con->free_size = true;
+					con->width_fraction = current->width_fraction;
 				}
 			}
 		} else {
@@ -183,14 +179,14 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 			if (new_height <= workspace->height - gaps && new_height >= MIN_SANE_H + gaps) {
 				fail = false;
 				current->pending.height = new_height;
-				current->free_size = true;
+				current->height_fraction = (current->pending.height + gaps) / workspace->height;
 			}
 			if (layout == L_VERT) {
 				// If it has children, propagate its height_fraction, overwriting whatever they had
 				for (int i = 0; i < current->pending.children->length; ++i) {
 					struct sway_container *con = current->pending.children->items[i];
 					con->pending.height = current->pending.height;
-					con->free_size = true;
+					con->height_fraction = current->height_fraction;
 				}
 			}
 		}
@@ -234,14 +230,12 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 				fail = false;
 				con->width_fraction = width->amount;
 				con->pending.width = workspace->width * con->width_fraction - gaps;
-				con->free_size = true;
 				// If it has children, propagate its width, overwriting whatever they had
 				if (con->pending.children) {
 					for (int i = 0; i < con->pending.children->length; ++i) {
 						struct sway_container *child = con->pending.children->items[i];
 						child->width_fraction = con->width_fraction;
 						child->pending.width = workspace->width * child->width_fraction - gaps;
-						child->free_size = true;
 					}
 				}
 			}
@@ -249,12 +243,14 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 			if (width->amount <= workspace->width - gaps && width->amount >= MIN_SANE_W + gaps) {
 				fail = false;
 				con->pending.width = width->amount;
-				con->free_size = true;
+				con->width_fraction = (con->pending.width + gaps) / workspace->width;
 				// If it has children, propagate its width, overwriting whatever they had
-				for (int i = 0; i < con->pending.children->length; ++i) {
-					struct sway_container *child = con->pending.children->items[i];
-					child->pending.width = width->amount;
-					child->free_size = true;
+				if (con->pending.children) {
+					for (int i = 0; i < con->pending.children->length; ++i) {
+						struct sway_container *child = con->pending.children->items[i];
+						child->pending.width = width->amount;
+						child->width_fraction = con->width_fraction;
+					}
 				}
 			}
 		}
@@ -269,14 +265,12 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 				fail = false;
 				con->height_fraction = height->amount;
 				con->pending.height = con->pending.workspace->height * con->height_fraction - gaps;
-				con->free_size = true;
 				// If it has children, propagate its height, overwriting whatever they had
 				if (con->pending.children) {
 					for (int i = 0; i < con->pending.children->length; ++i) {
 						struct sway_container *child = con->pending.children->items[i];
 						child->height_fraction = con->height_fraction;
 						child->pending.height = workspace->height * child->height_fraction - gaps;
-						child->free_size = true;
 					}
 				}
 			}
@@ -284,12 +278,14 @@ static struct cmd_results *resize_set_tiled(struct sway_container *con,
 			if (height->amount <= workspace->height - gaps && height->amount >= MIN_SANE_H + gaps) {
 				fail = false;
 				con->pending.height = height->amount;
-				con->free_size = true;
+				con->height_fraction = (con->pending.height + gaps) / workspace->height;
 				// If it has children, propagate its width, overwriting whatever they had
-				for (int i = 0; i < con->pending.children->length; ++i) {
-					struct sway_container *child = con->pending.children->items[i];
-					child->pending.height = height->amount;
-					child->free_size = true;
+				if (con->pending.children) {
+					for (int i = 0; i < con->pending.children->length; ++i) {
+						struct sway_container *child = con->pending.children->items[i];
+						child->pending.height = height->amount;
+						child->height_fraction = con->height_fraction;
+					}
 				}
 			}
 		}

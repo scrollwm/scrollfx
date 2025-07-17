@@ -1605,19 +1605,13 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *container_get_sticky(container)*
 	Returns _true_ if the container is sticky, otherwise _false_.
 
-*container_get_free_size(container)*
-	Returns _true_ if the container has a custom size, otherwise _false_. A
-	custom size is one that is not a fraction set by *cycle_size* or *set_size*.
-	When a container's size is set by calling *resize* or *fit_size*, its
-	geometry is not given by a layout fraction, and this flag is set to _true_.
-
 *container_get_width_fraction(container)*
 	Returns the value for the container's width fraction. This value is used
-	to compute the width of the container when _free_size_ is _false_.
+	to compute the width of the container.
 
 *container_get_height_fraction(container)*
 	Returns the value for the container's height fraction. This value is used
-	to compute the height of the container when _free_size_ is _false_.
+	to compute the height of the container.
 
 *container_get_fullscreen_mode(container)*
 	Returns a string with the _fullscreen_ state for _container_. Values can be

@@ -43,7 +43,6 @@ static struct sway_space_container *space_container_create(struct sway_container
 	}
 	space_container->width_fraction = container->width_fraction;
 	space_container->height_fraction = container->height_fraction;
-	space_container->free_size = container->free_size;
 	space_container->layout = container->pending.layout;
 	space_container->x = container->pending.x;
 	space_container->y = container->pending.y;
