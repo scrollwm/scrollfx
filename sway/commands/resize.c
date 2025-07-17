@@ -172,7 +172,7 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 				// If it has children, propagate its width, overwriting whatever they had
 				for (int i = 0; i < current->pending.children->length; ++i) {
 					struct sway_container *con = current->pending.children->items[i];
-					con->pending.width = new_width;
+					con->pending.width = current->pending.width;
 					con->free_size = true;
 				}
 			}
@@ -187,7 +187,7 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 				// If it has children, propagate its height_fraction, overwriting whatever they had
 				for (int i = 0; i < current->pending.children->length; ++i) {
 					struct sway_container *con = current->pending.children->items[i];
-					con->pending.height = new_height;
+					con->pending.height = current->pending.height;
 					con->free_size = true;
 				}
 			}
