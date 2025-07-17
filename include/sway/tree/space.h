@@ -17,8 +17,6 @@ struct sway_space_container {
 	// Fraction of the viewport size this container occupies
 	double width_fraction;
 	double height_fraction;
-	// The container doesn't use a fraction for size
-	bool free_size;
 	enum sway_container_layout layout;
 	double x, y;
 	double width, height;

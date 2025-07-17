@@ -3135,13 +3135,15 @@ static bool find_view(struct sway_container *container, void *data) {
 static struct sway_container *find_and_detach_container(struct sway_view *view) {
 	struct sway_container *container = root_find_container(find_view, view);
 	if (container) {
-		struct sway_container *parent = container->pending.parent;
-		list_t *siblings = parent->pending.children;
-		list_del(siblings, list_find(siblings, container));
-		node_set_dirty(&parent->pending.workspace->node);
-		container_update_representation(parent);
-		node_set_dirty(&parent->node);
-		container_reap_empty(parent);
+		if (!container_is_floating(container)) {
+			struct sway_container *parent = container->pending.parent;
+			list_t *siblings = parent->pending.children;
+			list_del(siblings, list_find(siblings, container));
+			node_set_dirty(&parent->pending.workspace->node);
+			container_update_representation(parent);
+			node_set_dirty(&parent->node);
+			container_reap_empty(parent);
+		}
 	}
 	return container;
 }
@@ -3194,6 +3196,12 @@ static struct sway_container *layout_space_container_restore_tiling(struct sway_
 		// Find view, detach its container
 		struct sway_container *container = find_and_detach_container(space_container->view->view);
 		if (container) {
+			if (container_is_floating(container)) {
+				struct sway_workspace * ws = container->pending.workspace;
+				list_del(ws->floating, list_find(ws->floating, container));
+				workspace_consider_destroy(ws);
+				node_set_dirty(&ws->node);
+			}
 			container->view->content_scale = space_container->view->content_scale;
 			arrange_container(container);
 			node_set_dirty(&container->node);
@@ -3222,14 +3230,16 @@ static void layout_space_container_restore_floating(struct sway_workspace *works
 		struct sway_space_container *focused) {
 	if (space_container->view) {
 		// Find view, detach its container
-		struct sway_container *container = root_find_container(find_view, space_container->view->view);
+		struct sway_container *container = find_and_detach_container(space_container->view->view);
 		if (container) {
 			struct sway_output *old_output = container->pending.workspace->output;
 			struct sway_workspace *old_workspace = container->pending.workspace;
-			list_del(container->pending.workspace->floating,
-				list_find(container->pending.workspace->floating, container));
-			workspace_consider_destroy(container->pending.workspace);
-			node_set_dirty(&container->pending.workspace->node);
+			if (container_is_floating(container)) {
+				list_del(container->pending.workspace->floating,
+					list_find(container->pending.workspace->floating, container));
+				workspace_consider_destroy(container->pending.workspace);
+				node_set_dirty(&container->pending.workspace->node);
+			}
 			container->view->content_scale = space_container->view->content_scale;
 			arrange_container(container);
 			node_set_dirty(&container->node);
