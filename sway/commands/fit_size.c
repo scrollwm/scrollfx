@@ -185,6 +185,7 @@ static void fit_size_workspace(struct sway_workspace *workspace, enum sway_layou
 	// Now split the width/height among all the containers (from, to), and realign
 	// from to the edge. Note: widths/heights are not stored scaled, so operate in
 	// unscaled mode.
+	int gap = workspace->gaps_inner;
 	if (layout == L_HORIZ) {
 		double share = workspace->width - (to - from + 1) * 2.0 * workspace->gaps_inner;
 		if (!equal) {
@@ -195,15 +196,15 @@ static void fit_size_workspace(struct sway_workspace *workspace, enum sway_layou
 			}
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = workspace->tiling->items[i];
-				con->free_size = true;
 				con->pending.width *= share / total;
+				con->width_fraction = (con->pending.width + 2.0 * gap) / workspace->width;
 			}
 		} else {
 			double width = share / (to - from + 1);
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = workspace->tiling->items[i];
-				con->free_size = true;
 				con->pending.width = width;
+				con->width_fraction = 1.0 / (to - from + 1);
 			}
 		}
 	} else {
@@ -216,15 +217,15 @@ static void fit_size_workspace(struct sway_workspace *workspace, enum sway_layou
 			}
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = workspace->tiling->items[i];
-				con->free_size = true;
 				con->pending.height *= share / total;
+				con->height_fraction = (con->pending.height + 2.0 * gap) / workspace->height;
 			}
 		} else {
 			double height = share / (to - from + 1);
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = workspace->tiling->items[i];
-				con->free_size = true;
 				con->pending.height = height;
+				con->height_fraction = 1.0 / (to - from + 1);
 			}
 		}
 	}
@@ -270,6 +271,7 @@ static void fit_size_container(struct sway_container *container, enum sway_layou
 	// Now split the width/height among all the containers (from, to), and realign
 	// from to the edge. Note: widths/heights are not stored scaled, so operate in
 	// unscaled mode.
+	int gap = workspace->gaps_inner;
 	if (layout == L_HORIZ) {
 		double share = workspace->width - (to - from + 1) * 2.0 * workspace->gaps_inner;
 		if (!equal) {
@@ -280,15 +282,15 @@ static void fit_size_container(struct sway_container *container, enum sway_layou
 			}
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = children->items[i];
-				con->free_size = true;
 				con->pending.width *= share / total;
+				con->width_fraction = (con->pending.width + 2.0 * gap) / workspace->width;
 			}
 		} else {
 			double width = share / (to - from + 1);
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = children->items[i];
-				con->free_size = true;
 				con->pending.width = width;
+				con->width_fraction = 1.0 / (to - from + 1);
 			}
 		}
 	} else {
@@ -301,19 +303,18 @@ static void fit_size_container(struct sway_container *container, enum sway_layou
 			}
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = children->items[i];
-				con->free_size = true;
 				con->pending.height *= share / total;
+				con->height_fraction = (con->pending.height + 2.0 * gap) / workspace->height;
 			}
 		} else {
 			double height = share / (to - from + 1);
 			for (int i = from; i <= to; ++i) {
 				struct sway_container *con = children->items[i];
-				con->free_size = true;
 				con->pending.height = height;
+				con->height_fraction = 1.0 / (to - from + 1);
 			}
 		}
 	}
-	container->free_size = true;
 	set_from_position(workspace, layout, children, scale, from, active_idx, workspace->gaps_inner);
 	
 	arrange_container(container);

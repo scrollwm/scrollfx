@@ -499,21 +499,6 @@ static int scroll_container_get_sticky(lua_State *L) {
 	return 1;
 }
 
-static int scroll_container_get_free_size(lua_State *L) {
-	int argc = lua_gettop(L);
-	if (argc == 0) {
-		lua_pushboolean(L, 0);
-		return 1;
-	}
-	struct sway_container *container = lua_touserdata(L, -1);
-	if (!container || container->node.type != N_CONTAINER) {
-		lua_pushboolean(L, 0);
-		return 1;
-	}
-	lua_pushboolean(L, container->free_size);
-	return 1;
-}
-
 static int scroll_container_get_width_fraction(lua_State *L) {
 	int argc = lua_gettop(L);
 	if (argc == 0) {
@@ -1153,7 +1138,6 @@ static luaL_Reg const scroll_lib[] = {
 	{ "container_get_floating", scroll_container_get_floating },
 	{ "container_get_opacity", scroll_container_get_opacity },
 	{ "container_get_sticky", scroll_container_get_sticky },
-	{ "container_get_free_size", scroll_container_get_free_size },
 	{ "container_get_width_fraction", scroll_container_get_width_fraction },
 	{ "container_get_height_fraction", scroll_container_get_height_fraction },
 	{ "container_get_width", scroll_container_get_width },

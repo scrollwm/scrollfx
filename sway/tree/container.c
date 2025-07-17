@@ -1347,7 +1347,7 @@ void container_fullscreen_disable(struct sway_container *con) {
 	}
 	set_fullscreen(con, false, false);
 
-	if (container_is_floating(con) || con->free_size) {
+	if (container_is_floating(con)) {
 		con->pending.x = con->saved_x;
 		con->pending.y = con->saved_y;
 		con->pending.width = con->saved_width;
@@ -1914,7 +1914,6 @@ static void swap_places(struct sway_container *con1,
 	temp->pending.height = con1->pending.height;
 	temp->width_fraction = con1->width_fraction;
 	temp->height_fraction = con1->height_fraction;
-	temp->free_size = con1->free_size;
 	temp->pending.parent = con1->pending.parent;
 	temp->pending.workspace = con1->pending.workspace;
 	bool temp_floating = container_is_floating(con1);
@@ -1925,7 +1924,6 @@ static void swap_places(struct sway_container *con1,
 	con1->pending.height = con2->pending.height;
 	con1->width_fraction = con2->width_fraction;
 	con1->height_fraction = con2->height_fraction;
-	con1->free_size = con2->free_size;
 
 	con2->pending.x = temp->pending.x;
 	con2->pending.y = temp->pending.y;
@@ -1933,7 +1931,6 @@ static void swap_places(struct sway_container *con1,
 	con2->pending.height = temp->pending.height;
 	con2->width_fraction = temp->width_fraction;
 	con2->height_fraction = temp->height_fraction;
-	con2->free_size = temp->free_size;
 
 	int temp_index = container_sibling_index(con1);
 	if (con2->pending.parent) {

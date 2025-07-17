@@ -39,24 +39,20 @@ static struct cmd_results *set_size_tiled(uint32_t axis, double fraction) {
 
 	if (horizontal) {
 		current->width_fraction = fraction;
-		current->free_size = false;
 		if (layout == L_HORIZ) {
 			// If it has children, propagate its width_fraction, overwriting whatever they had
 			for (int i = 0; i < current->pending.children->length; ++i) {
 				struct sway_container *con = current->pending.children->items[i];
 				con->width_fraction = current->width_fraction;
-				con->free_size = false;
 			}
 		}
 	} else {
 		current->height_fraction = fraction;
-		current->free_size = false;
 		if (layout == L_VERT) {
 			// If it has children, propagate its width_fraction, overwriting whatever they had
 			for (int i = 0; i < current->pending.children->length; ++i) {
 				struct sway_container *con = current->pending.children->items[i];
 				con->height_fraction = current->height_fraction;
-				con->free_size = false;
 			}
 		}
 	}

@@ -543,7 +543,6 @@ static struct sway_container *layout_wrap_into_container(struct sway_container *
 	cont->pending.x = child->pending.x;
 	cont->pending.y = child->pending.y;
 	cont->pending.layout = layout;
-	cont->free_size = child->free_size;
 	cont->current.focused_inactive_child = child;
 	cont->pending.focused_inactive_child = child;
 
@@ -2685,7 +2684,6 @@ static struct sway_container *wrap_children_into_container(struct sway_workspace
 	cont->pending.x = old_parent->pending.x;
 	cont->pending.y = old_parent->pending.y;
 	cont->pending.layout = layout;
-	cont->free_size = old_parent->free_size;
 
 	cont->pending.children = children;
 	for (int i = 0; i < children->length; ++i) {
@@ -3152,7 +3150,6 @@ static void fill_container(struct sway_space_container *space_container,
 		struct sway_container *container) {
 	container->width_fraction = space_container->width_fraction;
 	container->height_fraction = space_container->height_fraction;
-	container->free_size = space_container->free_size;
 	container->pending.layout = space_container->layout;
 	container->pending.x = space_container->x;
 	container->pending.y = space_container->y;
