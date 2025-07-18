@@ -595,21 +595,27 @@ set|plus|minus|toggle <amount>
 	Modes and mode modifiers are per workspace.
 	At window creation time, scroll can apply several modifiers to the current
 	working mode (h/v). It supports extra arguments:
+
 	_<h|v|t>_: set horizontal, vertical, or toggle the current mode.
+
 	_position_: It is one of after (default), before, end, beg. This parameter
 	decides the position of new windows: after the current one (default value),
 	before the current one, at the end of the row/column, or at the beginning
 	of the row/column.
+
 	_focus_: One of focus (default) or nofocus. When creating a new window,
 	this parameter controls whether it will get focus or not.
+
 	_reorder_ automatic mode: reorder_auto (default) or noreorder_auto.
 	By default, scroll will reorder windows every time you change focus,
 	move or create new windows. But sometimes you want to keep the current
 	window in a certain position, for example when using _align_. _align_ turns
 	reordering mode to noreorder_auto, and the window will keep its position
 	regardless of what you do, until you set reorder_auto again.
+
 	_center_horiz/nocenter_horiz_: It will keep the active column centered
 	(or not) on the screen.
+
 	_center_vert/nocenter_vert_: It will keep the active window centered
 	(or not) in its column.
 
@@ -1711,8 +1717,8 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 
 	_event_ can be "view_map" (application's window creation), "view_unmap"
 	(application's window destruction), "view_urgent" (a window gets the
-	urgent attribute set), or "workspace_create" (called when a workspace is
-	ceated).
+	urgent attribute set), "view_focus" (a window gets focus), or
+	"workspace_create" (called when a workspace is created).
 
 	_cb_func_ is a Lua function with two parameters, _view_ (the view triggering
 	the event) and _data_, the _cb_data_ value passed when creating the

@@ -976,6 +976,8 @@ static int scroll_add_callback(lua_State *L) {
 		list_add(config->lua.cbs_view_unmap, closure);
 	} else if (strcmp(event, "view_urgent") == 0) {
 		list_add(config->lua.cbs_view_urgent, closure);
+	} else if (strcmp(event, "view_focus") == 0) {
+		list_add(config->lua.cbs_view_focus, closure);
 	} else if (strcmp(event, "workspace_create") == 0) {
 		list_add(config->lua.cbs_workspace_create, closure);
 	} else {
@@ -1015,6 +1017,15 @@ static int scroll_remove_callback(lua_State *L) {
 	for (int i = 0; i < config->lua.cbs_view_urgent->length; ++i) {
 		if (config->lua.cbs_view_urgent->items[i] == closure) {
 			list_del(config->lua.cbs_view_urgent, i);
+			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+			free(closure);
+			return 0;
+		}
+	}
+	for (int i = 0; i < config->lua.cbs_view_focus->length; ++i) {
+		if (config->lua.cbs_view_focus->items[i] == closure) {
+			list_del(config->lua.cbs_view_focus, i);
 			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
 			luaL_unref(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
 			free(closure);
