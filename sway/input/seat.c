@@ -1128,6 +1128,17 @@ void seat_set_raw_focus(struct sway_seat *seat, struct sway_node *node) {
 	}
 }
 
+static void view_focus_run_lua_callbacks(struct sway_container *container) {
+	// Lua callbacks
+	for (int i = 0; i < config->lua.cbs_view_focus->length; ++i) {
+		struct sway_lua_closure *closure = config->lua.cbs_view_focus->items[i];
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_function);
+		lua_pushlightuserdata(config->lua.state, container->view);
+		lua_rawgeti(config->lua.state, LUA_REGISTRYINDEX, closure->cb_data);
+		lua_call(config->lua.state, 2, 0);
+	}
+}
+
 static void seat_set_workspace_focus(struct sway_seat *seat, struct sway_node *node) {
 	struct sway_node *last_focus = seat_get_focus(seat);
 	if (last_focus == node) {
@@ -1203,6 +1214,7 @@ static void seat_set_workspace_focus(struct sway_seat *seat, struct sway_node *n
 	// emit ipc events
 	set_workspace(seat, new_workspace);
 	if (container && container->view) {
+		view_focus_run_lua_callbacks(container);
 		ipc_event_window(container, "focus");
 	}
 

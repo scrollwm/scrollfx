@@ -23,6 +23,7 @@ struct sway_lua {
 	list_t *cbs_view_map;
 	list_t *cbs_view_unmap;
 	list_t *cbs_view_urgent;
+	list_t *cbs_view_focus;
 	list_t *cbs_workspace_create;
 };
 
