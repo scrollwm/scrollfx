@@ -109,7 +109,7 @@ struct sway_output *output_create(struct wlr_output *wlr_output) {
 	output->layers.shell_background = alloc_scene_tree(root->staging, &failed);
 	output->layers.shell_bottom = alloc_scene_tree(root->staging, &failed);
 	output->layers.tiling = alloc_scene_tree(root->staging, &failed);
-	output->layers.tiling->node.wlr_output = wlr_output;
+	output->layers.tiling->node.info.wlr_output = wlr_output;
 	output->layers.fullscreen = alloc_scene_tree(root->staging, &failed);
 	output->layers.shell_top = alloc_scene_tree(root->staging, &failed);
 	output->layers.shell_overlay = alloc_scene_tree(root->staging, &failed);

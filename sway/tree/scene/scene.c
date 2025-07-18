@@ -90,8 +90,12 @@ static void scene_node_init(struct sway_scene_node *node,
 		.type = type,
 		.parent = parent,
 		.enabled = true,
-		.scale = -1.0f,
-		.wlr_output = NULL,
+		.info = {
+			.scale = -1.0f,
+			.wlr_output = NULL,
+			.workspace = NULL,
+			.background = false
+		},
 	};
 
 	wl_list_init(&node->link);
@@ -613,8 +617,8 @@ static struct wlr_output *scene_node_get_output(struct sway_scene_node *node) {
 	}
 
 	while (tree != NULL) {
-		if (tree->node.wlr_output != NULL) {
-			return tree->node.wlr_output;
+		if (tree->node.info.wlr_output != NULL) {
+			return tree->node.info.wlr_output;
 		}
 		tree = tree->node.parent;
 	}
@@ -630,12 +634,29 @@ static struct sway_workspace *scene_node_get_workspace(struct sway_scene_node *n
 	}
 
 	while (tree != NULL) {
-		if (tree->node.data != NULL) {
-			return (struct sway_workspace *)tree->node.data;
+		if (tree->node.info.workspace != NULL) {
+			return tree->node.info.workspace;
 		}
 		tree = tree->node.parent;
 	}
 	return NULL;
+}
+
+static bool scene_node_get_background(struct sway_scene_node *node) {
+	struct sway_scene_tree *tree;
+	if (node->type == SWAY_SCENE_NODE_TREE) {
+		tree = sway_scene_tree_from_node(node);
+	} else {
+		tree = node->parent;
+	}
+
+	while (tree != NULL) {
+		if (tree->node.info.background) {
+			return true;
+		}
+		tree = tree->node.parent;
+	}
+	return false;
 }
 
 static void scene_node_apply_tiling_visibility(struct sway_scene_node *node,
@@ -1522,14 +1543,8 @@ static void scene_entry_render(struct render_list_entry *entry, const struct ren
 	int dy = workspace ? workspace->layout.workspaces.y : 0;
 
 	pixman_region32_t render_region;
-	if (layout_overview_workspaces_enabled() && workspace == NULL) {
-		// This is the background, reset visibility
-		pixman_region32_init_rect(&render_region, data->logical.x, data->logical.y,
-			data->logical.width, data->logical.height);
-	} else {
-		pixman_region32_init(&render_region);
-		pixman_region32_copy(&render_region, &node->visible);
-	}
+	pixman_region32_init(&render_region);
+	pixman_region32_copy(&render_region, &node->visible);
 	pixman_region32_translate(&render_region, -data->logical.x, -data->logical.y);
 	logical_to_buffer_coords(&render_region, data, true);
 	if (workspace) {
@@ -2444,10 +2459,19 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 	// Cull areas of the background that are occluded by opaque regions of
 	// scene nodes above. Those scene nodes will just render atop having us
 	// never see the background.
-	if (scene_output->scene->calculate_visibility && !layout_overview_workspaces_enabled()) {
+	if (scene_output->scene->calculate_visibility) {
 		for (int i = list_len - 1; i >= 0; i--) {
 			struct render_list_entry *entry = &list_data[i];
 
+			if (layout_overview_workspaces_enabled() && scene_node_get_background(entry->node)) {
+				// If we are in workspaces overview and the node is the wallpaper
+				// (layer_shell ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND), we want to
+				// reset the calculated visibility to avoid having remains of the
+				// un-scaled nodes that are part of the workspace.
+				pixman_region32_init_rect(&entry->node->visible, render_data.logical.x,
+					render_data.logical.y, render_data.logical.width, render_data.logical.height);
+				pixman_region32_fini(&entry->node->visible);
+			}
 			// We must only cull opaque regions that are visible by the node.
 			// The node's visibility will have the knowledge of a black rect
 			// that may have been omitted from the render list via the black
@@ -2667,11 +2691,11 @@ float scene_node_get_parent_scale(struct sway_scene_node *node) {
 	float scale = -1.0f;
 	while (tree) {
 		// Check scene descriptor
-		if (tree->node.scale > 0.0f) {
+		if (tree->node.info.scale > 0.0f) {
 			if (scale <= 0.0f) {
-				scale = tree->node.scale;
+				scale = tree->node.info.scale;
 			} else {
-				scale *= tree->node.scale;
+				scale *= tree->node.info.scale;
 			}
 		}
 		tree = tree->node.parent;
