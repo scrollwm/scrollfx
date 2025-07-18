@@ -148,7 +148,7 @@ static void recreate_buffers(struct sway_workspace *workspace) {
 }
 
 static void workspace_set_scale(struct sway_workspace *workspace, float scale) {
-	workspace->layers.tiling->node.scale = scale;
+	workspace->layers.tiling->node.info.scale = scale;
 	for (int i = 0; i < workspace->floating->length; ++i) {
 		struct sway_container *con = workspace->floating->items[i];
 		layout_view_scale_set(con, scale);
@@ -219,7 +219,7 @@ void layout_overview_recompute_scale(struct sway_workspace *workspace, int gaps)
 		maxh = fh;
 	}
 	float scale = fmin(workspace->width / w, workspace->height / maxh);
-	if (workspace->layers.tiling->node.scale != scale) {
+	if (workspace->layers.tiling->node.info.scale != scale) {
 		workspace_set_scale(workspace, scale);
 		node_set_dirty(&workspace->node);
 		recreate_buffers(workspace);
@@ -320,7 +320,7 @@ void layout_overview_workspaces_toggle() {
 					child->layout.workspaces.width = ceil(scale * width);
 					child->layout.workspaces.height = ceil(scale * height);
 					child->layout.workspaces.scale = scale;
-					child->layers.tiling->node.data = child;
+					child->layers.tiling->node.info.workspace = child;
 					node_set_dirty(&child->node);
 					if (child->fullscreen) {
 						container_set_fullscreen(child->fullscreen, FULLSCREEN_NONE);
@@ -328,14 +328,14 @@ void layout_overview_workspaces_toggle() {
 					}
 					for (int f = 0; f < child->floating->length; ++f) {
 						struct sway_container *con = child->floating->items[f];
-						con->scene_tree->node.data = child;
+						con->scene_tree->node.info.workspace = child;
 					}
 				}
 			}
 		} else {
 			for (int j = 0; j < output->current.workspaces->length; ++j) {
 				struct sway_workspace *child = output->current.workspaces->items[j];
-				child->layers.tiling->node.data = NULL;
+				child->layers.tiling->node.info.workspace = NULL;
 				node_set_dirty(&child->node);
 				if (child->layout.fullscreen) {
 					struct sway_seat *seat = input_manager_current_seat();
@@ -345,7 +345,7 @@ void layout_overview_workspaces_toggle() {
 				}
 				for (int f = 0; f < child->floating->length; ++f) {
 					struct sway_container *con = child->floating->items[f];
-					con->scene_tree->node.data = NULL;
+					con->scene_tree->node.info.workspace = NULL;
 				}
 			}
 		}
@@ -374,30 +374,30 @@ void layout_scale_reset(struct sway_workspace *workspace) {
 }
 
 float layout_scale_get(struct sway_workspace *workspace) {
-	return workspace->layers.tiling->node.scale;
+	return workspace->layers.tiling->node.info.scale;
 }
 
 bool layout_scale_enabled(struct sway_workspace *workspace) {
 	if (!workspace) {
 		return false;
 	}
-	return workspace->layers.tiling->node.scale > 0.0f;
+	return workspace->layers.tiling->node.info.scale > 0.0f;
 }
 
 void layout_view_scale_set(struct sway_container *view, float scale) {
-	view->scene_tree->node.scale = scale;
+	view->scene_tree->node.info.scale = scale;
 }
 
 void layout_view_scale_reset(struct sway_container *view) {
-	view->scene_tree->node.scale = -1.0f;
+	view->scene_tree->node.info.scale = -1.0f;
 }
 
 float layout_view_scale_get(struct sway_container *view) {
-	return view->scene_tree->node.scale;
+	return view->scene_tree->node.info.scale;
 }
 
 bool layout_view_scale_enabled(struct sway_container *view) {
-	return view->scene_tree->node.scale > 0.0f;
+	return view->scene_tree->node.info.scale > 0.0f;
 }
 
 void layout_modifiers_init(struct sway_workspace *workspace) {

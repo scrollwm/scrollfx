@@ -57,6 +57,13 @@ enum sway_scene_node_type {
 	SWAY_SCENE_NODE_BUFFER,
 };
 
+struct sway_scene_node_info {
+	float scale;			// scale for everything below
+	struct wlr_output *wlr_output;	// wlr_output the node belongs to (if tiled, otherwise NULL)
+	struct sway_workspace *workspace;
+	bool background;	// bakground layer shell, usually the wallpaper
+};
+
 /** A node is an object in the scene. */
 struct sway_scene_node {
 	enum sway_scene_node_type type;
@@ -80,8 +87,7 @@ struct sway_scene_node {
 		pixman_region32_t visible;
 	};
 
-	float scale;			// scale for everything below
-	struct wlr_output *wlr_output;	// wlr_output the node belongs to (if tiled, otherwise NULL)
+	struct sway_scene_node_info info;
 };
 
 enum sway_scene_debug_damage_option {
