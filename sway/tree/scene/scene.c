@@ -1522,8 +1522,14 @@ static void scene_entry_render(struct render_list_entry *entry, const struct ren
 	int dy = workspace ? workspace->layout.workspaces.y : 0;
 
 	pixman_region32_t render_region;
-	pixman_region32_init(&render_region);
-	pixman_region32_copy(&render_region, &node->visible);
+	if (layout_overview_workspaces_enabled() && workspace == NULL) {
+		// This is the background, reset visibility
+		pixman_region32_init_rect(&render_region, data->logical.x, data->logical.y,
+			data->logical.width, data->logical.height);
+	} else {
+		pixman_region32_init(&render_region);
+		pixman_region32_copy(&render_region, &node->visible);
+	}
 	pixman_region32_translate(&render_region, -data->logical.x, -data->logical.y);
 	logical_to_buffer_coords(&render_region, data, true);
 	if (workspace) {
@@ -2277,10 +2283,6 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 		}
 
 		render_data.scale = state->scale;
-	}
-
-	if (layout_overview_workspaces_enabled()) {
-		scene_output_damage_whole(scene_output);
 	}
 
 	render_data.trans_width = resolution_width;
