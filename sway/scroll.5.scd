@@ -1566,6 +1566,9 @@ scroll.command(nil, "set_size v 0.33333333; move left nomode")
 *urgent_view()*
 	Returns the current urgent view pointer or nil if none.
 
+*view_mapped(view)*
+	Returns _true_ if the _view_ is mapped (exists), otherwise returns _false_.
+
 *view_get_container(view)*
 	Returns the container pointer associated to _view_.
 

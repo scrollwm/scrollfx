@@ -92,6 +92,11 @@ static int scroll_state_set_value(lua_State *L) {
 	return 0;
 }
 
+static bool find_view(struct sway_container *container, void *data) {
+	struct sway_view *view = data;
+	return container->view == view;
+}
+
 static bool find_container(struct sway_container *container, void *data) {
 	struct sway_container *con = data;
 	return container == con;
@@ -232,6 +237,24 @@ static int scroll_urgent_view(lua_State *L) {
 	} else {
 		lua_pushnil(L);
 	}
+	return 1;
+}
+
+static int scroll_view_mapped(lua_State *L) {
+	int argc = lua_gettop(L);
+	if (argc == 0) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	struct sway_view *view = lua_touserdata(L, -1);
+	if (view) {
+		struct sway_container *found = root_find_container(find_view, view);
+		if (found) {
+			lua_pushboolean(L, 1);
+			return 1;
+		}
+	}
+	lua_pushboolean(L, 0);
 	return 1;
 }
 
@@ -1054,6 +1077,7 @@ static luaL_Reg const scroll_lib[] = {
 	{ "focused_container", scroll_focused_container },
 	{ "focused_workspace", scroll_focused_workspace },
 	{ "urgent_view", scroll_urgent_view },
+	{ "view_mapped", scroll_view_mapped },
 	{ "view_get_container", scroll_view_get_container },
 	{ "view_get_app_id", scroll_view_get_app_id },
 	{ "view_get_title", scroll_view_get_title },
