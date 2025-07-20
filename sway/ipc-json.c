@@ -709,6 +709,9 @@ static void ipc_json_describe_container(struct sway_container *c, json_object *o
 	json_object_object_add(object, "scratchpad_state",
 			json_object_new_string(!c->scratchpad ? "none" : "fresh"));
 
+	json_object_object_add(object, "width_fraction", json_object_new_double(c->width_fraction));
+	json_object_object_add(object, "height_fraction", json_object_new_double(c->height_fraction));
+
 	struct sway_node *parent = node_get_parent(&c->node);
 	struct wlr_box parent_box = {0, 0, 0, 0};
 
