@@ -444,6 +444,7 @@ static double get_active_position(struct sway_workspace *workspace,
 
 	// First, find the range of containers that being on each edge of the viewport,
 	// allow the active one to be seen completely.
+	bool move = false;
 	double best_movement = DBL_MAX;
 	int c_l = 0, c_r = children->length - 1;
 	struct sway_container *active = children->items[active_idx];
@@ -482,6 +483,7 @@ static double get_active_position(struct sway_workspace *workspace,
 					}
 				}
 				if (!space && fabs(movement) < fabs(best_movement)) {
+					move = true;
 					best_movement = movement;
 				}
 			} else {
@@ -516,11 +518,15 @@ static double get_active_position(struct sway_workspace *workspace,
 					}
 				}
 				if (!space && fabs(movement) < fabs(best_movement)) {
+					move = true;
 					best_movement = movement;
 				}
 			} else {
 				break;
 			}
+		}
+		if (!move) {
+			return a_x;
 		}
 		return a_x + best_movement;
 	} else {
@@ -551,6 +557,7 @@ static double get_active_position(struct sway_workspace *workspace,
 					}
 				}
 				if (!space && fabs(movement) < fabs(best_movement)) {
+					move = true;
 					best_movement = movement;
 				}
 			} else {
@@ -581,11 +588,15 @@ static double get_active_position(struct sway_workspace *workspace,
 					}
 				}
 				if (!space && fabs(movement) < fabs(best_movement)) {
+					move = true;
 					best_movement = movement;
 				}
 			} else {
 				break;
 			}
+		}
+		if (!move) {
+			return a_y;
 		}
 		return a_y + best_movement;
 	}
