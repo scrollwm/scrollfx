@@ -923,13 +923,13 @@ void workspace_add_gaps(struct sway_workspace *ws) {
 }
 
 void workspace_update_representation(struct sway_workspace *ws) {
-	size_t len = container_build_representation(layout_modifiers_get_mode(ws), ws->tiling, NULL);
+	size_t len = container_build_representation(layout_get_type(ws), ws->tiling, NULL);
 	free(ws->representation);
 	ws->representation = calloc(len + 1, sizeof(char));
 	if (!sway_assert(ws->representation, "Unable to allocate title string")) {
 		return;
 	}
-	container_build_representation(layout_modifiers_get_mode(ws), ws->tiling, ws->representation);
+	container_build_representation(layout_get_type(ws), ws->tiling, ws->representation);
 }
 
 void workspace_get_box(struct sway_workspace *workspace, struct wlr_box *box) {
