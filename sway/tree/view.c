@@ -1216,6 +1216,10 @@ static void view_save_buffer_iterator(struct sway_scene_buffer *buffer,
 	sway_scene_buffer_set_dest_size(sbuf,
 		buffer->dst_width, buffer->dst_height);
 	sway_scene_buffer_set_opaque_region(sbuf, &buffer->opaque_region);
+	sway_scene_buffer_set_opacity(sbuf, buffer->opacity);
+	sway_scene_buffer_set_filter_mode(sbuf, buffer->filter_mode);
+	sway_scene_buffer_set_transfer_function(sbuf, buffer->transfer_function);
+	sway_scene_buffer_set_primaries(sbuf, buffer->primaries);
 	sway_scene_buffer_set_source_box(sbuf, &buffer->src_box);
 	sway_scene_node_set_position(&sbuf->node, sx, sy);
 	sway_scene_buffer_set_transform(sbuf, buffer->transform);
