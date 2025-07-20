@@ -58,9 +58,24 @@ static struct cmd_results *resize_adjust_floating(uint32_t axis,
 	}
 
 	// Make sure we're not adjusting beyond floating min/max size
-	int min_width, max_width, min_height, max_height;
-	floating_calculate_constraints(&min_width, &max_width,
-			&min_height, &max_height);
+	int fmin_width, fmax_width, fmin_height, fmax_height;
+	floating_calculate_constraints(&fmin_width, &fmax_width,
+			&fmin_height, &fmax_height);
+	double min_width, max_width, min_height, max_height;
+	view_get_constraints(con->view, &min_width, &max_width,	&min_height, &max_height);
+	if (min_width < fmin_width) {
+		min_width = fmin_width;
+	}
+	if (max_width > fmax_width) {
+		max_width = fmax_width;
+	}
+	if (min_height < fmin_height) {
+		min_height = fmin_height;
+	}
+	if (max_height > fmax_height) {
+		max_height = fmax_height;
+	}
+
 	if (con->pending.width + grow_width < min_width) {
 		grow_width = min_width - con->pending.width;
 	} else if (con->pending.width + grow_width > max_width) {
@@ -106,6 +121,8 @@ static struct cmd_results *resize_adjust_floating(uint32_t axis,
 static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 		struct movement_amount *amount) {
 	struct sway_container *current = config->handler_context.container;
+	double min_width, max_width, min_height, max_height;
+	view_get_constraints(current->view, &min_width, &max_width, &min_height, &max_height);
 	enum sway_container_layout layout = layout_get_type(config->handler_context.workspace);
 	bool horizontal = is_horizontal(axis);
 	if ((layout == L_HORIZ && horizontal) || (layout == L_VERT && !horizontal)) {
@@ -129,10 +146,23 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 		float pct = amount->amount / 100.0f;
 		if (horizontal) {
 			double new_width = current->width_fraction + pct;
+			double width = workspace->width * new_width - gaps;
 			if (new_width <= 1.0 && new_width >= 0.05) {
-				fail = false;
+				if (width < min_width) {
+					if (pct > 0.0f) {
+						fail = false;
+					}
+					width = min_width;
+				} else if (width > max_width) {
+					if (pct < 0.0) {
+						fail = false;
+					}
+					width = max_width;
+				} else {
+					fail = false;
+				}
 				current->width_fraction = new_width;
-				current->pending.width = workspace->width * current->width_fraction - gaps;
+				current->pending.width = width;
 			}
 			if (layout == L_HORIZ) {
 				// If it has children, propagate its width_fraction, overwriting whatever they had
@@ -144,10 +174,23 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 			}
 		} else {
 			double new_height = current->height_fraction + pct;
+			double height = workspace->height * new_height - gaps;
 			if (new_height <= 1.0 && new_height >= 0.05) {
-				fail = false;
+				if (height < min_height) {
+					if (pct > 0.0f) {
+						fail = false;
+					}
+					height = min_height;
+				} else if (height > max_height) {
+					if (pct < 0.0) {
+						fail = false;
+					}
+					height = max_height;
+				} else {
+					fail = false;
+				}
 				current->height_fraction = new_height;
-				current->pending.height = workspace->height * current->height_fraction - gaps;
+				current->pending.height = height;
 			}
 			if (layout == L_VERT) {
 				// If it has children, propagate its height_fraction, overwriting whatever they had
@@ -162,7 +205,19 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 		if (horizontal) {
 			double new_width = current->pending.width + amount->amount;
 			if (new_width <= workspace->width - gaps && new_width >= MIN_SANE_W + gaps) {
-				fail = false;
+				if (new_width < min_width) {
+					if (amount->amount >= 0) {
+						fail = false;
+					}
+					new_width = min_width;
+				} else if (new_width > max_width) {
+					if (amount->amount <= 0) {
+						fail = false;
+					}
+					new_width = max_width;
+				} else {
+					fail = false;
+				}
 				current->pending.width = new_width;
 				current->width_fraction = (current->pending.width + gaps) / workspace->width;
 			}
@@ -177,7 +232,19 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 		} else {
 			double new_height = current->pending.height + amount->amount;
 			if (new_height <= workspace->height - gaps && new_height >= MIN_SANE_H + gaps) {
-				fail = false;
+				if (new_height < min_height) {
+					if (amount->amount >= 0) {
+						fail = false;
+					}
+					new_height = min_height;
+				} else if (new_height > max_height) {
+					if (amount->amount <= 0) {
+						fail = false;
+					}
+					new_height = max_height;
+				} else {
+					fail = false;
+				}
 				current->pending.height = new_height;
 				current->height_fraction = (current->pending.height + gaps) / workspace->height;
 			}
