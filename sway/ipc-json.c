@@ -796,11 +796,15 @@ json_object *ipc_json_describe_node(struct sway_node *node) {
 	struct wlr_box box;
 	node_get_box(node, &box);
 	if (node->type == N_CONTAINER) {
-		struct wlr_box deco_rect = {0, 0, 0, 0};
-		get_deco_rect(node->sway_container, &deco_rect);
-		size_t count = 1;
-		box.y += deco_rect.height * count;
-		box.height -= deco_rect.height * count;
+		struct sway_container *con = node->sway_container;
+		bool has_titlebar = con->title_bar.tree->node.enabled;
+		if (has_titlebar) {
+			struct wlr_box deco_rect = {0, 0, 0, 0};
+			get_deco_rect(node->sway_container, &deco_rect);
+			size_t count = 1;
+			box.y += deco_rect.height * count;
+			box.height -= deco_rect.height * count;
+		}
 	}
 
 	json_object *focus = json_object_new_array();
