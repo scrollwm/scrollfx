@@ -867,14 +867,18 @@ static void animation_clip_container(struct sway_container *con) {
 				.x = con->view->geometry.x,
 				.y = con->view->geometry.y,
 			};
+			const int thickness = con->pending.border_thickness;
+			double width = con->animation.wt - con->pending.border_left * thickness
+				- con->pending.border_right * thickness;
+			double height = con->animation.ht - con->pending.border_top * thickness
+				- con->pending.border_bottom * thickness;
 			if (view_is_content_scaled(con->view)) {
 				float scale = view_get_content_scale(con->view);
-				clip.width = max(1, con->animation.wt / scale);
-				clip.height = max(1, con->animation.ht / scale);
-			} else {
-				clip.width = max(1, con->animation.wt);
-				clip.height = max(1, con->animation.ht);
+				width /= scale;
+				height /= scale;
 			}
+			clip.width = max(1, round(width));
+			clip.height = max(1, round(height));
 			sway_scene_subsurface_tree_set_clip(&con->view->content_tree->node, &clip);
 		}
 	}
