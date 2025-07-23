@@ -22,6 +22,12 @@ enum sway_node_type {
 	N_CONTAINER,
 };
 
+enum sway_node_focus_warp {
+	FOCUS_WARP_NONE,
+	FOCUS_WARP_DEFAULT,
+	FOCUS_WARP_FORCE
+};
+
 struct sway_node {
 	enum sway_node_type type;
 	union {
@@ -48,6 +54,8 @@ struct sway_node {
 	struct {
 		struct wl_signal destroy;
 	} events;
+
+	enum sway_node_focus_warp focus_warp;
 };
 
 void node_init(struct sway_node *node, enum sway_node_type type, void *thing);
@@ -86,5 +94,12 @@ void scene_node_disown_children(struct sway_scene_tree *tree);
 // of this scene node preventing memory leaks.
 struct sway_scene_tree *alloc_scene_tree(struct sway_scene_tree *parent,
 		bool *failed);
+
+// Set node's focus warp mode that will be applied when the transaction ends.
+// If it is a container, its view will already be mapped and the container's
+// position correct
+void node_set_focus_warp(struct sway_node *node, enum sway_node_focus_warp warp);
+
+enum sway_node_focus_warp node_get_focus_warp(struct sway_node *node);
 
 #endif

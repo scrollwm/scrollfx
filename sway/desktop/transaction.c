@@ -1349,7 +1349,21 @@ static void transaction_progress(void) {
 
 	if (!server.pending_transaction) {
 		struct sway_seat *seat = input_manager_get_default_seat();
-		seat_consider_warp_to_focus(seat);
+		struct sway_node *node = seat_get_focus(seat);
+		if (node->type == N_CONTAINER) {
+			switch (node_get_focus_warp(node)) {
+			case FOCUS_WARP_NONE:
+				break;
+			case FOCUS_WARP_DEFAULT:
+				cursor_warp_to_container(seat->cursor, node->sway_container, false);
+				node_set_focus_warp(node, FOCUS_WARP_NONE);
+				break;
+			case FOCUS_WARP_FORCE:
+				cursor_warp_to_container(seat->cursor, node->sway_container, true);
+				node_set_focus_warp(node, FOCUS_WARP_NONE);
+				break;
+			}
+		}
 		sway_idle_inhibit_v1_check_active();
 		return;
 	}

@@ -1567,7 +1567,7 @@ void seat_consider_warp_to_focus(struct sway_seat *seat) {
 	}
 
 	if (focus->type == N_CONTAINER) {
-		cursor_warp_to_container(seat->cursor, focus->sway_container, false);
+		node_set_focus_warp(focus, FOCUS_WARP_DEFAULT);
 	} else {
 		cursor_warp_to_workspace(seat->cursor, focus->sway_workspace);
 	}

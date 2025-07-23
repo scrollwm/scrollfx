@@ -11,6 +11,7 @@ void node_init(struct sway_node *node, enum sway_node_type type, void *thing) {
 	node->id = next_id++;
 	node->type = type;
 	node->sway_root = thing;
+	node->focus_warp = FOCUS_WARP_NONE;
 	wl_signal_init(&node->events.destroy);
 }
 
@@ -186,4 +187,12 @@ struct sway_scene_tree *alloc_scene_tree(struct sway_scene_tree *parent,
 	}
 
 	return tree;
+}
+
+void node_set_focus_warp(struct sway_node *node, enum sway_node_focus_warp warp) {
+	node->focus_warp = warp;
+}
+
+enum sway_node_focus_warp node_get_focus_warp(struct sway_node *node) {
+	return node->focus_warp;
 }
