@@ -123,6 +123,10 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 	struct sway_container *current = config->handler_context.container;
 	double min_width, max_width, min_height, max_height;
 	view_get_constraints(current->view, &min_width, &max_width, &min_height, &max_height);
+	min_width += 2.0 * current->pending.border_thickness;
+	max_width += 2.0 * current->pending.border_thickness;
+	min_height += 2.0 * current->pending.border_thickness;
+	max_height += 2.0 * current->pending.border_thickness;
 	enum sway_container_layout layout = layout_get_type(config->handler_context.workspace);
 	bool horizontal = is_horizontal(axis);
 	if ((layout == L_HORIZ && horizontal) || (layout == L_VERT && !horizontal)) {
