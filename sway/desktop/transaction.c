@@ -1350,7 +1350,7 @@ static void transaction_progress(void) {
 	if (!server.pending_transaction) {
 		struct sway_seat *seat = input_manager_get_default_seat();
 		struct sway_node *node = seat_get_focus(seat);
-		if (node->type == N_CONTAINER) {
+		if (node && node->type == N_CONTAINER) {
 			switch (node_get_focus_warp(node)) {
 			case FOCUS_WARP_NONE:
 				break;
