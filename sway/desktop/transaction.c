@@ -1332,6 +1332,10 @@ static void animation_callback(void *data) {
 	arrange_root(root);
 }
 
+static void animation_callback_end(void *data) {
+	cursor_rebase_all();
+}
+
 static void transaction_commit_pending(void);
 
 static void transaction_progress(void) {
@@ -1342,7 +1346,7 @@ static void transaction_progress(void) {
 		return;
 	}
 	transaction_apply(server.queued_transaction);
-	animation_start(NULL, NULL, animation_callback, NULL, NULL, NULL);
+	animation_start(NULL, NULL, animation_callback, NULL, animation_callback_end, NULL);
 	cursor_rebase_all();
 	transaction_destroy(server.queued_transaction);
 	server.queued_transaction = NULL;
