@@ -619,6 +619,7 @@ struct sway_config {
 	char *jump_labels_keys;
 	bool fullscreen_movefocus;
 	bool align_reset_auto;
+	bool cycle_size_wrap;
 	bool gesture_scroll_enable;
 	uint32_t gesture_scroll_fingers;
 	float gesture_scroll_sentitivity;

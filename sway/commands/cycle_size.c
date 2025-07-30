@@ -8,6 +8,7 @@
 #include "sway/tree/workspace.h"
 #include "sway/output.h"
 #include "sway/desktop/animation.h"
+#include "util.h"
 
 #define AXIS_HORIZONTAL (WLR_EDGE_LEFT | WLR_EDGE_RIGHT)
 #define AXIS_VERTICAL   (WLR_EDGE_TOP | WLR_EDGE_BOTTOM)
@@ -26,6 +27,10 @@ static double get_closest_fraction(double cur, list_t *sizes, int inc) {
 				return *size;
 			}
 		}
+		if (config->cycle_size_wrap) {
+			double *size = sizes->items[0];
+			return *size;
+		}
 	} else {
 		for (int i = sizes->length - 1; i >= 0; i--) {
 			double *size = sizes->items[i];
@@ -33,8 +38,21 @@ static double get_closest_fraction(double cur, list_t *sizes, int inc) {
 				return *size;
 			}
 		}
+		if (config->cycle_size_wrap) {
+			double *size = sizes->items[sizes->length - 1];
+			return *size;
+		}
 	}
 	return cur;
+}
+
+struct cmd_results *cmd_cycle_size_wrap(int argc, char **argv) {
+	struct cmd_results *error;
+	if ((error = checkarg(argc, "cycle_size_wrap", EXPECTED_AT_LEAST, 1))) {
+		return error;
+	}
+	config->cycle_size_wrap = parse_boolean(argv[0], config->cycle_size_wrap);
+	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 
 /**
