@@ -60,6 +60,10 @@ to *scroll-input*(5) and *scroll-output*(5).
 ## Config only commands
 The following commands may only be used in the configuration file.
 
+*align_reset_auto* <true|false>
+	The default value is _false_. If _true_, alignment is reset when changing
+	focus, otherwise the user needs to do it manually.
+
 *animations* <animations-subcommands...>
 	Subcommands are:
 
@@ -120,6 +124,11 @@ The following commands may only be used in the configuration file.
 
 *bar* [<bar-id>] <bar-subcommands...>
 	For details on bar subcommands, see *scroll-bar*(5).
+
+*cycle_size_wrap* <true|false>
+	Default value is _false_. Enables wrapping sizes in the *cycle_size* command.
+	Incrementing from the last available size will start again from the
+	beginning, and decrementing the first one will move to the last.
 
 *default_orientation* <horizontal|vertical|auto>
 	Sets the default container layout for tiled containers.
@@ -234,7 +243,9 @@ They are expected to be used with *bindsym* or at runtime through *scrollmsg*(1)
 
 *cycle_size* <h|v> <next|prev>
 	Cycles the widths/heights of windows/columns/rows in horizontal or vertical
-	modes.
+	modes. See the *cycle_size_wrap* option if you want to wrap from the last
+	available size to the first one when incrementing, and from the first to the
+	last one when decrementing.
 
 *exit*
 	Exit scroll and end your Wayland session.

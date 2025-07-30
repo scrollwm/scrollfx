@@ -121,6 +121,7 @@ sway_cmd cmd_client_selected_focused;
 sway_cmd cmd_commands;
 sway_cmd cmd_create_output;
 sway_cmd cmd_cycle_size;
+sway_cmd cmd_cycle_size_wrap;
 sway_cmd cmd_default_border;
 sway_cmd cmd_default_floating_border;
 sway_cmd cmd_default_orientation;
