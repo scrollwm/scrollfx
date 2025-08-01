@@ -2430,6 +2430,9 @@ static void scroll_end_horizontal(struct sway_seat *seat, list_t *children, int 
 			}
 			offset += scale * (con->pending.width + 2.0 * workspace->gaps_inner);
 		}
+		if (new_active->pending.children) {
+			new_active = new_active->current.focused_inactive_child;
+		}
 		seat_set_focus_container(seat, new_active);
     } else if (scrolling_direction == DIR_RIGHT) {
 		struct sway_container *new_active = children->items[0];
@@ -2443,6 +2446,9 @@ static void scroll_end_horizontal(struct sway_seat *seat, list_t *children, int 
 				break;
 			}
 			offset -= scale * (con->pending.width + 2.0 * workspace->gaps_inner);
+		}
+		if (new_active->pending.children) {
+			new_active = new_active->current.focused_inactive_child;
 		}
 		seat_set_focus_container(seat, new_active);
 	}
@@ -2466,6 +2472,9 @@ static void scroll_end_vertical(struct sway_seat *seat, list_t *children, int ac
 			}
 			offset += scale * (con->pending.height + 2.0 * workspace->gaps_inner);
 		}
+		if (new_active->pending.children) {
+			new_active = new_active->current.focused_inactive_child;
+		}
 		seat_set_focus_container(seat, new_active);
     } else if (scrolling_direction == DIR_DOWN) {
 		struct sway_container *new_active = children->items[0];
@@ -2479,6 +2488,9 @@ static void scroll_end_vertical(struct sway_seat *seat, list_t *children, int ac
 				break;
 			}
 			offset -= scale * (con->pending.height + 2.0 * workspace->gaps_inner);
+		}
+		if (new_active->pending.children) {
+			new_active = new_active->current.focused_inactive_child;
 		}
 		seat_set_focus_container(seat, new_active);
 	}
