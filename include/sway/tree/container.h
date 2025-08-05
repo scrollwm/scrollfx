@@ -140,6 +140,12 @@ struct sway_container {
 	double width_fraction;
 	double height_fraction;
 
+	struct {
+		bool saved;
+		double saved_width_fraction;
+		double saved_height_fraction;
+	} toggle_size;
+
 	// Animation variables
 	struct {
 		double x0, y0, w0, h0;

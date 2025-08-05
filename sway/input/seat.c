@@ -1276,6 +1276,8 @@ static void seat_set_workspace_focus(struct sway_seat *seat, struct sway_node *n
 		last_workspace == new_workspace) {
 		layout_modifiers_set_reorder(last_workspace, REORDER_AUTO);
 	}
+
+	layout_toggle_size_change_focus(last_focus, node);
 }
 
 void seat_set_focus(struct sway_seat *seat, struct sway_node *node) {

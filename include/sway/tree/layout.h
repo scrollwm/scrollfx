@@ -61,6 +61,12 @@ enum sway_layout_overview {
 	OVERVIEW_ALL
 };
 
+enum sway_toggle_size {
+	TOGGLE_SIZE_NONE,
+	TOGGLE_SIZE_ACTIVE,
+	TOGGLE_SIZE_ALL
+};
+
 struct sway_scroller {
 	enum sway_container_layout type;
 
@@ -89,6 +95,12 @@ struct sway_scroller {
 		struct sway_scene_tree *tree;
 		struct sway_text_node *text;
 	} workspaces;
+
+	struct {
+		enum sway_toggle_size mode;
+		struct sway_container *container;
+		double width, height;
+	} toggle_size;
 };
 
 // Global functions
@@ -226,5 +238,17 @@ bool layout_trails_trailmarked(struct sway_view *view);
 struct sway_space;
 
 void layout_space_restore(struct sway_space *space, struct sway_workspace *workspace, bool reset);
+
+// Toggle size
+//
+// Return the current toggle_size mode for the workspace
+enum sway_toggle_size layout_toggle_size_mode(struct sway_workspace *workspace);
+double layout_toggle_size_width_fraction(struct sway_workspace *workspace);
+double layout_toggle_size_height_fraction(struct sway_workspace *workspace);
+// Set the toggle_size mode for the workspace
+void layout_toggle_size(struct sway_workspace *workspace, struct sway_container *container,
+	enum sway_toggle_size mode, double width_fraction, double height_fraction);
+// Called when changing focus to update toggle_size
+void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_node *new_focus);
 
 #endif // _SWAY_LAYOUT_H

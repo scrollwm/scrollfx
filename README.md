@@ -440,6 +440,10 @@ still be in full screen mode. See the `fullscreen_movefocus` option. This way
 you can work normally in full screen mode, even using `jump` to move to
 different containers quickly.
 
+*scroll* also supports a *maximize* mode, through the `toggle_size` command.
+This command lets you toggle back and forth any size for the *active* window in
+the current workspace, or *all* of them. See the manual for details.
+
 ### Touchpad and Mouse Drag Scrolling
 
 The default for scrolling is swiping with three fingers to scroll left, right,

@@ -402,11 +402,58 @@ within a container, full screen UI within a container, or a regular UI in a
 full screen container. You can always return to the usual behavior by calling
 `fullscreen_application reset`.
 
+*scroll* also supports a *maximize* mode, through the `toggle_size` command.
+This command lets you toggle back and forth any size for the *active* window in
+the current workspace, or *all* of them. See the manual for details.
+
 ``` config
     bindsym $mod+f fullscreen
     bindsym $mod+Ctrl+f fullscreen global
     bindsym $mod+Alt+f fullscreen_application toggle
     bindsym $mod+Ctrl+Alt+f fullscreen_application reset
+
+    # Toggle Size (and maximize)
+    bindsym $mod+Ctrl+t toggle_size active 1.0 1.0
+
+mode "togglesizeh" {
+    bindsym 1 toggle_size all 0.125 1.0; mode default
+    bindsym 2 toggle_size all 0.1666666667 1.0; mode default
+    bindsym 3 toggle_size all 0.25 1.0; mode default
+    bindsym 4 toggle_size all 0.333333333 1.0; mode default
+    bindsym 5 toggle_size all 0.375 1.0; mode default
+    bindsym 6 toggle_size all 0.5 1.0; mode default
+    bindsym 7 toggle_size all 0.625 1.0; mode default
+    bindsym 8 toggle_size all 0.6666666667 1.0; mode default
+    bindsym 9 toggle_size all 0.75 1.0; mode default
+    bindsym 0 toggle_size all 0.833333333 1.0; mode default
+    bindsym minus toggle_size all 0.875 1.0; mode default
+    bindsym equal toggle_size all 1.0 1.0; mode default
+    bindsym r toggle_size reset; mode default
+
+    # Return to default mode
+    bindsym Escape mode "default"
+}
+bindsym $mod+t mode "togglesizeh"
+
+mode "togglesizev" {
+    bindsym 1 toggle_size all 1.0 0.125; mode default
+    bindsym 2 toggle_size all 1.0 0.1666666667; mode default
+    bindsym 3 toggle_size all 1.0 0.25; mode default
+    bindsym 4 toggle_size all 1.0 0.333333333; mode default
+    bindsym 5 toggle_size all 1.0 0.375; mode default
+    bindsym 6 toggle_size all 1.0 0.5; mode default
+    bindsym 7 toggle_size all 1.0 0.625; mode default
+    bindsym 8 toggle_size all 1.0 0.6666666667; mode default
+    bindsym 9 toggle_size all 1.0 0.75; mode default
+    bindsym 0 toggle_size all 1.0 0.833333333; mode default
+    bindsym minus toggle_size all 1.0 0.875; mode default
+    bindsym equal toggle_size all 1.0 1.0; mode default
+    bindsym r toggle_size reset; mode default
+
+    # Return to default mode
+    bindsym Escape mode "default"
+}
+bindsym $mod+Shift+t mode "togglesizev"
 ```
 
 ## Touchpad Gestures
