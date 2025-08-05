@@ -182,6 +182,10 @@ The following commands may only be used in the configuration file.
 	Default is _[0.33333333, 0.5, 0.66666667, 1.0]_. These are the fractions
 	_cycle_size_ will use when resizing the width of columns/windows.
 
+*maximize_if_single* <true|false>
+	Default value is _false_. If _true_, whenever there is a single tiling
+	window in the workspace, it will be maximized.
+
 *swaybg_command* <command>
 	Executes custom background _command_. Default is _swaybg_. Refer to
 	*scroll-output*(5) for more information.

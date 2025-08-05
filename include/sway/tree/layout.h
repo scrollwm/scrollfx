@@ -251,4 +251,7 @@ void layout_toggle_size(struct sway_workspace *workspace, struct sway_container 
 // Called when changing focus to update toggle_size
 void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_node *new_focus);
 
+// Maximize if single option
+void layout_maximize_if_single(struct sway_workspace *workspace);
+
 #endif // _SWAY_LAYOUT_H

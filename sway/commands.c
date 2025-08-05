@@ -125,6 +125,7 @@ static const struct cmd_handler config_handlers[] = {
 	{ "layout_default_width", cmd_layout_default_width },
 	{ "layout_heights", cmd_layout_heights },
 	{ "layout_widths", cmd_layout_widths },
+	{ "maximize_if_single", cmd_maximize_if_single },
 	{ "primary_selection", cmd_primary_selection },
 	{ "scrollnag_command", cmd_swaynag_command },
 	{ "swaybg_command", cmd_swaybg_command },

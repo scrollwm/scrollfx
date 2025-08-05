@@ -275,6 +275,7 @@ static void config_defaults(struct sway_config *config) {
 	config->fullscreen_movefocus = true;
 	config->align_reset_auto = false;
 	config->cycle_size_wrap = false;
+	config->maximize_if_single = false;
 	config->gesture_scroll_enable = true;
 	config->gesture_scroll_fingers = 3;
 	config->gesture_scroll_sentitivity = 1.0f;
