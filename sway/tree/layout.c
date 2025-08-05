@@ -64,11 +64,14 @@ list_t *layout_get_heights(struct sway_output *output) {
 	return config->layout_heights;
 }
 
+static void layout_toggle_size_init(struct sway_workspace *workspace);
+
 void layout_init(struct sway_workspace *workspace) {
 	layout_modifiers_init(workspace);
 	workspace->layout.overview = OVERVIEW_DISABLED;
 	workspace->layout.mem_scale = -1.0f;  // disabled
 	workspace->layout.workspaces.text = NULL;
+	layout_toggle_size_init(workspace);
 	bool failed = false;
 	workspace->layout.workspaces.tree = alloc_scene_tree(workspace->output->layers.shell_overlay, &failed);
 	sway_scene_node_set_enabled(&workspace->layout.workspaces.tree->node, false);
@@ -522,6 +525,7 @@ static void layout_container_add_view(struct sway_container *active, struct sway
 	container_insert_child(parent, view, index);
 	view->width_fraction = parent->width_fraction;
 	view->height_fraction = parent->height_fraction;
+	view->toggle_size = parent->toggle_size;
 	if (ref) {
 		position_new_container(parent->pending.workspace, parent->pending.children,
 			ref, view, index);
@@ -538,6 +542,7 @@ static struct sway_container *layout_wrap_into_container(struct sway_container *
 	cont->pending.height = child->pending.height;
 	cont->width_fraction = child->width_fraction;
 	cont->height_fraction = child->height_fraction;
+	cont->toggle_size = child->toggle_size;
 	cont->current.x = child->current.x;
 	cont->current.y = child->current.y;
 	cont->pending.x = child->pending.x;
@@ -1076,19 +1081,31 @@ static bool need_to_detach(enum sway_container_layout parent_layout, enum sway_l
 	return true;
 }
 
+static void pop_container_and_children_sizes(struct sway_container *container);
+
 // Detaches a container from its parent container and wraps it into a container
 static struct sway_container *layer_container_detach(struct sway_container *child) {
 	struct sway_container *parent = child->pending.parent;
 	list_t *siblings = parent->pending.children;
 	list_del(siblings, list_find(siblings, child));
+	if (child->toggle_size.saved) {
+		pop_container_and_children_sizes(parent);
+	}
 	struct sway_container *new_parent = layout_wrap_into_container(child, parent->pending.layout);
 	container_update_representation(parent);
 	node_set_dirty(&parent->node);
 	return new_parent;
 }
 
+static void push_container_and_children_sizes(struct sway_container *container,
+		double new_width, double new_height);
+
 // Inserts a top level orphan container (view) into a container
 static void layout_insert_into_container(struct sway_container *parent, struct sway_container *child, int idx) {
+	if (child->toggle_size.saved && !parent->toggle_size.saved) {
+		push_container_and_children_sizes(parent, child->width_fraction,
+			child->height_fraction);
+	}
 	list_insert(parent->pending.children, idx, child);
 	child->pending.parent = parent;
 	child->pending.workspace = parent->pending.workspace;
@@ -3340,4 +3357,208 @@ void layout_space_restore(struct sway_space *space, struct sway_workspace *works
 		arrange_workspace(workspace);
 		node_set_dirty(&workspace->node);
 	}
+}
+
+static void layout_toggle_size_init(struct sway_workspace *workspace) {
+	workspace->layout.toggle_size.mode = TOGGLE_SIZE_NONE;
+	workspace->layout.toggle_size.container = NULL;
+	workspace->layout.toggle_size.width = 0.0;
+	workspace->layout.toggle_size.height = 0.0;
+}
+
+enum sway_toggle_size layout_toggle_size_mode(struct sway_workspace *workspace) {
+	return workspace->layout.toggle_size.mode;
+}
+
+static struct sway_container *layout_toggle_size_container(struct sway_workspace *workspace) {
+	return workspace->layout.toggle_size.container;
+}
+
+double layout_toggle_size_width_fraction(struct sway_workspace *workspace) {
+	return workspace->layout.toggle_size.width;
+}
+
+double layout_toggle_size_height_fraction(struct sway_workspace *workspace) {
+	return workspace->layout.toggle_size.height;
+}
+
+static void push_children_sizes(list_t *children,
+		double new_width, double new_height) {
+	if (!children) {
+		return;
+	}
+	for (int i = 0; i < children->length; ++i) {
+		struct sway_container *con = children->items[i];
+		con->toggle_size.saved_width_fraction = con->width_fraction;
+		con->toggle_size.saved_height_fraction = con->height_fraction;
+		con->toggle_size.saved = true;
+		con->width_fraction = new_width;
+		con->height_fraction = new_height;
+		if (con->pending.children) {
+			for (int j = 0; j < con->pending.children->length; ++j) {
+				struct sway_container *child = con->pending.children->items[j];
+				child->toggle_size.saved_width_fraction = child->width_fraction;
+				child->toggle_size.saved_height_fraction = child->height_fraction;
+				child->toggle_size.saved = true;
+				child->width_fraction = new_width;
+				child->height_fraction = new_height;
+			}
+		}
+	}
+}
+
+static void pop_children_sizes(list_t *children) {
+	if (!children) {
+		return;
+	}
+	for (int i = 0; i < children->length; ++i) {
+		struct sway_container *con = children->items[i];
+		con->toggle_size.saved = false;
+		con->width_fraction = con->toggle_size.saved_width_fraction;
+		con->height_fraction = con->toggle_size.saved_height_fraction;
+		if (con->pending.children) {
+			for (int j = 0; j < con->pending.children->length; ++j) {
+				struct sway_container *child = con->pending.children->items[j];
+				child->toggle_size.saved = false;
+				child->width_fraction = child->toggle_size.saved_width_fraction;
+				child->height_fraction = child->toggle_size.saved_height_fraction;
+			}
+		}
+	}
+}
+
+static void push_container_and_children_sizes(struct sway_container *container,
+		double new_width, double new_height) {
+	if (container == NULL) {
+		return;
+	}
+	if (container->pending.parent) {
+		container = container->pending.parent;
+	}
+	if (!container->toggle_size.saved) {
+		container->toggle_size.saved_width_fraction = container->width_fraction;
+		container->toggle_size.saved_height_fraction = container->height_fraction;
+		container->toggle_size.saved = true;
+		container->width_fraction = new_width;
+		container->height_fraction = new_height;
+		push_children_sizes(container->pending.children, new_width, new_height);
+	}
+}
+
+static void pop_container_and_children_sizes(struct sway_container *container) {
+	if (container == NULL) {
+		return;
+	}
+	if (container->pending.parent) {
+		container = container->pending.parent;
+	}
+	container->toggle_size.saved = false;
+	container->width_fraction = container->toggle_size.saved_width_fraction;
+	container->height_fraction = container->toggle_size.saved_height_fraction;
+	pop_children_sizes(container->pending.children);
+}
+
+void layout_toggle_size(struct sway_workspace *workspace,
+		struct sway_container *container, enum sway_toggle_size mode,
+		double width_fraction, double height_fraction) {
+	enum sway_toggle_size old_mode = workspace->layout.toggle_size.mode;
+	if (old_mode == mode && mode == TOGGLE_SIZE_NONE) {
+		return;
+	}
+	workspace->layout.toggle_size.mode = mode;
+	workspace->layout.toggle_size.container = container;
+	workspace->layout.toggle_size.width = width_fraction;
+	workspace->layout.toggle_size.height = height_fraction;
+
+	switch (mode) {
+	case TOGGLE_SIZE_NONE:
+		if (old_mode == TOGGLE_SIZE_ACTIVE) {
+			pop_container_and_children_sizes(container);
+		} else {
+			pop_children_sizes(workspace->tiling);
+		}
+		break;
+	case TOGGLE_SIZE_ACTIVE:
+		push_container_and_children_sizes(container, width_fraction, height_fraction);
+		break;
+	case TOGGLE_SIZE_ALL:
+		push_children_sizes(workspace->tiling, width_fraction, height_fraction);
+		break;
+	}
+	arrange_workspace(workspace);
+	node_set_dirty(&workspace->node);
+}
+
+void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_node *new_focus) {
+	struct sway_workspace *new_workspace;
+	struct sway_container *new_container;
+	if (new_focus->type == N_WORKSPACE) {
+		// If new_focus is a workspace, leave last_focus as it is
+		new_workspace = new_focus->sway_workspace;
+		return;
+	} else {
+		new_container = new_focus->sway_container;
+		new_workspace = new_focus->sway_container->pending.workspace;
+	}
+
+	struct sway_workspace *last_workspace = NULL;
+	struct sway_container *last_container = NULL;
+	if (last_focus) {
+		if (last_focus->type == N_WORKSPACE) {
+			last_workspace = last_focus->sway_workspace;
+		} else {
+			last_container = last_focus->sway_container;
+			last_workspace = last_focus->sway_container->current.workspace;
+		}
+	}
+
+	enum sway_toggle_size new_mode = layout_toggle_size_mode(new_workspace);
+	if (new_workspace == last_workspace) {
+		if (new_mode == TOGGLE_SIZE_NONE) {
+			return;
+		}
+		if (last_focus && last_container == new_container) {
+			return;
+		}
+		if (new_mode == TOGGLE_SIZE_ACTIVE && last_container) {
+			pop_container_and_children_sizes(last_container);
+			node_set_dirty(&last_container->node);
+		}
+		if (new_container) {
+			push_container_and_children_sizes(new_container,
+				layout_toggle_size_width_fraction(new_workspace),
+				layout_toggle_size_height_fraction(new_workspace));
+			new_workspace->layout.toggle_size.container = new_container;
+			node_set_dirty(&new_container->node);
+		}
+	} else {
+		if (new_container &&
+			new_container->current.workspace != new_container->pending.workspace) {
+			if (new_container->toggle_size.saved) {
+				// First restore moving container
+				pop_container_and_children_sizes(new_container);
+			}
+			if (new_mode == TOGGLE_SIZE_NONE) {
+				arrange_workspace(new_workspace);
+				node_set_dirty(&new_container->node);
+				node_set_dirty(&new_workspace->node);
+				return;
+			} else if (new_mode == TOGGLE_SIZE_ACTIVE) {
+				struct sway_container *old_active = layout_toggle_size_container(new_workspace);
+				if (old_active && new_container != old_active) {
+					pop_container_and_children_sizes(old_active);
+					node_set_dirty(&old_active->node);
+				}
+			}
+			push_container_and_children_sizes(new_container,
+				layout_toggle_size_width_fraction(new_workspace),
+				layout_toggle_size_height_fraction(new_workspace));
+			new_workspace->layout.toggle_size.container = new_container;
+			node_set_dirty(&new_container->node);
+		} else {
+			return;
+		}
+	}
+	arrange_workspace(new_workspace);
+	node_set_dirty(&new_workspace->node);
 }

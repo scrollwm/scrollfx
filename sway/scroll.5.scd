@@ -716,6 +716,24 @@ set|plus|minus|toggle <amount>
 
 	The default format is "%title".
 
+*toggle_size* <active|all|reset> <width_fraction> <height_fraction>
+	Toggles the size for tiling windows in the current workspace. It can affect
+	the _active_ (currently focused) window every time it changes, or _all_ the
+	windows in the workspace. _reset_ will return to normal mode regardless of
+	the current state.
+
+	_width_fraction_ and _height_fraction_ are the new fractions to toggle. For
+	example, if you wanted to always have the active window maximized, you
+	could use:
+
+```
+	toggle_size active 1.0 1.0
+```
+
+	*toggle_size* saves the sizes of the affected windows when you call the
+	command. Any resizing you do to windows while in _toggle_size_ mode are
+	reset to the saved sizes when you toggle back to normal state.
+
 *trail* new|prev|next|delete|clear|to_selection
 	Manages trails. A _trail_ is a path of trailmarks. A _trailmark_ is an
 	anonymous mark. You can create as many trailmarks as you want in a trail,

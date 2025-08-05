@@ -211,6 +211,7 @@ sway_cmd cmd_title_align;
 sway_cmd cmd_title_format;
 sway_cmd cmd_titlebar_border_thickness;
 sway_cmd cmd_titlebar_padding;
+sway_cmd cmd_toggle_size;
 sway_cmd cmd_trail;
 sway_cmd cmd_trailmark;
 sway_cmd cmd_unbindcode;

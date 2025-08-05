@@ -167,6 +167,7 @@ static const struct cmd_handler command_handlers[] = {
 	{ "sticky", cmd_sticky },
 	{ "swap", cmd_swap },
 	{ "title_format", cmd_title_format },
+	{ "toggle_size", cmd_toggle_size },
 	{ "trail", cmd_trail },
 	{ "trailmark", cmd_trailmark },
 	{ "unmark", cmd_unmark },
