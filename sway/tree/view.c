@@ -955,6 +955,7 @@ void view_unmap(struct sway_view *view) {
 		// Container may have been a child of the root fullscreen container
 		arrange_root();
 	} else if (ws && !ws->node.destroying) {
+		layout_maximize_if_single(ws);
 		arrange_workspace(ws);
 		workspace_detect_urgent(ws);
 	}

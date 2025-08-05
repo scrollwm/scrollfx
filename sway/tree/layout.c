@@ -3489,6 +3489,36 @@ void layout_toggle_size(struct sway_workspace *workspace,
 	node_set_dirty(&workspace->node);
 }
 
+void layout_maximize_if_single(struct sway_workspace *workspace) {
+	if (workspace && workspace->tiling->length > 0 && config->maximize_if_single) {
+		enum sway_toggle_size mode = layout_toggle_size_mode(workspace);
+		if (mode == TOGGLE_SIZE_NONE) {
+			bool arrange = false;
+			if (workspace->tiling->length == 1) {
+				struct sway_container *con = workspace->tiling->items[0];
+				if (!con->toggle_size.saved) {
+					arrange = true;
+					push_container_and_children_sizes(con, 1.0, 1.0);
+					node_set_dirty(&con->node);
+				}
+			} else {
+				for (int i = 0; i < workspace->tiling->length; ++i) {
+					struct sway_container *con = workspace->tiling->items[i];
+					if (con->toggle_size.saved) {
+						arrange = true;
+						pop_container_and_children_sizes(con);
+						node_set_dirty(&con->node);
+					}
+				}
+			}
+			if (arrange) {
+				arrange_workspace(workspace);
+				node_set_dirty(&workspace->node);
+			}
+		}
+	}
+}
+
 void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_node *new_focus) {
 	struct sway_workspace *new_workspace;
 	struct sway_container *new_container;
@@ -3515,6 +3545,7 @@ void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_n
 	enum sway_toggle_size new_mode = layout_toggle_size_mode(new_workspace);
 	if (new_workspace == last_workspace) {
 		if (new_mode == TOGGLE_SIZE_NONE) {
+			layout_maximize_if_single(new_workspace);
 			return;
 		}
 		if (last_focus && last_container == new_container) {
@@ -3539,6 +3570,7 @@ void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_n
 				pop_container_and_children_sizes(new_container);
 			}
 			if (new_mode == TOGGLE_SIZE_NONE) {
+				layout_maximize_if_single(new_workspace);
 				arrange_workspace(new_workspace);
 				node_set_dirty(&new_container->node);
 				node_set_dirty(&new_workspace->node);

@@ -1104,6 +1104,8 @@ void container_set_floating(struct sway_container *container, bool enable) {
 		}
 	}
 
+	layout_maximize_if_single(workspace);
+
 	container_end_mouse_operation(container);
 
 	ipc_event_window(container, "floating");
