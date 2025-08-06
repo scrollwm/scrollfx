@@ -611,6 +611,80 @@ static void check_focus_follows_mouse(struct sway_seat *seat,
 	}
 }
 
+// Shake cursor detection
+static const uint32_t SHAKE_MSEC = 500;
+static const uint32_t SHAKE_MIN_PIX = 200;
+static const int SHAKE_MIN_SEGMENTS = 4;
+static const double SHAKE_FACTOR = 2.5;
+static const double M_PI = 3.14159265358979323846;
+
+static bool cursor_detect_shake(struct sway_cursor *cursor, uint32_t time_msec) {
+	struct Position {
+		double x, y;
+		uint32_t time;
+	};
+	static list_t *history = NULL;
+	if (history == NULL) {
+		history = create_list();
+	}
+	bool reused = false;
+	struct Position p0;
+	p0.x = cursor->cursor->x;
+	p0.y = cursor->cursor->y;
+	if (history->length > 0) {
+		struct Position *p1 = history->items[history->length - 1];
+		const double len_p1x = p0.x - p1->x;
+		const double len_p1y = p0.y - p1->y;
+		if (history->length > 1) {
+			struct Position *p2 = history->items[history->length - 2];
+			const double len_p2x = p0.x - p2->x;
+			const double len_p2y = p0.y - p2->y;
+			if (len_p1x * len_p2x >= -0.5 && len_p1y * len_p2y >= -0.5) {
+				p1->x = p0.x;
+				p1->y = p0.y;
+				p1->time = time_msec;
+				reused = true;
+			}
+		}
+	}
+	if (!reused) {
+		struct Position *new_pos = malloc(sizeof(struct Position));
+		*new_pos = p0;
+		new_pos->time = time_msec;
+		list_add(history, new_pos);
+	}
+	for (int i = 0; i < history->length; ++i) {
+		struct Position *pos = history->items[i];
+		if (pos->time < time_msec - SHAKE_MSEC) {
+			list_del(history, i);
+			i--;
+			free(pos);
+		} else {
+			break;
+		}
+	}
+	if (history->length > SHAKE_MIN_SEGMENTS) {
+		double length = 0.0, rotation = 0.0;
+		for (int i = 2; i < history->length; ++i) {
+			struct Position *p0 = history->items[i];
+			struct Position *p1 = history->items[i - 1];
+			struct Position *p2 = history->items[i - 2];
+			double a2 = (p1->x - p2->x) * (p1->x - p2->x) + (p1->y - p2->y) * (p1->y - p2->y);
+			double b2 = (p1->x - p0->x) * (p1->x - p0->x) + (p1->y - p0->y) * (p1->y - p0->y);
+			double c2 = (p0->x - p2->x) * (p0->x - p2->x) + (p0->y - p2->y) * (p0->y - p2->y);
+			length += sqrt(b2);
+			if (a2 * b2 == 0.0) {
+				continue;
+			}
+			rotation += M_PI - acos((a2 + b2 - c2) / (2.0 *  sqrt(a2 * b2)));
+		}
+		if (length > SHAKE_MIN_PIX && rotation > SHAKE_FACTOR * M_PI) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static void handle_pointer_motion(struct sway_seat *seat, uint32_t time_msec) {
 	struct seatop_default_event *e = seat->seatop_data;
 	struct sway_cursor *cursor = seat->cursor;
@@ -622,6 +696,29 @@ static void handle_pointer_motion(struct sway_seat *seat, uint32_t time_msec) {
 
 	if (config->focus_follows_mouse != FOLLOWS_NO) {
 		check_focus_follows_mouse(seat, e, node);
+	}
+
+	if (config->cursor_shake_magnify) {
+		// wlroots is missing an easy way to scale the cursor. It creates a default
+		// size per output depending on the cursor theme and the output scale,
+		// and it provides no more control than that, so I need to reconfigure
+		// the theme each time.
+		struct seat_config *seat_config = seat_get_config(seat);
+		static int size = 0;
+		if (cursor_detect_shake(cursor, time_msec) && size > 0) {
+			if (size == seat_config->xcursor_theme.size) {
+				seat_config->xcursor_theme.size = size * 4;
+				seat_configure_xcursor(seat);
+			}
+		} else {
+			if (size <= 0) {
+				size = seat_config->xcursor_theme.size;
+			}
+			if (seat_config->xcursor_theme.size != size) {
+				seat_config->xcursor_theme.size = size;
+				seat_configure_xcursor(seat);
+			}
+		}
 	}
 
 	if (surface) {
