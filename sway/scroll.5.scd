@@ -125,6 +125,10 @@ The following commands may only be used in the configuration file.
 *bar* [<bar-id>] <bar-subcommands...>
 	For details on bar subcommands, see *scroll-bar*(5).
 
+*cursor_shake_magnify* <true|false>
+	Default value is _false_. If _true_, shaking the cursor will magnify it. It
+	can be useful to find the location of the cursor on very big displays.
+
 *cycle_size_wrap* <true|false>
 	Default value is _false_. Enables wrapping sizes in the *cycle_size* command.
 	Incrementing from the last available size will start again from the

@@ -110,6 +110,7 @@ static const struct cmd_handler handlers[] = {
 static const struct cmd_handler config_handlers[] = {
 	{ "align_reset_auto", cmd_align_reset_auto },
 	{ "animations", cmd_animations },
+	{ "cursor_shake_magnify", cmd_cursor_shake_magnify },
 	{ "cycle_size_wrap", cmd_cycle_size_wrap },
 	{ "default_orientation", cmd_default_orientation },
 	{ "fullscreen_movefocus", cmd_fullscreen_movefocus },

@@ -96,6 +96,7 @@ sway_sources = files(
 	'commands/new_window.c',
 	'commands/no_focus.c',
 	'commands/nop.c',
+	'commands/options.c',
 	'commands/output.c',
 	'commands/overview.c',
 	'commands/pin.c',
