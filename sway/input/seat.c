@@ -1330,6 +1330,7 @@ void seat_set_focus_layer(struct sway_seat *seat,
 		struct wlr_layer_surface_v1 *layer) {
 	if (!layer && seat->focused_layer) {
 		seat->focused_layer = NULL;
+		seat->has_exclusive_layer = false;
 		struct sway_node *previous = seat_get_focus_inactive(seat, &root->node);
 		if (previous) {
 			// Hack to get seat to re-focus the return value of get_focus
@@ -1457,7 +1458,7 @@ struct sway_node *seat_get_active_tiling_child(struct sway_seat *seat,
 }
 
 struct sway_node *seat_get_focus(struct sway_seat *seat) {
-	if (!seat->has_focus) {
+	if (!seat->has_focus && !seat->has_exclusive_layer) {
 		return NULL;
 	}
 	sway_assert(!wl_list_empty(&seat->focus_stack),
