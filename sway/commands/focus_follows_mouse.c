@@ -13,9 +13,11 @@ struct cmd_results *cmd_focus_follows_mouse(int argc, char **argv) {
 		config->focus_follows_mouse = FOLLOWS_YES;
 	} else if(strcmp(argv[0], "always") == 0) {
 		config->focus_follows_mouse = FOLLOWS_ALWAYS;
+	} else if(strcmp(argv[0], "full") == 0) {
+		config->focus_follows_mouse = FOLLOWS_FULL;
 	} else {
 		return cmd_results_new(CMD_FAILURE,
-				"Expected 'focus_follows_mouse no|yes|always'");
+				"Expected 'focus_follows_mouse no|yes|always|full'");
 	}
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }

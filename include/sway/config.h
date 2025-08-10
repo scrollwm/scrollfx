@@ -480,6 +480,7 @@ enum focus_follows_mouse_mode {
 	FOLLOWS_NO,
 	FOLLOWS_YES,
 	FOLLOWS_ALWAYS,
+	FOLLOWS_FULL,
 };
 
 enum focus_wrapping_mode {
