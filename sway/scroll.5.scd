@@ -1119,10 +1119,12 @@ The default colors are:
 	disables this feature. If _inverse_ is specified, left click is used for
 	resizing and right click for moving.
 
-*focus_follows_mouse* yes|no|always
-	If set to _yes_, moving your mouse over a window will focus that window. If
-	set to _always_, the window under the cursor will always be focused, even
-	after switching between workspaces.
+*focus_follows_mouse* yes|no|always|full
+	If set to _yes_ (default value), moving your mouse over a window will focus
+	that window. If	set to _always_, the window under the cursor will always be
+	focused, even after switching between workspaces. If set to _full_,focusing
+	will only happen if the tiling window under the cursor is fully in the
+	viewport.
 
 *focus_on_window_activation* smart|urgent|focus|none
 	This option determines what to do when a client requests window activation.
