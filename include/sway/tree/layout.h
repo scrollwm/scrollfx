@@ -254,4 +254,7 @@ void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_n
 // Maximize if single option
 void layout_maximize_if_single(struct sway_workspace *workspace);
 
+void layout_toggle_size_container(struct sway_container *container,
+		double width_fraction, double height_fraction);
+
 #endif // _SWAY_LAYOUT_H

@@ -724,11 +724,26 @@ set|plus|minus|toggle <amount>
 
 	The default format is "%title".
 
-*toggle_size* <active|all|reset> <width_fraction> <height_fraction>
-	Toggles the size for tiling windows in the current workspace. It can affect
-	the _active_ (currently focused) window every time it changes, or _all_ the
-	windows in the workspace. _reset_ will return to normal mode regardless of
-	the current state.
+*toggle_size* <this|active|all|reset> <width_fraction> <height_fraction>
+	Toggles the size for tiling windows in the current workspace. There are
+	three modes of operation, and they affect the whole workspace:
+
+	_normal_: *scroll*'s usual working mode. Only windows that call
+	*toggle_size* manually (using _this_) are affected by the temporary sizing.
+
+	_active_: set by calling *toggle_size* _active_, the _active_ (currently
+	focused) window will be affected every time it changes.
+
+	_all_: set by calling *toggle_size* _all_, it affects all the windows in
+	the workspace.
+
+	When you move a window from a workspace to another, it will be affected
+	by the new workspace's mode regardless of its previous _toggle_size_ state.
+
+	The _this_ argument doesn't set any mode, it just overrides the current
+	window's state.
+
+	_reset_ will return to _normal_ mode regardless of the current state.
 
 	_width_fraction_ and _height_fraction_ are the new fractions to toggle. For
 	example, if you wanted to always have the active window maximized, you
@@ -736,6 +751,12 @@ set|plus|minus|toggle <amount>
 
 ```
 	toggle_size active 1.0 1.0
+```
+
+	If you just want to have the current window maximized, you can call:
+
+```
+	toggle_size this 1.0 1.0
 ```
 
 	*toggle_size* saves the sizes of the affected windows when you call the

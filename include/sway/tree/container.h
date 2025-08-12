@@ -142,6 +142,7 @@ struct sway_container {
 
 	struct {
 		bool saved;
+		bool single;
 		double saved_width_fraction;
 		double saved_height_fraction;
 	} toggle_size;

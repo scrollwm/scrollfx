@@ -43,7 +43,7 @@ static struct cmd_results *toggle_size(enum sway_toggle_size mode, double width_
 // It can affect the active (currently focused) window every time it changes,
 // or all of them in the workspace.
 
-// toggle_size <active|all|reset> <width_fraction> <height_fraction>
+// toggle_size <this|active|all|reset> <width_fraction> <height_fraction>
 struct cmd_results *cmd_toggle_size(int argc, char **argv) {
 	if (!root->outputs->length) {
 		return cmd_results_new(CMD_INVALID,
@@ -70,8 +70,17 @@ struct cmd_results *cmd_toggle_size(int argc, char **argv) {
 		return toggle_size(TOGGLE_SIZE_ACTIVE, width_fraction, height_fraction);
 	} else if (strcasecmp(argv[0], "all") == 0) {
 		return toggle_size(TOGGLE_SIZE_ALL, width_fraction, height_fraction);
+	} else if (strcasecmp(argv[0], "this") == 0) {
+		struct sway_container * current = config->handler_context.container;
+		if (!current) {
+			return cmd_results_new(CMD_INVALID, "toggle_size this needs an active container");
+		}
+		if (container_is_floating(current)) {
+			return cmd_results_new(CMD_INVALID, "Cannot toggle_size floating containers");
+		}
+		layout_toggle_size_container(current, width_fraction, height_fraction);
 	}
-	const char usage[] = "Expected 'toggle_size <active|all|reset> <width_fraction> <height_fraction>'";
+	const char usage[] = "Expected 'toggle_size <this|active|all|reset> <width_fraction> <height_fraction>'";
 
 	return cmd_results_new(CMD_INVALID, "%s", usage);
 }
