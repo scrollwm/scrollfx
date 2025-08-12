@@ -414,6 +414,7 @@ the current workspace, or *all* of them. See the manual for details.
 
     # Toggle Size (and maximize)
     bindsym $mod+Ctrl+t toggle_size active 1.0 1.0
+    bindsym $mod+Ctrl+Shift+t toggle_size this 1.0 1.0
 
 mode "togglesizeh" {
     bindsym 1 toggle_size all 0.125 1.0; mode default

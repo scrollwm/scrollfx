@@ -3370,7 +3370,7 @@ enum sway_toggle_size layout_toggle_size_mode(struct sway_workspace *workspace) 
 	return workspace->layout.toggle_size.mode;
 }
 
-static struct sway_container *layout_toggle_size_container(struct sway_workspace *workspace) {
+static struct sway_container *layout_toggle_size_get_container(struct sway_workspace *workspace) {
 	return workspace->layout.toggle_size.container;
 }
 
@@ -3496,6 +3496,7 @@ void layout_maximize_if_single(struct sway_workspace *workspace) {
 			bool arrange = false;
 			if (workspace->tiling->length == 1) {
 				struct sway_container *con = workspace->tiling->items[0];
+				con->toggle_size.single = true;
 				if (!con->toggle_size.saved) {
 					arrange = true;
 					push_container_and_children_sizes(con, 1.0, 1.0);
@@ -3504,7 +3505,8 @@ void layout_maximize_if_single(struct sway_workspace *workspace) {
 			} else {
 				for (int i = 0; i < workspace->tiling->length; ++i) {
 					struct sway_container *con = workspace->tiling->items[i];
-					if (con->toggle_size.saved) {
+					if (con->toggle_size.single && con->toggle_size.saved) {
+						con->toggle_size.single = false;
 						arrange = true;
 						pop_container_and_children_sizes(con);
 						node_set_dirty(&con->node);
@@ -3576,7 +3578,7 @@ void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_n
 				node_set_dirty(&new_workspace->node);
 				return;
 			} else if (new_mode == TOGGLE_SIZE_ACTIVE) {
-				struct sway_container *old_active = layout_toggle_size_container(new_workspace);
+				struct sway_container *old_active = layout_toggle_size_get_container(new_workspace);
 				if (old_active && new_container != old_active) {
 					pop_container_and_children_sizes(old_active);
 					node_set_dirty(&old_active->node);
@@ -3593,4 +3595,17 @@ void layout_toggle_size_change_focus(struct sway_node *last_focus, struct sway_n
 	}
 	arrange_workspace(new_workspace);
 	node_set_dirty(&new_workspace->node);
+}
+
+void layout_toggle_size_container(struct sway_container *container,
+		double width_fraction, double height_fraction) {
+	if (container->toggle_size.saved) {
+		pop_container_and_children_sizes(container);
+	} else {
+		push_container_and_children_sizes(container, width_fraction, height_fraction);
+	}
+	struct sway_workspace *workspace = container->pending.workspace;
+	arrange_workspace(workspace);
+	node_set_dirty(&container->node);
+	node_set_dirty(&workspace->node);
 }
