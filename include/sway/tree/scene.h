@@ -732,8 +732,12 @@ void scene_node_get_size(struct sway_scene_node *node, int *width, int *height);
 
 void scene_surface_set_clip(struct sway_scene_surface *surface, struct wlr_box *clip);
 
-float scene_node_get_parent_content_scale(struct sway_scene_node *node);
-
-float scene_node_get_parent_scale(struct sway_scene_node *node);
+/**
+ * Find a parent of the current node that is a popup or view. If it finds one,
+ * fill scale (content scale and workspace scale)
+ * Returns: true if the current node is a popup or view (parent view), else false
+ * (children surfaces or popups)
+ */
+bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scale);
 
 #endif // _SWAY_SCENE_H
