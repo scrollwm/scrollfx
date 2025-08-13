@@ -70,7 +70,8 @@ static bool subsurface_tree_reconfigure_clip(
 		// The coordinates of the node are in logical space (we set them using
 		// sway_scene_node_set_position() earlier). But clipping happens in
 		// surface space, so we need to undo it if there is content scaling.
-		float scale = scene_node_get_parent_content_scale(&subsurface_tree->tree->node);
+		float scale;
+		scene_node_get_parent_total_scale(&subsurface_tree->tree->node, &scale);
 		if (scale < 0.0f) {
 			scale = 1.0f;
 		}

@@ -157,11 +157,8 @@ static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	sway_scene_buffer_set_opaque_region(scene_buffer, &opaque);
 	sway_scene_buffer_set_source_box(scene_buffer, &src_box);
 	double total_scale = 1.0f;
-	double content_scale = scene_node_get_parent_content_scale(&scene_buffer->node);
-	double scale = scene_node_get_parent_scale(&scene_buffer->node);
-	if (content_scale > 0.0f) {
-		total_scale *= content_scale;
-	}
+	float scale;
+	scene_node_get_parent_total_scale(&scene_buffer->node, &scale);
 	if (scale > 0.0f) {
 		total_scale *= scale;
 	}
