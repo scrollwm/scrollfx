@@ -72,10 +72,10 @@ with *i3-msg*(1) or even with *i3*(1).
 
 # ENVIRONMENT
 
-The following environment variables have an effect on sway:
+The following environment variables have an effect on scroll:
 
 _SCROLLSOCK_
-	Specifies the path to the sway IPC socket.
+	Specifies the path to the scroll IPC socket.
 
 _XKB\_DEFAULT\_RULES_, _XKB\_DEFAULT\_MODEL_, _XKB\_DEFAULT\_LAYOUT_,
 _XKB\_DEFAULT\_VARIANT_, _XKB\_DEFAULT\_OPTIONS_
@@ -83,23 +83,23 @@ _XKB\_DEFAULT\_VARIANT_, _XKB\_DEFAULT\_OPTIONS_
 	preferred way to configure the keyboard is via the configuration file, see
 	*scroll-input*(5).
 
-The following environment variables are set by sway:
+The following environment variables are set by scroll:
 
 _DISPLAY_
 	If compiled with Xwayland support and Xwayland is not disabled by the
 	config, this will be set to the name of the X display used for Xwayland.
 
 _SWAYSOCK_
-	For compatibility with sway, specifies the path to the sway IPC socket.
+	For compatibility with sway, specifies the path to the scroll IPC socket.
 
 _I3SOCK_
-	For compatibility with i3, specifies the path to the sway IPC socket.
+	For compatibility with i3, specifies the path to the scroll IPC socket.
 
 _SCROLLSOCK_
-	Specifies the path to the sway IPC socket.
+	Specifies the path to the scroll IPC socket.
 
 _WAYLAND_DISPLAY_
-	Specifies the name of the Wayland display that sway is running on.
+	Specifies the name of the Wayland display that scroll is running on.
 
 _XCURSOR_SIZE_
 	Specifies the configured cursor size.
