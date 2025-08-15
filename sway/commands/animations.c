@@ -9,7 +9,6 @@ static const struct cmd_handler animations_config_handlers[] = {
 	{ "default", animations_cmd_default },
 	{ "enabled", animations_cmd_enabled },
 	{ "frequency_ms", animations_cmd_frequency },
-	{ "style", animations_cmd_style },
 	{ "window_move", animations_cmd_window_move },
 	{ "window_open", animations_cmd_window_open },
 	{ "window_size", animations_cmd_window_size },
@@ -21,22 +20,6 @@ struct cmd_results *animations_cmd_enabled(int argc, char **argv) {
 		return error;
 	}
 	config->animations.enabled = parse_boolean(argv[0], config->animations.enabled);
-	return cmd_results_new(CMD_SUCCESS, NULL);
-}
-
-struct cmd_results *animations_cmd_style(int argc, char **argv) {
-	struct cmd_results *error = NULL;
-	if ((error = checkarg(argc, "style", EXPECTED_AT_LEAST, 1))) {
-		return error;
-	}
-
-	if (strcasecmp(argv[0], "clip") == 0) {
-		config->animations.style = ANIM_STYLE_CLIP;
-	} else if (strcasecmp(argv[0], "scale") == 0) {
-		config->animations.style = ANIM_STYLE_SCALE;
-	} else {
-		return cmd_results_new(CMD_INVALID, "Expected 'animations style <clip|scale>' ");
-	}
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 

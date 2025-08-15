@@ -884,66 +884,6 @@ static void animation_clip_container(struct sway_container *con) {
 	}
 }
 
-struct dest_size_data {
-	double wscale;
-	double hscale;
-};
-
-static void buffer_set_dest_size_iterator(struct sway_scene_buffer *buffer,
-		int sx, int sy, void *user_data) {
-	struct dest_size_data *data = user_data;
-	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(buffer);
-	int width, height;
-	if (scene_surface) {
-		struct wlr_surface *surface = scene_surface->surface;
-		struct wlr_surface_state *state = &surface->current;
-		width = state->width;
-		height = state->height;
-	} else {
-		width = buffer->dst_width;
-		height = buffer->dst_height;
-	}
-	sway_scene_buffer_set_dest_size(buffer,
-		round(width * data->wscale),
-		round(height * data->hscale));
-}
-
-static void view_set_dest_size(struct sway_view *view, struct dest_size_data *data) {
-	sway_scene_node_for_each_buffer(&view->content_tree->node,
-		buffer_set_dest_size_iterator, data);
-}
-
-static void animation_scale_container(struct sway_container *con) {
-	if (!wl_list_empty(&con->view->content_tree->children)) {
-		if (!container_is_floating(con)) {
-			// Sometimes there could be a transaction timeout, and the surface
-			// is "officially" mapped, but hasn't provided a buffer. If we try
-			// to clip it, scroll will crash. This check (for lack of a better
-			// idea/solution) verifies we are not in that state.
-			if (con->view->surface->current.buffer_width <= 1 &&
-				con->view->surface->current.buffer_height <= 1) {
-			//if (con->view->surface->buffer->source->n_locks == 0) {
-				sway_scene_node_set_enabled(&con->view->scene_tree->node, false);
-				return;
-			}
-			sway_scene_node_set_enabled(&con->view->scene_tree->node, true);
-			double scale = 1.0;
-			struct sway_workspace *workspace = con->pending.workspace;
-			if (layout_scale_enabled(workspace)) {
-				scale *= layout_scale_get(workspace);
-			}
-			if (view_is_content_scaled(con->view)) {
-				scale *= view_get_content_scale(con->view);
-			}
-			struct dest_size_data data = {
-				.wscale = scale * con->animation.wt / con->animation.w1,
-				.hscale = scale * con->animation.ht / con->animation.h1
-			};
-			view_set_dest_size(con->view, &data);
-		}
-	}
-}
-
 static void arrange_container(struct sway_container *con,
 		double dwidth, double dheight, bool title_bar, int gaps,
 		struct sway_workspace *workspace) {
@@ -1017,11 +957,7 @@ static void arrange_container(struct sway_container *con,
 			border_left, border_top);
 
 		if (animation_enabled()) {
-			if (config->animations.style == ANIM_STYLE_CLIP) {
-				animation_clip_container(con);
-			} else {
-				animation_scale_container(con);
-			}
+			animation_clip_container(con);
 		}
 
 		// Update content geometry
