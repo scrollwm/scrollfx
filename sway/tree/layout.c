@@ -117,7 +117,7 @@ static void recreate_view_buffer(struct sway_container *view, float scale) {
 	// in scaled mode need to be reconfigured, so reconfigure everything
 	// just in case.
 	view_configure(view->view, view->pending.content_x, view->pending.content_y,
-		view->pending.content_width, view->pending.content_height);
+		round(view->pending.content_width), round(view->pending.content_height));
 
 }
 
