@@ -283,7 +283,6 @@ static void config_defaults(struct sway_config *config) {
 
 	config->animations.frequency_ms = 16; // ~60 Hz
 	config->animations.enabled = true;
-	config->animations.style = ANIM_STYLE_CLIP;
 	double points[] = { 0.215, 0.61, 0.355, 1.0 };
 	list_t *default_points = create_list();
 	for (uint32_t i = 0; i < sizeof(points) / sizeof(double); ++i) {

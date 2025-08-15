@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <wlr/types/wlr_alpha_modifier_v1.h>
 #include <wlr/types/wlr_color_management_v1.h>
-#include "sway/config.h"
 #include "sway/tree/scene.h"
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_fractional_scale_v1.h>
@@ -206,14 +205,8 @@ static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	if (scale > 0.0f) {
 		total_scale *= scale;
 	}
-	double wscale, hscale;
-	if (animation_enabled() && config->animations.style == ANIM_STYLE_SCALE) {
-		sway_scene_buffer_get_animation_scales(scene_buffer, &wscale, &hscale);
-	} else {
-		wscale = hscale = 1.0;
-	}
-	sway_scene_buffer_set_dest_size(scene_buffer, round(wscale * width * total_scale),
-		round(hscale * height * total_scale));
+	sway_scene_buffer_set_dest_size(scene_buffer, round(width * total_scale),
+		round(height * total_scale));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
 	sway_scene_buffer_set_opacity(scene_buffer, opacity);
 	sway_scene_buffer_set_transfer_function(scene_buffer, tf);

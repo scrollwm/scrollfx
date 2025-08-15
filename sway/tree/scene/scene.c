@@ -2691,38 +2691,3 @@ bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scal
 	*scale = -1.0f;
 	return false;
 }
-
-static struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node) {
-	struct sway_scene_tree *tree;
-	if (node->type == SWAY_SCENE_NODE_TREE) {
-		tree = sway_scene_tree_from_node(node);
-	} else {
-		tree = node->parent;
-	}
-	while (tree) {
-		// Check scene descriptor
-		struct sway_view *view = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_VIEW);
-		if (!view) {
-			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_POPUP);
-			if (desc && desc->view) {
-				return desc->view;
-			}
-		} else {
-			return view;
-		}
-		tree = tree->node.parent;
-	}
-	return NULL;
-}
-
-void sway_scene_buffer_get_animation_scales(struct sway_scene_buffer *scene_buffer,
-		double *wscale, double *hscale) {
-	struct sway_view *view = scene_node_get_parent_view(&scene_buffer->node);
-	if (view) {
-		*wscale = view->container->animation.wt / view->container->animation.w1;
-		*hscale = view->container->animation.ht / view->container->animation.h1;
-	} else {
-		*wscale = 1.0;
-		*hscale = 1.0;
-	}
-}
