@@ -16,6 +16,10 @@ enum sway_animation_mode {
 	ANIM_WINDOW_SIZE,
 };
 
+enum sway_animation_style {
+	ANIM_STYLE_CLIP,
+	ANIM_STYLE_SCALE
+};
 
 // Animation callback
 typedef void (*sway_animation_callback_func_t)(void *data);
