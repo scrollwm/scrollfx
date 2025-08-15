@@ -717,7 +717,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			if (parent && parent->jump.jumping) {
 				off = child->pending.y;
 			}
-			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
 			sway_scene_node_set_enabled(&child->border.tree->node, true);
 			double movement = fabs(off - child->animation.y0);
 			if (movement > 0.0) {
@@ -738,7 +738,7 @@ static void arrange_children(struct sway_workspace *workspace,
 				child->pending.x = workspace->x + scale * gaps;
 			}
 			sway_scene_node_reparent(&child->scene_tree->node, content);
-			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 			off += scale * (child->pending.height + 2 * gaps);
 		}
@@ -746,7 +746,7 @@ static void arrange_children(struct sway_workspace *workspace,
 		for (int i = active_idx - 1; i >= 0; i--) {
 			struct sway_container *child = children->items[i];
 			struct sway_container *parent = child->pending.parent;
-			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
 			off -= scale * (child->pending.height + 2 * gaps);
 			if (parent && parent->jump.jumping) {
 				off = child->pending.y;
@@ -771,7 +771,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			}
 			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
 			sway_scene_node_reparent(&child->scene_tree->node, content);
-			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 		}
 	} else if (layout == L_HORIZ) {
@@ -782,7 +782,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			if (parent && parent->jump.jumping) {
 				off = child->pending.x;
 			}
-			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
 			double movement = fabs(off - child->animation.x0);
 			if (movement > 0.0) {
 				child->animation.xt = linear_scale(child->animation.x0, off, x);
@@ -807,7 +807,7 @@ static void arrange_children(struct sway_workspace *workspace,
 				child->pending.y = workspace->y + scale * gaps;
 			}
 			sway_scene_node_reparent(&child->scene_tree->node, content);
-			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 			off += scale * (child->pending.width + 2 * gaps);
 		}
@@ -815,7 +815,7 @@ static void arrange_children(struct sway_workspace *workspace,
 		for (int i = active_idx - 1; i >= 0; i--) {
 			struct sway_container *child = children->items[i];
 			struct sway_container *parent = child->pending.parent;
-			child->animation.wt = max(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
 			off -= scale * (child->pending.width + 2 * gaps);
 			if (parent && parent->jump.jumping) {
 				off = child->pending.x;
@@ -840,7 +840,7 @@ static void arrange_children(struct sway_workspace *workspace,
 			}
 			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
 			sway_scene_node_reparent(&child->scene_tree->node, content);
-			child->animation.ht = max(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
 		}
 	} else {
@@ -880,6 +880,60 @@ static void animation_clip_container(struct sway_container *con) {
 			clip.width = max(1, round(width));
 			clip.height = max(1, round(height));
 			sway_scene_subsurface_tree_set_clip(&con->view->content_tree->node, &clip);
+		}
+	}
+}
+
+struct dest_size_data {
+	double wscale;
+	double hscale;
+};
+
+static void buffer_set_dest_size_iterator(struct sway_scene_buffer *buffer,
+		int sx, int sy, void *user_data) {
+	struct dest_size_data *data = user_data;
+	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(buffer);
+	int width, height;
+	if (scene_surface) {
+		struct wlr_surface *surface = scene_surface->surface;
+		struct wlr_surface_state *state = &surface->current;
+		width = state->width;
+		height = state->height;
+	} else {
+		width = buffer->dst_width;
+		height = buffer->dst_height;
+	}
+	sway_scene_buffer_set_dest_size(buffer,
+		round(width * data->wscale),
+		round(height * data->hscale));
+}
+
+static void view_set_dest_size(struct sway_view *view, struct dest_size_data *data) {
+	sway_scene_node_for_each_buffer(&view->content_tree->node,
+		buffer_set_dest_size_iterator, data);
+}
+
+static void animation_scale_container(struct sway_container *con) {
+	if (!wl_list_empty(&con->view->content_tree->children)) {
+		if (!container_is_floating(con)) {
+			// Sometimes there could be a transaction timeout, and the surface
+			// is "officially" mapped, but hasn't provided a buffer. If we try
+			// to clip it, scroll will crash. This check (for lack of a better
+			// idea/solution) verifies we are not in that state.
+			if (con->view->surface->current.buffer_width <= 1 &&
+				con->view->surface->current.buffer_height <= 1) {
+			//if (con->view->surface->buffer->source->n_locks == 0) {
+				sway_scene_node_set_enabled(&con->view->scene_tree->node, false);
+				return;
+			}
+			sway_scene_node_set_enabled(&con->view->scene_tree->node, true);
+			struct sway_workspace *workspace = con->pending.workspace;
+			float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+			struct dest_size_data data = {
+				.wscale = scale * con->animation.wt / con->animation.w1,
+				.hscale = scale * con->animation.ht / con->animation.h1
+			};
+			view_set_dest_size(con->view, &data);
 		}
 	}
 }
@@ -957,7 +1011,11 @@ static void arrange_container(struct sway_container *con,
 			border_left, border_top);
 
 		if (animation_enabled()) {
-			animation_clip_container(con);
+			if (config->animations.style == ANIM_STYLE_CLIP) {
+				animation_clip_container(con);
+			} else {
+				animation_scale_container(con);
+			}
 		}
 
 		// Update content geometry

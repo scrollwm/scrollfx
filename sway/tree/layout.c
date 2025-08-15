@@ -131,16 +131,9 @@ static void recreate_buffers(struct sway_workspace *workspace) {
 		}
 	}
 	for (int i = 0; i < workspace->floating->length; ++i) {
-		const struct sway_container *con = workspace->floating->items[i];
+		struct sway_container *con = workspace->floating->items[i];
 		if (con->view) {
-			float total_scale = scale;
-			if (view_is_content_scaled(con->view)) {
-				total_scale *= view_get_content_scale(con->view);
-			}
-			sway_scene_node_for_each_buffer(&con->view->content_tree->node,
-				buffer_set_dest_size_iterator, &total_scale);
-			view_configure(con->view, con->pending.content_x, con->pending.content_y,
-				con->pending.content_width, con->pending.content_height);
+			recreate_view_buffer(con, scale);
 		} else {
 			for (int j = 0; j < con->pending.children->length; ++j) {
 				struct sway_container *view = con->pending.children->items[j];

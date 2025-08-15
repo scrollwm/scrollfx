@@ -77,6 +77,15 @@ The following commands may only be used in the configuration file.
 	avoid crashes or performance issues. The default should work for most cases
 	unless you have a very high refresh rate monitor.
 
+	*style* <clip|scale>
+	Default is _clip_. _clip_ keeps the resolution of the client and clips the
+	container while animating. This leads to a part of the container showing the
+	background when resizing containers to a smaller size, but at the same time,
+	the content is always the same, making it easier to read. _scale_, instead,
+	scales the content of the container to the animated size of the container.
+	This makes the transitiions smoother, but the content may be deformed
+	while animating.
+
 	*default* enabled [duration] [var animation curve] [off animation curve]
 	Default is default is _yes 300 var 3 [ 0.215 0.61 0.355 1 ]_.
 	Defines the default animation curve. Follows the format explained below.
