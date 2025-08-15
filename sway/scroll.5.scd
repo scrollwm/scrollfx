@@ -179,11 +179,11 @@ The following commands may only be used in the configuration file.
 	("horizontal" layout) or windows ("vertical" layouts).
 
 *layout_heights* <array of numbers>
-	Default is _[0.33333333, 0.5, 0.66666667, 1.0]_. These are the fractions
+	Default is _[0.33333333 0.5 0.66666667 1.0]_. These are the fractions
 	_cycle_size_ will use when resizing the height of columns/windows.
 
 *layout_widths* <array of numbers>
-	Default is _[0.33333333, 0.5, 0.66666667, 1.0]_. These are the fractions
+	Default is _[0.33333333 0.5 0.66666667 1.0]_. These are the fractions
 	_cycle_size_ will use when resizing the width of columns/windows.
 
 *maximize_if_single* <true|false>
