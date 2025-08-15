@@ -590,14 +590,14 @@ static void handle_request_configure(struct wl_listener *listener, void *data) {
 
 		configure(view, view->container->pending.content_x,
 				view->container->pending.content_y,
-				view->container->pending.content_width,
-				view->container->pending.content_height);
+				round(view->container->pending.content_width),
+				round(view->container->pending.content_height));
 		node_set_dirty(&view->container->node);
 	} else {
 		configure(view, view->container->current.content_x,
 				view->container->current.content_y,
-				view->container->current.content_width,
-				view->container->current.content_height);
+				round(view->container->current.content_width),
+				round(view->container->current.content_height));
 	}
 }
 

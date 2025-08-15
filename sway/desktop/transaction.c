@@ -927,8 +927,14 @@ static void animation_scale_container(struct sway_container *con) {
 				return;
 			}
 			sway_scene_node_set_enabled(&con->view->scene_tree->node, true);
+			double scale = 1.0;
 			struct sway_workspace *workspace = con->pending.workspace;
-			float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+			if (layout_scale_enabled(workspace)) {
+				scale *= layout_scale_get(workspace);
+			}
+			if (view_is_content_scaled(con->view)) {
+				scale *= view_get_content_scale(con->view);
+			}
 			struct dest_size_data data = {
 				.wscale = scale * con->animation.wt / con->animation.w1,
 				.hscale = scale * con->animation.ht / con->animation.h1
@@ -946,15 +952,15 @@ static void arrange_container(struct sway_container *con,
 	sway_scene_node_set_enabled(&con->scene_tree->node, true);
 
 	if (con->output_handler) {
-		sway_scene_buffer_set_dest_size(con->output_handler, round(dwidth), round(dheight));
+		sway_scene_buffer_set_dest_size(con->output_handler, dwidth, dheight);
 	}
 
 	if (con->view) {
 		float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 		int border_top = round(container_titlebar_height() * scale);
 		int border_width = max(1, round(con->current.border_thickness * scale));
-		int width = round(scale * dwidth);
-		int height = round(scale * dheight);
+		int width = scale * dwidth;
+		int height = scale * dheight;
 
 		if (title_bar && con->current.border != B_NORMAL) {
 			sway_scene_node_set_enabled(&con->title_bar.tree->node, false);
@@ -1038,7 +1044,7 @@ static void arrange_container(struct sway_container *con,
 				con->pending.content_width != con->current.content_width ||
 				con->pending.content_height != con->current.content_height)) {
 				view_configure(con->view, con->pending.content_x, con->pending.content_y,
-					con->pending.content_width, con->pending.content_height);
+					round(con->pending.content_width), round(con->pending.content_height));
 				con->current.content_x = con->pending.content_x;
 				con->current.content_y = con->pending.content_y;
 				con->current.content_width = con->pending.content_width;
@@ -1053,7 +1059,7 @@ static void arrange_container(struct sway_container *con,
 
 		arrange_children(workspace, con->current.layout,
 			con->current.children, con->current.focused_inactive_child,
-			con->content_tree, round(dwidth), round(dheight), gaps);
+			con->content_tree, dwidth, dheight, gaps);
 	}
 }
 
@@ -1490,8 +1496,8 @@ static void transaction_commit(struct sway_transaction *transaction) {
 			instruction->serial = view_configure(node->sway_container->view,
 					instruction->container_state.content_x,
 					instruction->container_state.content_y,
-					instruction->container_state.content_width,
-					instruction->container_state.content_height);
+					round(instruction->container_state.content_width),
+					round(instruction->container_state.content_height));
 			if (!hidden) {
 				instruction->waiting = true;
 				++transaction->num_waiting;
