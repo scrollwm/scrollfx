@@ -2718,7 +2718,8 @@ static struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node
 void sway_scene_buffer_get_animation_scales(struct sway_scene_buffer *scene_buffer,
 		double *wscale, double *hscale) {
 	struct sway_view *view = scene_node_get_parent_view(&scene_buffer->node);
-	if (view && view->container->pending.fullscreen_mode == FULLSCREEN_NONE) {
+	if (view && view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
+		!container_is_floating(view->container)) {
 		struct sway_container *con = view->container;
 		const int thickness = con->pending.border_thickness;
 		const int border_horiz = con->pending.border_left * thickness
