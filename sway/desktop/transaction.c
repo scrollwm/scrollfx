@@ -867,11 +867,21 @@ static void animation_clip_container(struct sway_container *con) {
 				.x = con->view->geometry.x,
 				.y = con->view->geometry.y,
 			};
-			const int thickness = con->pending.border_thickness;
-			double width = con->animation.wt - con->pending.border_left * thickness
-				- con->pending.border_right * thickness;
-			double height = con->animation.ht - con->pending.border_top * thickness
-				- con->pending.border_bottom * thickness;
+			double width = con->animation.wt;
+			double height = con->animation.ht;
+			if (con->pending.border != B_NONE) {
+				const int thickness = con->pending.border_thickness;
+				int border_horiz = con->pending.border_left * thickness
+					+ con->pending.border_right * thickness;
+				int border_vert = con->pending.border_bottom * thickness;
+				if (con->pending.border == B_NORMAL) {
+					border_vert += container_titlebar_height();
+				} else {
+					border_vert += con->pending.border_top * thickness;
+				}
+				width -= border_horiz;
+				height -= border_vert;
+			}
 			if (view_is_content_scaled(con->view)) {
 				float scale = view_get_content_scale(con->view);
 				width /= scale;
