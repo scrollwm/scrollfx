@@ -219,6 +219,13 @@ The following commands may only be used in the configuration file.
 *workspace_layout* default|horizontal|vertical
 	Specifies the initial layout for new containers in an empty workspace.
 
+*workspace_next_on_output_create_empty* <true|false>
+	The default is _true_. If _true_, when calling *workspace next_on_output*,
+	if the current workspace is the last one, it will create a new workspace
+	instead	of wrapping to the first one. The new workspace will be the first
+	unused one for that output. If _false_, instead of creating a new workspace,
+	it will focus on the first one.
+
 *xwayland* enable|disable|force
 	Enables or disables Xwayland support, which allows X11 applications to be
 	used. _enable_ will lazily load Xwayland so Xwayland will not be launched

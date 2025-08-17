@@ -624,6 +624,7 @@ struct sway_config {
 	bool cycle_size_wrap;
 	bool maximize_if_single;
 	bool cursor_shake_magnify;
+	bool workspace_next_on_output_create_empty;
 	bool gesture_scroll_enable;
 	uint32_t gesture_scroll_fingers;
 	float gesture_scroll_sentitivity;

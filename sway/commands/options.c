@@ -13,3 +13,12 @@ struct cmd_results *cmd_cursor_shake_magnify(int argc, char **argv) {
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
+
+struct cmd_results *cmd_workspace_next_on_output_create_empty(int argc, char **argv) {
+	struct cmd_results *error;
+	if ((error = checkarg(argc, "workspace_next_on_output_create_empty", EXPECTED_AT_LEAST, 1))) {
+		return error;
+	}
+	config->workspace_next_on_output_create_empty = parse_boolean(argv[0], config->workspace_next_on_output_create_empty);
+	return cmd_results_new(CMD_SUCCESS, NULL);
+}

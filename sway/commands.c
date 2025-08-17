@@ -131,6 +131,7 @@ static const struct cmd_handler config_handlers[] = {
 	{ "scrollnag_command", cmd_swaynag_command },
 	{ "swaybg_command", cmd_swaybg_command },
 	{ "workspace_layout", cmd_workspace_layout },
+	{ "workspace_next_on_output_create_empty", cmd_workspace_next_on_output_create_empty },
 	{ "xwayland", cmd_xwayland },
 };
 
