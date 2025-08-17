@@ -184,6 +184,11 @@ animations {
     bindsym $mod+Ctrl+1 move workspace to output left
     bindsym $mod+Ctrl+2 move workspace to output right
 
+    bindsym $mod+Shift+Page_Up workspace prev
+    bindsym $mod+Shift+Page_Down workspace next
+    bindsym $mod+Page_Up workspace prev_on_output
+    bindsym $mod+Page_Down workspace next_on_output
+
 # Scaling
     # Workspace
     bindsym $mod+Shift+comma scale_workspace incr -0.05

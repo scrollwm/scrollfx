@@ -277,6 +277,7 @@ static void config_defaults(struct sway_config *config) {
 	config->cycle_size_wrap = false;
 	config->maximize_if_single = false;
 	config->cursor_shake_magnify = false;
+	config->workspace_next_on_output_create_empty = true;
 	config->gesture_scroll_enable = true;
 	config->gesture_scroll_fingers = 3;
 	config->gesture_scroll_sentitivity = 1.0f;
