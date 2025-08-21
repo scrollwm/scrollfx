@@ -164,7 +164,7 @@ void animation_set_path(struct sway_animation_path *path) {
 }
 
 static struct sway_animation_path *get_path() {
-	if (!config->animations.enabled) {
+	if (!config->animations.enabled || config->reading) {
 		return NULL;
 	}
 	struct sway_animation_path *path;
