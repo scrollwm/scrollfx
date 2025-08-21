@@ -349,7 +349,7 @@ static struct cmd_results *fit_size(uint32_t axis, enum sway_layout_fit_group fi
 			fit_size_container(current->pending.parent ? current->pending.parent : current, fit, equal);
 		}
 	}
-	animation_create(ANIM_WINDOW_SIZE);
+	animation_set_path(config->animations.window_size);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }

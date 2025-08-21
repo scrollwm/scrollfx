@@ -13,6 +13,7 @@ static const struct cmd_handler animations_config_handlers[] = {
 	{ "window_move", animations_cmd_window_move },
 	{ "window_open", animations_cmd_window_open },
 	{ "window_size", animations_cmd_window_size },
+	{ "workspace_switch", animations_cmd_workspace_switch },
 };
 
 struct cmd_results *animations_cmd_enabled(int argc, char **argv) {
@@ -50,11 +51,13 @@ struct cmd_results *animations_cmd_frequency(int argc, char **argv) {
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 
-static struct cmd_results *parse_animation_curve(int argc, char **argv, struct sway_animation_curve **curve) {
+static struct cmd_results *parse_animation_curve(int argc, char **argv, struct sway_animation_path **path) {
 	bool enabled = parse_boolean(argv[0], true);
 	if (argc == 1) {
-		destroy_animation_curve(*curve);
-		*curve = create_animation_curve(enabled, 0, 0, NULL, 0.0, 0, NULL);
+		animation_path_destroy(*path);
+		*path = animation_path_create(enabled);
+		struct sway_animation_curve *curve = create_animation_curve(0, 0, NULL, 0.0, 0, NULL);
+		animation_path_add_curve(*path, curve);
 		return cmd_results_new(CMD_SUCCESS, NULL);
 	}
 	uint32_t duration = strtol(argv[1], NULL, 10);
@@ -84,8 +87,10 @@ static struct cmd_results *parse_animation_curve(int argc, char **argv, struct s
 		}
 	}
 	if (var_list || off_list) {
-		destroy_animation_curve(*curve);
-		*curve = create_animation_curve(enabled, duration, var_order, var_list, off_scale, off_order, off_list);
+		animation_path_destroy(*path);
+		*path = animation_path_create(enabled);
+		struct sway_animation_curve *curve = create_animation_curve(duration, var_order, var_list, off_scale, off_order, off_list);
+		animation_path_add_curve(*path, curve);
 		if (var_list) {
 			list_free_items_and_destroy(var_list);
 		}
@@ -96,8 +101,10 @@ static struct cmd_results *parse_animation_curve(int argc, char **argv, struct s
 	} else if (error) {
 		return cmd_results_new(CMD_FAILURE, "Error parsing animations array");
 	} else {
-		destroy_animation_curve(*curve);
-		*curve = create_animation_curve(enabled, duration, 0, NULL, 0.0, 0, NULL);
+		animation_path_destroy(*path);
+		*path = animation_path_create(enabled);
+		struct sway_animation_curve *curve = create_animation_curve(duration, 0, NULL, 0.0, 0, NULL);
+		animation_path_add_curve(*path, curve);
 		return cmd_results_new(CMD_SUCCESS, NULL);
 	}
 }
@@ -107,7 +114,8 @@ struct cmd_results *animations_cmd_default(int argc, char **argv) {
 	if ((error = checkarg(argc, "default", EXPECTED_AT_LEAST, 1))) {
 		return error;
 	}
-	return parse_animation_curve(argc, argv, &config->animations.anim_default);
+	error = parse_animation_curve(argc, argv, &config->animations.anim_default);
+	return error;
 }
 
 struct cmd_results *animations_cmd_window_open(int argc, char **argv) {
@@ -132,6 +140,14 @@ struct cmd_results *animations_cmd_window_size(int argc, char **argv) {
 		return error;
 	}
 	return parse_animation_curve(argc, argv, &config->animations.window_size);
+}
+
+struct cmd_results *animations_cmd_workspace_switch(int argc, char **argv) {
+	struct cmd_results *error;
+	if ((error = checkarg(argc, "workspace_switch", EXPECTED_AT_LEAST, 1))) {
+		return error;
+	}
+	return parse_animation_curve(argc, argv, &config->animations.workspace_switch);
 }
 
 struct cmd_results *cmd_animations(int argc, char **argv) {

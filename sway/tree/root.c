@@ -79,6 +79,8 @@ struct sway_root *root_create(struct wl_display *wl_display) {
 
 	root->spaces = create_list();
 
+	root_set_default_filters(root);
+
 	return root;
 }
 
@@ -336,4 +338,51 @@ void root_get_box(struct sway_root *root, struct wlr_box *box) {
 	box->y = root->y;
 	box->width = root->width;
 	box->height = root->height;
+}
+
+static bool default_free_animation_activation_filter(struct sway_workspace *workspace,
+		void *data) {
+	return false;
+}
+
+static bool default_workspace_filter(struct sway_workspace *workspace, void *data) {
+	struct sway_output *output = workspace->output;
+	bool activated = output->wlr_output->enabled;
+	if (!layout_overview_workspaces_enabled()) {
+		activated = activated && output->current.active_workspace == workspace;
+	}
+	return activated;
+}
+
+static bool default_workspace_tiling_filter(struct sway_workspace *workspace, void *data) {
+	bool tiling = true;
+	if (layout_overview_mode(workspace) == OVERVIEW_FLOATING) {
+		tiling = false;
+	}
+	return tiling;
+}
+
+static bool default_workspace_floating_filter(struct sway_workspace *workspace, void *data) {
+	bool floating = true;
+	if (layout_overview_mode(workspace) == OVERVIEW_TILING) {
+		floating = false;
+	}
+	return floating;
+}
+
+static bool default_container_filter(struct sway_container *container, void *data) {
+	return true;
+}
+
+void root_set_default_filters(struct sway_root *root) {
+	root->filters.free_animation_activation_filter = default_free_animation_activation_filter;
+	root->filters.free_animation_activation_filter_data = NULL;
+	root->filters.workspace_filter = default_workspace_filter;
+	root->filters.workspace_filter_data = NULL;
+	root->filters.workspace_tiling_filter = default_workspace_tiling_filter;
+	root->filters.workspace_tiling_filter_data = NULL;
+	root->filters.workspace_floating_filter = default_workspace_floating_filter;
+	root->filters.workspace_floating_filter_data = NULL;
+	root->filters.container_filter = default_container_filter;
+	root->filters.container_filter_data = NULL;
 }

@@ -908,7 +908,7 @@ void view_map(struct sway_view *view, struct wlr_surface *wlr_surface,
 		lua_call(config->lua.state, 2, 0);
 	}
 
-	animation_create(ANIM_WINDOW_OPEN);
+	animation_set_path(config->animations.window_open);
 }
 
 void view_unmap(struct sway_view *view) {

@@ -288,7 +288,7 @@ static void disable_container(struct sway_container *con) {
 }
 
 static void arrange_container(struct sway_container *con,
-		double width, double height, bool title_bar, int gaps,
+		double dwidth, double dheight, bool title_bar, int gaps,
 		struct sway_workspace *workspace);
 
 static double get_active_position_pin(struct sway_workspace *workspace,
@@ -668,7 +668,7 @@ static double compute_active_offset(struct sway_workspace *workspace,
 	}
 }
 
-static void arrange_children(struct sway_workspace *workspace,
+static void default_arrange_children(struct sway_workspace *workspace,
 		enum sway_container_layout layout, list_t *children,
 		struct sway_container *active, struct sway_scene_tree *content,
 		int width, int height, int gaps) {
@@ -971,9 +971,17 @@ static void animation_scale_container(struct sway_container *con) {
 	}
 }
 
+static void animation_arrange_children(struct sway_workspace *workspace,
+		enum sway_container_layout layout, list_t *children,
+		struct sway_scene_tree *content);
+
 static void arrange_container(struct sway_container *con,
 		double dwidth, double dheight, bool title_bar, int gaps,
 		struct sway_workspace *workspace) {
+	if (!root->filters.container_filter(con, root->filters.container_filter_data)) {
+		sway_scene_node_set_enabled(&con->scene_tree->node, false);
+		return;
+	}
 	// this container might have previously been in the scratchpad,
 	// make sure it's enabled for viewing
 	sway_scene_node_set_enabled(&con->scene_tree->node, true);
@@ -1084,9 +1092,14 @@ static void arrange_container(struct sway_container *con,
 			sway_scene_node_set_enabled(&con->title_bar.tree->node, false);
 		}
 
-		arrange_children(workspace, con->current.layout,
-			con->current.children, con->current.focused_inactive_child,
-			con->content_tree, dwidth, dheight, gaps);
+		if (!root->filters.free_animation_activation_filter(workspace, root->filters.free_animation_activation_filter_data)) {
+			default_arrange_children(workspace, con->current.layout,
+				con->current.children, con->current.focused_inactive_child,
+				con->content_tree, dwidth, dheight, gaps);
+		} else {
+			animation_arrange_children(workspace, con->current.layout,
+				con->current.children, con->content_tree);
+		}
 	}
 }
 
@@ -1193,9 +1206,14 @@ static void arrange_workspace_tiling(struct sway_workspace *ws,
 	if (mode == OVERVIEW_ALL || mode == OVERVIEW_TILING) {
 		layout_overview_recompute_scale(ws, ws->gaps_inner);
 	}
-	arrange_children(ws, layout_get_type(ws), ws->tiling,
-		ws->current.focused_inactive_child, ws->layers.tiling,
-		width, height, ws->gaps_inner);
+	if (!root->filters.free_animation_activation_filter(ws, root->filters.free_animation_activation_filter_data)) {
+		default_arrange_children(ws, layout_get_type(ws), ws->tiling,
+			ws->current.focused_inactive_child, ws->layers.tiling,
+			width, height, ws->gaps_inner);
+	} else {
+		animation_arrange_children(ws, layout_get_type(ws), ws->tiling,
+			ws->layers.tiling);
+	}
 }
 
 static void disable_workspace(struct sway_workspace *ws) {
@@ -1221,22 +1239,13 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 	for (int i = 0; i < output->current.workspaces->length; i++) {
 		struct sway_workspace *child = output->current.workspaces->items[i];
 
-		bool activated = output->wlr_output->enabled;
-		if (!layout_overview_workspaces_enabled()) {
-			activated = activated && output->current.active_workspace == child;
-		}
+		bool activated = root->filters.workspace_filter(child, root->filters.workspace_filter_data);
 
 		sway_scene_node_reparent(&child->layers.tiling->node, output->layers.tiling);
 		sway_scene_node_reparent(&child->layers.fullscreen->node, output->layers.fullscreen);
 
-		bool floating = true;
-		if (layout_overview_mode(child) == OVERVIEW_TILING) {
-			floating = false;
-		}
-		bool tiling = true;
-		if (layout_overview_mode(child) == OVERVIEW_FLOATING) {
-			tiling = false;
-		}
+		bool floating = root->filters.workspace_floating_filter(child, root->filters.workspace_floating_filter_data);
+		bool tiling = root->filters.workspace_tiling_filter(child, root->filters.workspace_tiling_filter_data);
 
 		for (int i = 0; i < child->current.floating->length; i++) {
 			struct sway_container *floater = child->current.floating->items[i];
@@ -1419,12 +1428,93 @@ static void transaction_apply(struct sway_transaction *transaction) {
 	}
 }
 
+static void animation_arrange_children(struct sway_workspace *workspace,
+		enum sway_container_layout layout, list_t *children,
+		struct sway_scene_tree *content) {
+	if (children->length == 0) {
+		return;
+	}
+
+	double t, x, y, anim_scale;
+	animation_get_values(&t, &x, &y, &anim_scale);
+	if (layout == L_VERT) {
+		for (int i = 0; i < children->length; ++i) {
+			struct sway_container *child = children->items[i];
+			const double off = child->pending.y;
+			struct sway_container *parent = child->pending.parent;
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			sway_scene_node_set_enabled(&child->border.tree->node, true);
+			double movement = fabs(off - child->animation.y0);
+			if (movement > 0.0) {
+				child->animation.yt = linear_scale(child->animation.y0, off, x);
+			} else if (fabs(child->pending.x - child->animation.x0) > 0.0) {
+				child->animation.yt = child->animation.y0 + y * anim_scale * workspace->height;
+			} else {
+				child->animation.yt = child->animation.y0;
+			}
+			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
+			child->current.y = off;
+			child->pending.y = off;
+			if (parent) {
+				child->current.x = parent->current.x;
+				child->pending.x = parent->pending.x;
+			}
+			sway_scene_node_reparent(&child->scene_tree->node, content);
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			arrange_container(child, child->animation.wt, child->animation.ht, true, 0, workspace);
+		}
+	} else if (layout == L_HORIZ) {
+		for (int i = 0; i < children->length; ++i) {
+			struct sway_container *child = children->items[i];
+			const double off = child->pending.x;
+			struct sway_container *parent = child->pending.parent;
+			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
+			double movement = fabs(off - child->animation.x0);
+			if (movement > 0.0) {
+				child->animation.xt = linear_scale(child->animation.x0, off, x);
+			} else if (fabs(child->pending.y - child->animation.y0) > 0.0) {
+				child->animation.xt = child->animation.x0 + y * anim_scale * workspace->width;
+			} else {
+				child->animation.xt = child->animation.x0;
+			}
+			sway_scene_node_set_enabled(&child->border.tree->node, true);
+			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
+			// Update child for next iteration. Transactions don't re-arrange
+			// the layout (arrange.c:apply_xxx()), so we need to set it here,
+			// otherwise the next call will have the positions wrong and the
+			// offset won't be optimal.
+			child->current.x = off;
+			child->pending.x = off;
+			if (parent) {
+				child->current.y = parent->current.y;
+				child->pending.y = parent->pending.y;
+			}
+			sway_scene_node_reparent(&child->scene_tree->node, content);
+			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
+			arrange_container(child, child->animation.wt, child->animation.ht, true, 0, workspace);
+		}
+	} else {
+		sway_assert(false, "unreachable");
+	}
+}
+
 static void animation_callback(void *data) {
 	arrange_root(root);
 }
 
 static void animation_callback_end(void *data) {
 	cursor_rebase_all();
+}
+
+void animation_set_default_callbacks() {
+	struct sway_animation_callbacks callbacks;
+	callbacks.callback_begin = NULL;
+	callbacks.callback_begin_data = NULL;
+	callbacks.callback_step = animation_callback;
+	callbacks.callback_step_data = NULL;
+	callbacks.callback_end = animation_callback_end;
+	callbacks.callback_end_data = NULL;
+	animation_set_callbacks(&callbacks);
 }
 
 static void transaction_commit_pending(void);
@@ -1437,7 +1527,7 @@ static void transaction_progress(void) {
 		return;
 	}
 	transaction_apply(server.queued_transaction);
-	animation_start(NULL, NULL, animation_callback, NULL, animation_callback_end, NULL);
+	animation_next_key();
 	cursor_rebase_all();
 	transaction_destroy(server.queued_transaction);
 	server.queued_transaction = NULL;

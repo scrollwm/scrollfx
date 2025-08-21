@@ -266,7 +266,7 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 		return cmd_results_new(CMD_INVALID, "Cannot resize any further");
 	}
 
-	animation_create(ANIM_WINDOW_SIZE);
+	animation_set_path(config->animations.window_size);
 
 	if (current->pending.parent) {
 		arrange_container(current->pending.parent);
@@ -367,7 +367,7 @@ static struct cmd_results *resize_set_tiled(struct sway_container *container,
 		return cmd_results_new(CMD_INVALID, "Invalid size");
 	}
 
-	animation_create(ANIM_WINDOW_SIZE);
+	animation_set_path(config->animations.window_size);
 
 	if (container->pending.parent) {
 		arrange_container(container->pending.parent);

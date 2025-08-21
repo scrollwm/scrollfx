@@ -388,7 +388,7 @@ static struct cmd_results *cmd_move_container(bool no_auto_back_and_forth,
 		}
 		arrange_node(node_get_parent(destination));
 	}
-	animation_create(ANIM_WINDOW_MOVE);
+	animation_set_path(config->animations.window_move);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
@@ -464,7 +464,7 @@ static struct cmd_results *cmd_move_workspace(int argc, char **argv) {
 	struct sway_seat *seat = config->handler_context.seat;
 	seat_consider_warp_to_focus(seat);
 
-	animation_create(ANIM_WINDOW_MOVE);
+	animation_set_path(config->animations.window_move);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
@@ -551,7 +551,7 @@ static struct cmd_results *cmd_move_in_direction(
 	struct sway_seat *seat = config->handler_context.seat;
 	seat_consider_warp_to_focus(seat);
 
-	animation_create(ANIM_WINDOW_MOVE);
+	animation_set_path(config->animations.window_move);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }

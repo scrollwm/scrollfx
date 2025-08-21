@@ -34,7 +34,7 @@ static struct cmd_results *toggle_size(enum sway_toggle_size mode, double width_
 		}
 	}
 
-	animation_create(ANIM_WINDOW_SIZE);
+	animation_set_path(config->animations.window_size);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }

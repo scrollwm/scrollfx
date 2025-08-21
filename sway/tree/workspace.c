@@ -16,6 +16,7 @@
 #include "sway/tree/node.h"
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
+#include "sway/desktop/transaction.h"
 #include "list.h"
 #include "log.h"
 #include "util.h"
@@ -598,17 +599,228 @@ struct sway_workspace *workspace_auto_back_and_forth(
 	return workspace;
 }
 
-bool workspace_switch(struct sway_workspace *workspace) {
-	struct sway_seat *seat = input_manager_current_seat();
+struct workspace_switch_container_data {
+	struct sway_container *container;
+	double y;
+};
 
-	sway_log(SWAY_DEBUG, "Switching to workspace %p:%s",
-		workspace, workspace->name);
+struct workspace_switch_data {
+	struct sway_workspace *from;
+	struct sway_workspace *to;
+	list_t *from_containers;
+	list_t *to_containers;
+};
+
+static void workspace_switch_callback_end(void *callback_data) {
+	struct workspace_switch_data *data = callback_data;
+
+	for (int i = 0; i < data->from_containers->length; ++i) {
+		struct workspace_switch_container_data *cdata = data->from_containers->items[i];
+		cdata->container->pending.y = cdata->y;
+		node_set_dirty(&cdata->container->node);
+	}
+	for (int i = 0; i < data->to_containers->length; ++i) {
+		struct workspace_switch_container_data *cdata = data->to_containers->items[i];
+		cdata->container->current.y = cdata->y;
+		node_set_dirty(&cdata->container->node);
+	}
+
+	node_set_dirty(&data->from->node);
+	node_set_dirty(&data->to->node);
+
+	struct sway_workspace *workspace = data->to;
+	struct sway_seat *seat = input_manager_current_seat();
 	struct sway_node *next = seat_get_focus_inactive(seat, &workspace->node);
 	if (next == NULL) {
 		next = &workspace->node;
 	}
 	seat_set_focus(seat, next);
-	arrange_workspace(workspace);
+
+	list_free_items_and_destroy(data->from_containers);
+	list_free_items_and_destroy(data->to_containers);
+	free(data);
+	root_set_default_filters(root);
+	animation_set_default_callbacks();
+
+	transaction_commit_dirty();
+}
+
+static bool switching_output(struct sway_workspace *workspace,
+		struct workspace_switch_data *data) {
+	struct sway_output *output = workspace->output;
+	struct sway_output *from_output = data->from->output;
+	struct sway_output *to_output = data->to->output;
+	if (output == from_output || output == to_output) {
+		return true;
+	}
+	return false;
+}
+
+static bool workspace_switch_animation_filter(struct sway_workspace *workspace, void *filter_data) {
+	return switching_output(workspace, filter_data);
+}
+
+static bool workspace_switch_workspace_filter(struct sway_workspace *workspace, void *filter_data) {
+	struct sway_output *output = workspace->output;
+	if (!output->wlr_output->enabled) {
+		return false;
+	}
+	if (switching_output(workspace, filter_data)) {
+		struct workspace_switch_data *data = filter_data;
+		return workspace == data->from || workspace == data->to;
+	}
+	if (!layout_overview_workspaces_enabled()) {
+		if (output->current.active_workspace != workspace) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool workspace_switch_container_filter(struct sway_container *container, void *filter_data) {
+	if (!switching_output(container->pending.workspace, filter_data)) {
+		return true;
+	}
+	struct workspace_switch_data *data = filter_data;
+	for (int i = 0; i < data->from_containers->length; ++i) {
+		struct workspace_switch_container_data *container_data = data->from_containers->items[i];
+		if (container == container_data->container) {
+			return true;
+		}
+	}
+	for (int i = 0; i < data->to_containers->length; ++i) {
+		struct workspace_switch_container_data *container_data = data->to_containers->items[i];
+		if (container == container_data->container) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool container_visible(struct sway_workspace *workspace,
+		struct sway_container *container) {
+	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	struct sway_output *output = workspace->output;
+	if (container->pending.x >= output->lx + output->width ||
+		container->pending.x + scale * container->pending.width <= output->lx ||
+		container->pending.y >= output->ly + output->height ||
+		container->pending.y + scale * container->pending.height <= output->ly) {
+		return false;
+	}
+	return true;
+}
+
+typedef void (*add_delta_to_container_func_t)(struct sway_container *con, double delta);
+
+static void add_delta_to_current(struct sway_container *con, double delta) {
+	con->current.y += delta;
+}
+
+static void add_delta_to_pending(struct sway_container *con, double delta) {
+	con->pending.y += delta;
+}
+
+static void select_visible_containers(list_t *containers,
+		struct sway_workspace *workspace, list_t *children,
+		double *min_y, double *max_y) {
+	for (int i = 0; i < children->length; ++i) {
+		struct sway_container *con = children->items[i];
+		if (container_visible(workspace, con)) {
+			struct workspace_switch_container_data *container_data =
+				malloc(sizeof(struct workspace_switch_container_data));
+			container_data->container = con;
+			container_data->y = con->current.y;
+			list_add(containers, container_data);
+			if (con->pending.children) {
+				select_visible_containers(containers, workspace,
+					con->pending.children, min_y, max_y);
+			}
+			node_set_dirty(&con->node);
+			if (con->pending.parent) {
+				float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+				int gap = workspace->gaps_inner;
+				const double miny = con->pending.y - gap;
+				const double maxy = con->pending.y + scale * (con->pending.height + gap);
+				if (miny < *min_y) {
+					*min_y = miny;
+				}
+				if (maxy > *max_y) {
+					*max_y = maxy;
+				}
+			}
+		}
+	}
+}
+
+static void add_delta_to_containers(list_t *containers,
+		add_delta_to_container_func_t add_delta, double delta) {
+	for (int i = 0; i < containers->length; ++i) {
+		struct workspace_switch_container_data *data = containers->items[i];
+		add_delta(data->container, delta);
+	}
+}
+
+static void animate_workspace_switch(struct sway_workspace *from, struct sway_workspace *to) {
+	struct workspace_switch_data *data = malloc(sizeof(struct workspace_switch_data));
+	data->from = from;
+	data->to = to;
+	data->from_containers = create_list();
+	data->to_containers = create_list();
+	root->filters.free_animation_activation_filter = workspace_switch_animation_filter;
+	root->filters.free_animation_activation_filter_data = data;
+	root->filters.workspace_filter = workspace_switch_workspace_filter;
+	root->filters.workspace_filter_data = data;
+	root->filters.container_filter = workspace_switch_container_filter;
+	root->filters.container_filter_data = data;
+
+	int from_idx = list_find(from->output->workspaces, from);
+	int to_idx = list_find(from->output->workspaces, to);
+	double min_y_to = DBL_MAX, max_y_to = -DBL_MAX;
+	select_visible_containers(data->to_containers, to, to->tiling, &min_y_to, &max_y_to);
+	if (max_y_to < min_y_to) {
+		max_y_to = min_y_to = to->y;
+	}
+	double min_y_from = DBL_MAX, max_y_from = -DBL_MAX;
+	select_visible_containers(data->from_containers, from, from->tiling, &min_y_from, &max_y_from);
+	if (max_y_from < min_y_from) {
+		max_y_from = min_y_from = from->y;
+	}
+	double delta;
+	if (from_idx < to_idx) {
+		delta = from->output->height + max_y_from - (from->y + from->height)
+			+ (from->y - min_y_to);
+	} else {
+		delta = from->output->height + max_y_to - (from->y + from->height)
+			+ (from->y - min_y_from);
+		delta = -delta;
+	}
+	add_delta_to_containers(data->to_containers, add_delta_to_current, delta);
+	add_delta_to_containers(data->from_containers, add_delta_to_pending, -delta);
+
+	struct sway_animation_callbacks *callbacks = animation_get_callbacks();
+	callbacks->callback_end = workspace_switch_callback_end;
+	callbacks->callback_end_data = data;
+	animation_set_callbacks(callbacks);
+}
+
+bool workspace_switch(struct sway_workspace *workspace) {
+	struct sway_seat *seat = input_manager_current_seat();
+
+	sway_log(SWAY_DEBUG, "Switching to workspace %p:%s",
+		workspace, workspace->name);
+	struct sway_workspace *old_ws = seat_get_focused_workspace(seat);
+	animation_set_path(config->animations.workspace_switch);
+	if (old_ws != workspace && old_ws->output == workspace->output &&
+		animation_enabled()) {
+		animate_workspace_switch(old_ws, workspace);
+	} else {
+		struct sway_node *next = seat_get_focus_inactive(seat, &workspace->node);
+		if (next == NULL) {
+			next = &workspace->node;
+		}
+		seat_set_focus(seat, next);
+		arrange_workspace(workspace);
+	}
 	return true;
 }
 

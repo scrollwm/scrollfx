@@ -61,4 +61,9 @@ bool transaction_notify_view_ready_by_geometry(struct sway_view *view,
 
 void arrange_popups(struct sway_scene_tree *popups);
 
+/**
+ * Sets the default animation callbacks
+ **/
+void animation_set_default_callbacks();
+
 #endif
