@@ -126,10 +126,11 @@ struct sway_animations_config {
 	bool enabled;
 	uint32_t frequency_ms;
 	enum sway_animation_style style;
-	struct sway_animation_curve *anim_default;
-	struct sway_animation_curve *window_open;
-	struct sway_animation_curve *window_size;
-	struct sway_animation_curve *window_move;
+	struct sway_animation_path *anim_default;
+	struct sway_animation_path *window_open;
+	struct sway_animation_path *window_size;
+	struct sway_animation_path *window_move;
+	struct sway_animation_path *workspace_switch;
 };
 
 struct input_config_mapped_from_region {

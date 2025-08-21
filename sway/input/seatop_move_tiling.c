@@ -210,7 +210,7 @@ static void finalize_move(struct sway_seat *seat) {
 	ipc_event_window(con, "move");
 	seat_set_focus(seat, &con->node);
 	arrange_workspace(workspace);
-	animation_create(ANIM_WINDOW_MOVE);
+	animation_set_path(config->animations.window_move);
 	transaction_commit_dirty();
 	seatop_begin_default(seat);
 }

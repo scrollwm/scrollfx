@@ -168,16 +168,19 @@ void free_config(struct sway_config *config) {
 	}
 
 	if (config->animations.anim_default) {
-		destroy_animation_curve(config->animations.anim_default);
+		animation_path_destroy(config->animations.anim_default);
 	}
 	if (config->animations.window_open) {
-		destroy_animation_curve(config->animations.window_open);
+		animation_path_destroy(config->animations.window_open);
 	}
 	if (config->animations.window_move) {
-		destroy_animation_curve(config->animations.window_move);
+		animation_path_destroy(config->animations.window_move);
 	}
 	if (config->animations.window_size) {
-		destroy_animation_curve(config->animations.window_size);
+		animation_path_destroy(config->animations.window_size);
+	}
+	if (config->animations.workspace_switch) {
+		animation_path_destroy(config->animations.workspace_switch);
 	}
 
 	list_free_items_and_destroy(config->lua.cbs_view_map);
@@ -292,11 +295,16 @@ static void config_defaults(struct sway_config *config) {
 		*val = points[i];
 		list_add(default_points, val);
 	}
-	config->animations.anim_default = create_animation_curve(true, 300, 3, default_points, 0.0, 0, NULL);
+	struct sway_animation_curve *curve = create_animation_curve(300, 3, default_points, 0.0, 0, NULL);
+	config->animations.anim_default = animation_path_create(true);
+	animation_set_default_callbacks();
+	animation_path_add_curve(config->animations.anim_default, curve);
+	animation_set_path(config->animations.anim_default);
 	list_free_items_and_destroy(default_points);
 	config->animations.window_open = NULL;
 	config->animations.window_move = NULL;
 	config->animations.window_size = NULL;
+	config->animations.workspace_switch = NULL;
 
 	if (!(config->lua.state = luaL_newstate())) goto cleanup;
 	if (!(config->lua.scripts = create_list())) goto cleanup;

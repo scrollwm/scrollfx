@@ -40,7 +40,7 @@ struct cmd_results *cmd_layout_transpose(int argc, char **argv) {
 	}
 	arrange_workspace(workspace);
 	workspace_update_representation(workspace);
-	animation_create(ANIM_WINDOW_MOVE);
+	animation_set_path(config->animations.window_move);
 
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
