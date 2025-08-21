@@ -2671,16 +2671,24 @@ bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scal
 		if (!view) {
 			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_POPUP);
 			if (desc && desc->view) {
-				struct sway_workspace *ws = desc->view->container->pending.workspace;
-				*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+				if (container_is_fullscreen_or_child(desc->view->container)) {
+					*scale = 1.0f;
+				} else {
+					struct sway_workspace *ws = desc->view->container->pending.workspace;
+					*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+				}
 				if (view_is_content_scaled(desc->view)) {
 					*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(desc->view);
 				}
 				return &tree->node == node;
 			}
 		} else if (view->container) {
-			struct sway_workspace *ws = view->container->pending.workspace;
-			*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+			if (container_is_fullscreen_or_child(view->container)) {
+				*scale = 1.0f;
+			} else {
+				struct sway_workspace *ws = view->container->pending.workspace;
+				*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+			}
 			if (view_is_content_scaled(view)) {
 				*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(view);
 			}
