@@ -271,6 +271,10 @@ list_t *parse_double_array(char *str) {
 		list_add(list, val);
 		if (*end) {
 			skip_spaces(&end);
+			if (end == str) {
+				list_free_items_and_destroy(list);
+				return NULL;
+			}
 			str = end;
 		}
 	}
