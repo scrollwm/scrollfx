@@ -619,7 +619,7 @@ struct sway_config {
 	float jump_labels_background[4];
 	double jump_labels_scale;
 	char *jump_labels_keys;
-	bool fullscreen_movefocus;
+	enum sway_fullscreen_movefocus fullscreen_movefocus;
 	bool align_reset_auto;
 	bool cycle_size_wrap;
 	bool maximize_if_single;

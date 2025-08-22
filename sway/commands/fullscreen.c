@@ -11,7 +11,23 @@ struct cmd_results *cmd_fullscreen_movefocus(int argc, char **argv) {
 	if ((error = checkarg(argc, "fullscreen_movefocus", EXPECTED_AT_LEAST, 1))) {
 		return error;
 	}
-	config->fullscreen_movefocus = parse_boolean(argv[0], config->fullscreen_movefocus);
+	bool enabled = parse_boolean(argv[0], config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NONE);
+	if (enabled) {
+		if (argc > 1) {
+			if (strcasecmp(argv[1], "follow") == 0) {
+				config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_FOLLOW;
+			} else if (strcasecmp(argv[1], "nofollow") == 0) {
+				config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_NOFOLLOW;
+			} else {
+				return cmd_results_new(CMD_INVALID,
+					"Expected fullscreen_movefocus <true|false> [follow|nofollow].");
+			}
+		} else {
+			config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_FOLLOW;
+		}
+	} else {
+		config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_NONE;
+	}
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 

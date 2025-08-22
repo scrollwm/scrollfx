@@ -147,7 +147,7 @@ static struct sway_node *node_get_in_direction_tiling(
 	struct sway_container *wrap_candidate = NULL;
 	struct sway_container *current = container;
 	while (current) {
-		if (!config->fullscreen_movefocus) {
+		if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_NONE) {
 			if (current->pending.fullscreen_mode == FULLSCREEN_WORKSPACE) {
 				// Fullscreen container with a direction - go straight to outputs
 				struct sway_output *output = current->pending.workspace->output;
@@ -479,22 +479,33 @@ struct cmd_results *cmd_focus(int argc, char **argv) {
 		next_focus = node_get_in_direction_tiling(container, seat, direction, descend);
 	}
 	if (next_focus) {
-		seat_set_focus(seat, next_focus);
-		seat_consider_warp_to_focus(seat);
-
 		if (next_focus->type == N_CONTAINER) {
-			arrange_workspace(next_focus->sway_container->pending.workspace);
-			container_raise_floating(next_focus->sway_container);
-			if (config->fullscreen_movefocus) {
+			if (config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NONE) {
 				// Deal with full screen
 				enum sway_fullscreen_mode fullscreen_mode = container->pending.fullscreen_mode;
 				// Allow fullscreen_movefocus for WORKSPACE type full screen
 				if (fullscreen_mode == FULLSCREEN_WORKSPACE) {
-					container_pass_fullscreen(container, next_focus->sway_container);
-					transaction_commit_dirty();
+					if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_FOLLOW) {
+						container_pass_fullscreen(container, next_focus->sway_container);
+					} else {
+						container_fullscreen_disable(container);
+						node_set_dirty(&container->node);
+					}
+				}
+				if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_NOFOLLOW) {
+					if (next_focus->sway_container->fullscreen) {
+						container_set_fullscreen(next_focus->sway_container, FULLSCREEN_WORKSPACE);
+						node_set_dirty(&next_focus->sway_container->node);
+					}
+					node_set_dirty(&container->pending.workspace->node);
 				}
 			}
+			arrange_workspace(next_focus->sway_container->pending.workspace);
+			container_raise_floating(next_focus->sway_container);
 		}
+		seat_set_focus(seat, next_focus);
+		seat_consider_warp_to_focus(seat);
+		transaction_commit_dirty();
 	}
 
 	return cmd_results_new(CMD_SUCCESS, NULL);

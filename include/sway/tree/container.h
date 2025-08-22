@@ -35,6 +35,12 @@ enum sway_fullscreen_app_mode {
 	FULLSCREEN_APP_ENABLED,
 };
 
+enum sway_fullscreen_movefocus {
+	FULLSCREEN_MOVEFOCUS_NONE,
+	FULLSCREEN_MOVEFOCUS_FOLLOW,
+	FULLSCREEN_MOVEFOCUS_NOFOLLOW
+};
+
 struct sway_root;
 struct sway_output;
 struct sway_workspace;
@@ -169,6 +175,8 @@ struct sway_container {
 	float alpha;
 
 	list_t *marks; // char *
+
+	bool fullscreen; // container needs to recover fs mode when refocused
 
 	struct {
 		struct wl_signal destroy;
