@@ -229,11 +229,22 @@ void layout_overview_toggle(struct sway_workspace *workspace, enum sway_layout_o
 		workspace_set_scale(workspace, workspace->layout.mem_scale);
 		node_set_dirty(&workspace->node);
 		recreate_buffers(workspace);
+		struct sway_seat *seat = input_manager_current_seat();
+		struct sway_container * focus = seat_get_focused_container(seat);
 		if (workspace->layout.fullscreen) {
-			struct sway_seat *seat = input_manager_current_seat();
-			struct sway_container * focus = seat_get_focused_container(seat);
-			container_set_fullscreen(focus, FULLSCREEN_WORKSPACE);
-			arrange_root();
+			if (config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NOFOLLOW) {
+				if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_FOLLOW ||
+					workspace->layout.fullscreen == focus) {
+						container_set_fullscreen(focus, FULLSCREEN_WORKSPACE);
+						arrange_root();
+				}
+			}
+		}
+		if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_NOFOLLOW) {
+			if (focus && focus->fullscreen) {
+				container_set_fullscreen(focus, FULLSCREEN_WORKSPACE);
+				arrange_root();
+			}
 		}
 	} else {
 		workspace->layout.mem_scale = layout_scale_get(workspace);
@@ -241,7 +252,7 @@ void layout_overview_toggle(struct sway_workspace *workspace, enum sway_layout_o
 		workspace->layout.fullscreen = workspace->fullscreen;
 		node_set_dirty(&workspace->node);
 		if (workspace->fullscreen) {
-			container_set_fullscreen(workspace->fullscreen, FULLSCREEN_NONE);
+			container_fullscreen_disable(workspace->fullscreen);
 			arrange_root();
 		}
 		// In case the next transaction_commit_dirty() is delayed, making 
@@ -1986,6 +1997,17 @@ static void container_jump(struct jump_container_data *jump_data) {
 	} else {
 		jump_data->jumping = true;
 		container->jump.jumping = true;
+		bool disable_fullscreen = false;
+		for (int i = 0; i < container->pending.children->length; ++i) {
+			struct sway_container *con = container->pending.children->items[i];
+			if (con->pending.fullscreen_mode == FULLSCREEN_WORKSPACE) {
+				container_fullscreen_disable(con);
+				disable_fullscreen = true;
+			}
+		}
+		if (disable_fullscreen) {
+			arrange_workspace(workspace);
+		}
 		reorder = layout_modifiers_get_reorder(workspace);
 		layout_modifiers_set_reorder(workspace, REORDER_LAZY);
 		if (layout_get_type(workspace) == L_HORIZ) {
@@ -2041,6 +2063,12 @@ static void jump_container_handle_keyboard_key_end(struct jump_container_data *j
 
 	if (focus) {
 		struct sway_container *view = jump_data->container->pending.children->items[jump_data->window_number];
+		if (config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NONE) {
+			if (config->fullscreen_movefocus == FULLSCREEN_MOVEFOCUS_FOLLOW || view->fullscreen) {
+				container_set_fullscreen(view, FULLSCREEN_WORKSPACE);
+				arrange_workspace(view->pending.workspace);
+			}
+		}
 		struct sway_seat *seat = input_manager_current_seat();
 		seat_set_focus_container(seat, view);
 		seat_consider_warp_to_focus(seat);

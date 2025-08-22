@@ -275,7 +275,7 @@ static void config_defaults(struct sway_config *config) {
 	color_to_rgba(config->jump_labels_background, 0x00000000);
 	config->jump_labels_scale = 0.5;
 	config->jump_labels_keys = strdup("1234");
-	config->fullscreen_movefocus = true;
+	config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_FOLLOW;
 	config->align_reset_auto = false;
 	config->cycle_size_wrap = false;
 	config->maximize_if_single = false;

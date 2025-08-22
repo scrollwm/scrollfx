@@ -150,10 +150,20 @@ The following commands may only be used in the configuration file.
 *default_orientation* <horizontal|vertical|auto>
 	Sets the default container layout for tiled containers.
 
-*fullscreen_movefocus* <true|false>
-	Default value is _true_. Allows you to change focus while in full screen
-	mode. Full screen will follow focus. You can still use overview/jump to
+*fullscreen_movefocus* <true|false> [follow|nofollow]
+	Default value is _true_ and _follow_.
+
+	_true_. Allows you to change focus while in full screen mode.
+
+	_false_. Focusing other containers in the same workspace is not allowed
+	until exiting full screen mode.
+
+	_follow_. Full screen will follow focus. You can still use overview/jump to
 	select a new window, and full screen state will follow.
+
+	_nofollow_. You can focus other windows, but they will not become full
+	screen. However, those in full screen mode will recover that mode when
+	focusing on them again.
 
 *gesture_scroll_enable* <true|false>
 	Default value is _true_. Enables trackpad layout scrolling.

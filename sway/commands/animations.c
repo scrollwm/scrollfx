@@ -115,6 +115,7 @@ struct cmd_results *animations_cmd_default(int argc, char **argv) {
 		return error;
 	}
 	error = parse_animation_curve(argc, argv, &config->animations.anim_default);
+	animation_set_path(config->animations.anim_default);
 	return error;
 }
 

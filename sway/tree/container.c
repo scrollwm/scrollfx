@@ -178,6 +178,7 @@ struct sway_container *container_create(struct sway_view *view) {
 	c->marks = create_list();
 	c->toggle_size.saved = false;
 	c->toggle_size.single = false;
+	c->fullscreen = false;
 
 	wl_signal_init(&c->events.destroy);
 	wl_signal_emit_mutable(&root->events.new_node, &c->node);
@@ -1290,6 +1291,7 @@ static void container_fullscreen_workspace(struct sway_container *con) {
 	}
 	set_fullscreen(con, true, false);
 	con->pending.fullscreen_mode = FULLSCREEN_WORKSPACE;
+	con->fullscreen = true;
 
 	con->saved_x = con->pending.x;
 	con->saved_y = con->pending.y;
@@ -1404,6 +1406,7 @@ void container_set_fullscreen(struct sway_container *con,
 	switch (mode) {
 	case FULLSCREEN_NONE:
 		container_fullscreen_disable(con);
+		con->fullscreen = false;
 		break;
 	case FULLSCREEN_WORKSPACE:
 		if (root->fullscreen_global) {
