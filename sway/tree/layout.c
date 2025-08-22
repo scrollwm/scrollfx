@@ -345,9 +345,7 @@ void layout_overview_workspaces_toggle() {
 				child->layers.tiling->node.info.workspace = NULL;
 				node_set_dirty(&child->node);
 				if (child->layout.fullscreen) {
-					struct sway_seat *seat = input_manager_current_seat();
-					struct sway_container * focus = seat_get_focused_container(seat);
-					container_set_fullscreen(focus, FULLSCREEN_WORKSPACE);
+					container_set_fullscreen(child->layout.fullscreen, FULLSCREEN_WORKSPACE);
 					arrange_root();
 				}
 				for (int f = 0; f < child->floating->length; ++f) {
