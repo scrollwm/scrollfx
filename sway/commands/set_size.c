@@ -64,6 +64,8 @@ static struct cmd_results *set_size_tiled(uint32_t axis, double fraction) {
 		arrange_workspace(current->pending.workspace);
 	}
 
+	layout_tiling_resize_callback(current);
+
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 

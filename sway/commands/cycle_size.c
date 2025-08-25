@@ -111,6 +111,8 @@ static struct cmd_results *cycle_size_tiled(uint32_t axis, int inc) {
 		arrange_workspace(current->pending.workspace);
 	}
 
+	layout_tiling_resize_callback(current);
+
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 

@@ -257,4 +257,8 @@ void layout_maximize_if_single(struct sway_workspace *workspace);
 void layout_toggle_size_container(struct sway_container *container,
 		double width_fraction, double height_fraction);
 
+// Call after any resize. This function calls any needed functions for
+// internal management of options etc.
+void layout_tiling_resize_callback(struct sway_container *container);
+
 #endif // _SWAY_LAYOUT_H

@@ -273,6 +273,9 @@ static struct cmd_results *resize_adjust_tiled(uint32_t axis,
 	} else {
 		arrange_workspace(current->pending.workspace);
 	}
+
+	layout_tiling_resize_callback(current);
+
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 
@@ -374,6 +377,9 @@ static struct cmd_results *resize_set_tiled(struct sway_container *container,
 	} else {
 		arrange_workspace(container->pending.workspace);
 	}
+
+	layout_tiling_resize_callback(container);
+
 	return cmd_results_new(CMD_SUCCESS, NULL);
 }
 

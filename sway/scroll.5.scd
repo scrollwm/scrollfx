@@ -211,7 +211,8 @@ The following commands may only be used in the configuration file.
 
 *maximize_if_single* <true|false>
 	Default value is _false_. If _true_, whenever there is a single tiling
-	window in the workspace, it will be maximized.
+	window in the workspace, it will be maximized, unless you explicitly resize
+	it.
 
 *swaybg_command* <command>
 	Executes custom background _command_. Default is _swaybg_. Refer to
@@ -762,10 +763,12 @@ set|plus|minus|toggle <amount>
 	*toggle_size* manually (using _this_) are affected by the temporary sizing.
 
 	_active_: set by calling *toggle_size* _active_, the _active_ (currently
-	focused) window will be affected every time it changes.
+	focused) window will be affected every time it changes, unless the user
+	resized it explicitly while in *toggle_size* mode.
 
 	_all_: set by calling *toggle_size* _all_, it affects all the windows in
-	the workspace.
+	the workspace except for those that have been resized by the user during
+	*toggle_size* mode.
 
 	When you move a window from a workspace to another, it will be affected
 	by the new workspace's mode regardless of its previous _toggle_size_ state.
@@ -790,8 +793,7 @@ set|plus|minus|toggle <amount>
 ```
 
 	*toggle_size* saves the sizes of the affected windows when you call the
-	command. Any resizing you do to windows while in _toggle_size_ mode are
-	reset to the saved sizes when you toggle back to normal state.
+	command so you can go back to them when toggling to normal mode again.
 
 *trail* new|prev|next|delete|clear|to_selection
 	Manages trails. A _trail_ is a path of trailmarks. A _trailmark_ is an

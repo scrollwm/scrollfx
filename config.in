@@ -353,8 +353,8 @@ mode "resize" {
 bindsym $mod+Shift+r mode "resize"
 
 # Toggle Size (and maximize)
-bindsym $mod+Ctrl+t toggle_size active 1.0 1.0
-bindsym $mod+Ctrl+Shift+t toggle_size this 1.0 1.0
+bindsym $mod+t toggle_size this 1.0 1.0
+bindsym $mod+Shift+t toggle_size active 1.0 1.0
 
 mode "togglesizeh" {
     bindsym 1 toggle_size all 0.125 1.0; mode default
@@ -374,7 +374,7 @@ mode "togglesizeh" {
     # Return to default mode
     bindsym Escape mode "default"
 }
-bindsym $mod+t mode "togglesizeh"
+bindsym $mod+Ctrl+t mode "togglesizeh"
 
 mode "togglesizev" {
     bindsym 1 toggle_size all 1.0 0.125; mode default
@@ -394,7 +394,7 @@ mode "togglesizev" {
     # Return to default mode
     bindsym Escape mode "default"
 }
-bindsym $mod+Shift+t mode "togglesizev"
+bindsym $mod+Ctrl+Shift+t mode "togglesizev"
 
 mode "align" {
     bindsym c align center; mode default

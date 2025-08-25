@@ -41,6 +41,13 @@ enum sway_fullscreen_movefocus {
 	FULLSCREEN_MOVEFOCUS_NOFOLLOW
 };
 
+enum sway_toggle_size_state {
+	TOGGLE_STATE_NONE,
+	TOGGLE_STATE_TOGGLED,
+	TOGGLE_STATE_NONE_FORCED,
+	TOGGLE_STATE_TOGGLED_FORCED,
+};
+
 struct sway_root;
 struct sway_output;
 struct sway_workspace;
@@ -147,8 +154,8 @@ struct sway_container {
 	double height_fraction;
 
 	struct {
-		bool saved;
 		bool single;
+		enum sway_toggle_size_state state;
 		double saved_width_fraction;
 		double saved_height_fraction;
 	} toggle_size;
