@@ -48,6 +48,7 @@ static void handle_button(struct sway_seat *seat, uint32_t time_msec,
 			}
 			container_set_resizing(e->con, false);
 			arrange_workspace(e->con->pending.workspace);
+			layout_tiling_resize_callback(e->con);
 		}
 		transaction_commit_dirty();
 		seatop_begin_default(seat);

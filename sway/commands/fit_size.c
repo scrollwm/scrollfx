@@ -232,6 +232,11 @@ static void fit_size_workspace(struct sway_workspace *workspace, enum sway_layou
 	set_from_position(workspace, layout, workspace->tiling, scale, from, active_idx, workspace->gaps_inner);
 	
 	arrange_workspace(workspace);
+
+	for (int i = from; i <= to; ++i) {
+		struct sway_container *con = workspace->tiling->items[i];
+		layout_tiling_resize_callback(con);
+	}
 }
 
 static void fit_size_container(struct sway_container *container, enum sway_layout_fit_group fit, bool equal) {
@@ -318,6 +323,8 @@ static void fit_size_container(struct sway_container *container, enum sway_layou
 	set_from_position(workspace, layout, children, scale, from, active_idx, workspace->gaps_inner);
 	
 	arrange_container(container);
+
+	layout_tiling_resize_callback(container);
 }
 
 static struct cmd_results *fit_size(uint32_t axis, enum sway_layout_fit_group fit, bool equal) {
