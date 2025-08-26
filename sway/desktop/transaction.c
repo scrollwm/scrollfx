@@ -1143,18 +1143,6 @@ static void arrange_workspace_floating(struct sway_workspace *ws) {
 	if (mode == OVERVIEW_ALL || mode == OVERVIEW_FLOATING) {
 		layout_overview_recompute_scale(ws, ws->gaps_inner);
 	}
-	float scale = 1.0f;;
-	double wsoffx = 0.0, wsoffy = 0.0;
-	double minx = 0.0, miny = 0.0;
-	if (layout_scale_enabled(ws)) {
-		scale = layout_scale_get(ws);
-		double maxx, maxy;
-		layout_compute_bounding_box(ws->floating, &minx, &maxx, &miny, &maxy);
-		const double width = maxx - minx;
-		const double height = maxy - miny;
-		wsoffx = ws->x + 0.5 * (ws->width - width * scale);
-		wsoffy = ws->y + 0.5 * (ws->height - height * scale);
-	}
 
 	for (int i = 0; i < ws->current.floating->length; i++) {
 		struct sway_container *floater = ws->current.floating->items[i];
@@ -1182,8 +1170,12 @@ static void arrange_workspace_floating(struct sway_workspace *ws) {
 
 		sway_scene_node_reparent(&floater->scene_tree->node, layer);
 		if (layout_scale_enabled(ws)) {
-			sway_scene_node_set_position(&floater->scene_tree->node,
-				wsoffx + (floater->current.x - minx) * scale, wsoffy + (floater->current.y - miny) * scale);
+			const float scale = layout_scale_get(ws);
+			const double minx = ws->output->lx + 0.5 * ws->output->width * (1.0 - scale);
+			const double miny = ws->output->ly + 0.5 * ws->output->height * (1.0 - scale);
+			const double x = minx + scale * (floater->current.x - ws->output->lx);
+			const double y = miny + scale * (floater->current.y - ws->output->ly);
+			sway_scene_node_set_position(&floater->scene_tree->node, x, y);
 
 		} else {
 			sway_scene_node_set_position(&floater->scene_tree->node,
