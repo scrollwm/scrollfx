@@ -163,8 +163,12 @@ void animation_set_path(struct sway_animation_path *path) {
 	animation.path = path;
 }
 
+struct sway_animation_path *animation_get_path() {
+	return animation.path;
+}
+
 static struct sway_animation_path *get_path() {
-	if (!config->animations.enabled || config->reading) {
+	if (!config->animations.enabled || config->reloading) {
 		return NULL;
 	}
 	struct sway_animation_path *path;
@@ -237,25 +241,27 @@ void animation_next_key() {
 	struct sway_animation_path *path = get_path();
 	if (path) {
 		animation.nsteps = max(1, animation_get_duration_ms() / config->animations.frequency_ms);
-		animation.step = 1;
-		if (animation.callbacks.callback_begin) {
-			animation.callbacks.callback_begin(animation.callbacks.callback_begin_data);
+		if (animation.nsteps > 0) {
+			animation.step = 1;
+			if (animation.callbacks.callback_begin) {
+				animation.callbacks.callback_begin(animation.callbacks.callback_begin_data);
+			}
+			animation.callbacks.callback_step(animation.callbacks.callback_step_data);
+			if (animation.timer) {
+				wl_event_source_remove(animation.timer);
+				path->idx = 0;
+			}
+			animation.timer = wl_event_loop_add_timer(server.wl_event_loop,
+				timer_callback, &animation);
+			if (animation.timer) {
+				wl_event_source_timer_update(animation.timer, config->animations.frequency_ms);
+			} else {
+				sway_log_errno(SWAY_ERROR, "Unable to create animation timer");
+			}
+			return;
 		}
-		animation.callbacks.callback_step(animation.callbacks.callback_step_data);
-		if (animation.timer) {
-			wl_event_source_remove(animation.timer);
-			path->idx = 0;
-		}
-		animation.timer = wl_event_loop_add_timer(server.wl_event_loop,
-			timer_callback, &animation);
-		if (animation.timer) {
-			wl_event_source_timer_update(animation.timer, config->animations.frequency_ms);
-		} else {
-			sway_log_errno(SWAY_ERROR, "Unable to create animation timer");
-		}
-	} else {
-		animation.callbacks.callback_step(animation.callbacks.callback_step_data);
 	}
+	animation.callbacks.callback_step(animation.callbacks.callback_step_data);
 }
 
 static void lookup_xy(struct bezier_curve *curve, double t, double *x, double *y) {
