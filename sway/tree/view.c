@@ -34,6 +34,7 @@
 #include "sway/tree/container.h"
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
+#include "sway/tree/scene.h"
 #include "sway/config.h"
 #include "sway/xdg_decoration.h"
 #include "stringop.h"
@@ -1014,7 +1015,7 @@ void view_center_and_clip_surface(struct sway_view *view) {
 		// geometry immediately affects the currently active rendering.
 		int x = (int) fmax(0, (con->current.content_width - view->geometry.width) / 2);
 		int y = (int) fmax(0, (con->current.content_height - view->geometry.height) / 2);
-		clip_to_geometry = !view->using_csd;
+		clip_to_geometry = !view->xdg_decoration;
 
 		sway_scene_node_set_position(&view->content_tree->node, x, y);
 	} else {
@@ -1314,4 +1315,91 @@ void view_reset_content_scale(struct sway_view *view) {
 
 bool view_is_content_scaled(struct sway_view *view) {
 	return view->content_scale > 0.0f;
+}
+
+static void view_get_animation_sizes(struct sway_view *view, double *wt, double *ht,
+		double *w1, double *h1) {
+	struct sway_container *con = view->container;
+	const int thickness = con->pending.border_thickness;
+	const int border_horiz = con->pending.border_left * thickness
+		+ con->pending.border_right * thickness;
+	int border_vert = con->pending.border_bottom * thickness;
+	if (con->pending.border == B_NORMAL) {
+		border_vert += container_titlebar_height();
+	} else {
+		border_vert += con->pending.border_top * thickness;
+	}
+	*w1 = con->animation.w1 - border_horiz;
+	*h1 = con->animation.h1 - border_vert;
+	if (animation_enabled() &&
+		view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
+		!container_is_floating(view->container)) {
+		*wt = con->animation.wt - border_horiz;
+		*ht = con->animation.ht - border_vert;
+	} else {
+		*wt = *w1;
+		*ht = *h1;
+	}
+}
+
+void view_get_animation_scales(struct sway_view *view,
+		double *wscale, double *hscale) {
+	if (view && view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
+		config->animations.style == ANIM_STYLE_SCALE &&
+		!container_is_floating(view->container)) {
+		double wt, ht, w1, h1;
+		view_get_animation_sizes(view, &wt, &ht, &w1, &h1);
+		*wscale = wt / w1;
+		*hscale = ht / h1;
+	} else {
+		*wscale = 1.0;
+		*hscale = 1.0;
+	}
+}
+
+static void clip_view(struct sway_view *view) {
+	if (animation_enabled() && config->animations.style == ANIM_STYLE_CLIP) {
+		double wt, ht, w1, h1;
+		view_get_animation_sizes(view, &wt, &ht, &w1, &h1);
+		double content_scale = view_is_content_scaled(view) ?
+			view_get_content_scale(view) : 1.0;
+		struct wlr_box clip = (struct wlr_box){
+			.x = view->geometry.x,
+			.y = view->geometry.y,
+			.width = wt / content_scale,
+			.height = ht / content_scale
+		};
+		sway_scene_subsurface_tree_set_clip(&view->content_tree->node, &clip);
+	} else {
+		bool clip_to_geometry = true;
+
+		if (container_is_floating(view->container)) {
+			clip_to_geometry = !view->xdg_decoration;
+		}
+		if (clip_to_geometry) {
+			struct wlr_box clip = (struct wlr_box){
+				.x = view->geometry.x,
+				.y = view->geometry.y,
+				.width = view->container->pending.content_width,
+				.height = view->container->pending.content_height
+			};
+			sway_scene_subsurface_tree_set_clip(&view->content_tree->node, &clip);
+		}
+	}
+}
+
+static void view_reconfigure_iterator(struct sway_scene_buffer *buffer,
+		int sx, int sy, void *user_data) {
+	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(buffer);
+	sway_scene_surface_reconfigure(scene_surface);
+}
+
+void view_reconfigure(struct sway_view *view) {
+	if (!view) {
+		return;
+	}
+	sway_scene_node_for_each_buffer(&view->content_tree->node,
+		view_reconfigure_iterator, NULL);
+
+	clip_view(view);
 }
