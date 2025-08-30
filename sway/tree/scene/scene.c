@@ -2647,7 +2647,7 @@ bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scal
 	return false;
 }
 
-static struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node) {
+struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node) {
 	struct sway_scene_tree *tree;
 	if (node->type == SWAY_SCENE_NODE_TREE) {
 		tree = sway_scene_tree_from_node(node);
@@ -2668,31 +2668,4 @@ static struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node
 		tree = tree->node.parent;
 	}
 	return NULL;
-}
-
-void sway_scene_buffer_get_animation_scales(struct sway_scene_buffer *scene_buffer,
-		double *wscale, double *hscale) {
-	struct sway_view *view = scene_node_get_parent_view(&scene_buffer->node);
-	if (view && view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
-		!container_is_floating(view->container)) {
-		struct sway_container *con = view->container;
-		const int thickness = con->pending.border_thickness;
-		const int border_horiz = con->pending.border_left * thickness
-			+ con->pending.border_right * thickness;
-		int border_vert = con->pending.border_bottom * thickness;
-		if (con->pending.border == B_NORMAL) {
-			border_vert += container_titlebar_height();
-		} else {
-			border_vert += con->pending.border_top * thickness;
-		}
-		double wt = con->animation.wt - border_horiz;
-		double ht = con->animation.ht - border_vert;
-		double w1 = con->animation.w1 - border_horiz;
-		double h1 = con->animation.h1 - border_vert;
-		*wscale = wt / w1;
-		*hscale = ht / h1;
-	} else {
-		*wscale = 1.0;
-		*hscale = 1.0;
-	}
 }

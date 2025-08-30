@@ -848,129 +848,6 @@ static void default_arrange_children(struct sway_workspace *workspace,
 	}
 }
 
-static void animation_clip_container(struct sway_container *con) {
-	if (!wl_list_empty(&con->view->content_tree->children)) {
-		if (!container_is_floating(con)) {
-			// Sometimes there could be a transaction timeout, and the surface
-			// is "officially" mapped, but hasn't provided a buffer. If we try
-			// to clip it, scroll will crash. This check (for lack of a better
-			// idea/solution) verifies we are not in that state.
-			if (con->view->surface->current.buffer_width <= 1 &&
-				con->view->surface->current.buffer_height <= 1) {
-			//if (con->view->surface->buffer->source->n_locks == 0) {
-				sway_scene_node_set_enabled(&con->view->scene_tree->node, false);
-				return;
-			}
-			sway_scene_node_set_enabled(&con->view->scene_tree->node, true);
-			// Clip the buffer to animation width, height
-			struct wlr_box clip = (struct wlr_box){
-				.x = con->view->geometry.x,
-				.y = con->view->geometry.y,
-			};
-			double width = con->animation.wt;
-			double height = con->animation.ht;
-			if (con->pending.border != B_NONE) {
-				const int thickness = con->pending.border_thickness;
-				int border_horiz = con->pending.border_left * thickness
-					+ con->pending.border_right * thickness;
-				int border_vert = con->pending.border_bottom * thickness;
-				if (con->pending.border == B_NORMAL) {
-					border_vert += container_titlebar_height();
-				} else {
-					border_vert += con->pending.border_top * thickness;
-				}
-				width -= border_horiz;
-				height -= border_vert;
-			}
-			if (view_is_content_scaled(con->view)) {
-				float scale = view_get_content_scale(con->view);
-				width /= scale;
-				height /= scale;
-			}
-			clip.width = max(1, round(width));
-			clip.height = max(1, round(height));
-			sway_scene_subsurface_tree_set_clip(&con->view->content_tree->node, &clip);
-		}
-	}
-}
-
-struct dest_size_data {
-	float ws_scale;
-	float content_scale;
-	double wscale;
-	double hscale;
-	int width;
-	int height;
-};
-
-static void buffer_set_dest_size_iterator(struct sway_scene_buffer *buffer,
-		int sx, int sy, void *user_data) {
-	struct dest_size_data *data = user_data;
-	double width = data->width;
-	double height = data->height;
-	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(buffer);
-	if (scene_surface) {
-		struct wlr_surface *surface = scene_surface->surface;
-		struct wlr_surface_state *state = &surface->current;
-		width = state->width;
-		height = state->height;
-		if (!wlr_box_empty(&scene_surface->clip)) {
-			const struct wlr_box *clip = &scene_surface->clip;
-			width = min(clip->width, width - clip->x);
-			height = min(clip->height, height - clip->y);
-		}
-	}
-	width *= data->ws_scale * data->content_scale * data->wscale;
-	height *= data->ws_scale * data->content_scale * data->hscale;
-	sway_scene_buffer_set_dest_size(buffer,	max(1, round(width)), max(1, round(height)));
-}
-
-static void view_set_dest_size(struct sway_view *view, struct dest_size_data *data) {
-	sway_scene_node_for_each_buffer(&view->content_tree->node,
-		buffer_set_dest_size_iterator, data);
-}
-
-static void animation_scale_container(struct sway_container *con) {
-	if (!wl_list_empty(&con->view->content_tree->children)) {
-		if (!container_is_floating(con)) {
-			// Sometimes there could be a transaction timeout, and the surface
-			// is "officially" mapped, but hasn't provided a buffer. If we try
-			// to clip it, scroll will crash. This check (for lack of a better
-			// idea/solution) verifies we are not in that state.
-			if (con->view->surface->current.buffer_width <= 1 &&
-				con->view->surface->current.buffer_height <= 1) {
-			//if (con->view->surface->buffer->source->n_locks == 0) {
-				sway_scene_node_set_enabled(&con->view->scene_tree->node, false);
-				return;
-			}
-			sway_scene_node_set_enabled(&con->view->scene_tree->node, true);
-			struct dest_size_data data;
-			struct sway_workspace *workspace = con->pending.workspace;
-			data.ws_scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
-			data.width = round(con->pending.content_width);
-			data.height = round(con->pending.content_height);
-			data.content_scale = view_is_content_scaled(con->view) ? view_get_content_scale(con->view) : 1.0f;
-
-			const int thickness = con->pending.border_thickness;
-			const int border_horiz = con->pending.border_left * thickness
-				+ con->pending.border_right * thickness;
-			int border_vert = con->pending.border_bottom * thickness;
-			if (con->pending.border == B_NORMAL) {
-				border_vert += container_titlebar_height();
-			} else {
-				border_vert += con->pending.border_top * thickness;
-			}
-			double wt = con->animation.wt - border_horiz;
-			double ht = con->animation.ht - border_vert;
-			double w1 = con->animation.w1 - border_horiz;
-			double h1 = con->animation.h1 - border_vert;
-			data.wscale = wt / w1;
-			data.hscale = ht / h1;
-			view_set_dest_size(con->view, &data);
-		}
-	}
-}
-
 static void animation_arrange_children(struct sway_workspace *workspace,
 		enum sway_container_layout layout, list_t *children,
 		struct sway_scene_tree *content);
@@ -1051,14 +928,6 @@ static void arrange_container(struct sway_container *con,
 		sway_scene_node_set_position(&con->view->scene_tree->node,
 			border_left, border_top);
 
-		if (animation_enabled()) {
-			if (config->animations.style == ANIM_STYLE_CLIP) {
-				animation_clip_container(con);
-			} else {
-				animation_scale_container(con);
-			}
-		}
-
 		// Update content geometry
 		view_autoconfigure(con->view);
 		// Re-configure Xwayland views that change position. The reason is unlike
@@ -1086,6 +955,7 @@ static void arrange_container(struct sway_container *con,
 				con->current.content_height = con->pending.content_height;
 			}
 		}
+		view_reconfigure(con->view);
 	} else {
 		// make sure to disable the title bar if the parent is not managing it
 		if (title_bar) {

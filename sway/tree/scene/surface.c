@@ -3,6 +3,7 @@
 #include <wlr/types/wlr_alpha_modifier_v1.h>
 #include "sway/config.h"
 #include "sway/tree/scene.h"
+#include "sway/tree/view.h"
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_linux_drm_syncobj_v1.h>
@@ -103,7 +104,7 @@ static int min(int a, int b) {
 	return a < b ? a : b;
 }
 
-static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
+void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	struct sway_scene_buffer *scene_buffer = scene_surface->buffer;
 	struct wlr_surface *surface = scene_surface->surface;
 	struct wlr_surface_state *state = &surface->current;
@@ -160,20 +161,14 @@ static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
 
 	sway_scene_buffer_set_opaque_region(scene_buffer, &opaque);
 	sway_scene_buffer_set_source_box(scene_buffer, &src_box);
-	double total_scale = 1.0f;
 	float scale;
 	scene_node_get_parent_total_scale(&scene_buffer->node, &scale);
-	if (scale > 0.0f) {
-		total_scale *= scale;
-	}
+	double total_scale = scale > 0.0f ? scale : 1.0;
+	struct sway_view *view = scene_node_get_parent_view(&scene_buffer->node);
 	double wscale, hscale;
-	if (animation_enabled() && config->animations.style == ANIM_STYLE_SCALE) {
-		sway_scene_buffer_get_animation_scales(scene_buffer, &wscale, &hscale);
-	} else {
-		wscale = hscale = 1.0;
-	}
-	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, round(wscale * width * total_scale)),
-		MAX(1, round(hscale * height * total_scale)));
+	view_get_animation_scales(view, &wscale, &hscale);
+	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, round(width * total_scale * wscale)),
+		MAX(1, round(height * total_scale * hscale)));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
 	sway_scene_buffer_set_opacity(scene_buffer, opacity);
 
@@ -210,6 +205,9 @@ static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	}
 
 	pixman_region32_fini(&opaque);
+}
+static void surface_reconfigure(struct sway_scene_surface *scene_surface) {
+	sway_scene_surface_reconfigure(scene_surface);
 }
 
 static void handle_scene_surface_surface_commit(

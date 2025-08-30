@@ -86,58 +86,33 @@ enum sway_container_layout layout_get_type(struct sway_workspace *workspace) {
 	return workspace->layout.type;
 }
 
-static void buffer_set_dest_size_iterator(struct sway_scene_buffer *buffer,
-		int sx, int sy, void *user_data) {
-	float *scale = user_data;
-	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(buffer);
-
-	int width, height;
-	if (scene_surface) {
-		struct wlr_surface *surface = scene_surface->surface;
-		struct wlr_surface_state *state = &surface->current;
-		width = state->width;
-		height = state->height;
-	} else {
-		width = buffer->dst_width;
-		height = buffer->dst_height;
-	}
-
-	sway_scene_buffer_set_dest_size(buffer, round(width * *scale), round(height * *scale));
-}
-
-static void recreate_view_buffer(struct sway_container *view, float scale) {
-	float total_scale = scale;
-	if (view_is_content_scaled(view->view)) {
-		total_scale *= view_get_content_scale(view->view);
-	}
-	sway_scene_node_for_each_buffer(&view->content_tree->node,
-		buffer_set_dest_size_iterator, &total_scale);
+static void recreate_view_buffer(struct sway_container *view) {
 	// Views using CSD need to be reconfigured, otherwise the content
 	// is not in sync with our borders. Also, some views created while
 	// in scaled mode need to be reconfigured, so reconfigure everything
 	// just in case.
 	view_configure(view->view, view->pending.content_x, view->pending.content_y,
 		round(view->pending.content_width), round(view->pending.content_height));
-
+	view_reconfigure(view->view);
+	node_set_dirty(&view->node);
 }
 
 static void recreate_buffers(struct sway_workspace *workspace) {
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
 	for (int i = 0; i < workspace->tiling->length; ++i) {
 		const struct sway_container *con = workspace->tiling->items[i];
 		for (int j = 0; j < con->pending.children->length; ++j) {
 			struct sway_container *view = con->pending.children->items[j];
-			recreate_view_buffer(view, scale);
+			recreate_view_buffer(view);
 		}
 	}
 	for (int i = 0; i < workspace->floating->length; ++i) {
 		struct sway_container *con = workspace->floating->items[i];
 		if (con->view) {
-			recreate_view_buffer(con, scale);
-		} else {
+			recreate_view_buffer(con);
+		} else if (con->pending.children){
 			for (int j = 0; j < con->pending.children->length; ++j) {
 				struct sway_container *view = con->pending.children->items[j];
-				recreate_view_buffer(view, scale);
+				recreate_view_buffer(view);
 			}
 		}
 	}

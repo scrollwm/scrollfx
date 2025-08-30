@@ -361,4 +361,8 @@ void view_reset_content_scale(struct sway_view *view);
 
 bool view_is_content_scaled(struct sway_view *view);
 
+void view_reconfigure(struct sway_view *view);
+
+void view_get_animation_scales(struct sway_view *view, double *wscale, double *hscale);
+
 #endif
