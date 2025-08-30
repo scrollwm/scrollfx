@@ -57,6 +57,9 @@ struct sway_animation_callbacks *animation_get_callbacks();
 // Set the active path for the animation
 void animation_set_path(struct sway_animation_path *path);
 
+// Get the current active path for the animation
+struct sway_animation_path *animation_get_path();
+
 // Starts animating using the next key (next curve in the animation path)
 void animation_next_key();
 

@@ -168,18 +168,33 @@ void free_config(struct sway_config *config) {
 	}
 
 	if (config->animations.anim_default) {
+		if (animation_get_path() == config->animations.anim_default) {
+			animation_set_path(NULL);
+		}
 		animation_path_destroy(config->animations.anim_default);
 	}
 	if (config->animations.window_open) {
+		if (animation_get_path() == config->animations.window_open) {
+			animation_set_path(NULL);
+		}
 		animation_path_destroy(config->animations.window_open);
 	}
 	if (config->animations.window_move) {
+		if (animation_get_path() == config->animations.window_move) {
+			animation_set_path(NULL);
+		}
 		animation_path_destroy(config->animations.window_move);
 	}
 	if (config->animations.window_size) {
+		if (animation_get_path() == config->animations.window_size) {
+			animation_set_path(NULL);
+		}
 		animation_path_destroy(config->animations.window_size);
 	}
 	if (config->animations.workspace_switch) {
+		if (animation_get_path() == config->animations.workspace_switch) {
+			animation_set_path(NULL);
+		}
 		animation_path_destroy(config->animations.workspace_switch);
 	}
 
