@@ -380,4 +380,10 @@ void view_reconfigure(struct sway_view *view);
 
 void view_get_animation_scales(struct sway_view *view, double *wscale, double *hscale);
 
+/**
+ * Returns the combination of workspace and content scale, or -1.0 if it is
+ * not scaled.
+ */
+double view_get_total_scale(struct sway_view *view);
+
 #endif

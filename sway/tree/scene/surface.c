@@ -201,12 +201,17 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 
 	sway_scene_buffer_set_opaque_region(scene_buffer, &opaque);
 	sway_scene_buffer_set_source_box(scene_buffer, &src_box);
-	float scale;
-	scene_node_get_parent_total_scale(&scene_buffer->node, &scale);
-	double total_scale = scale > 0.0f ? scale : 1.0;
-	struct sway_view *view = scene_node_get_parent_view(&scene_buffer->node);
-	double wscale, hscale;
-	view_get_animation_scales(view, &wscale, &hscale);
+	double wscale, hscale, total_scale;
+	struct sway_view *view = view_from_wlr_surface(surface);
+	if (view) {
+		total_scale = view_get_total_scale(view);
+		if (total_scale < 0.0) {
+			total_scale = 1.0;
+		}
+		view_get_animation_scales(view, &wscale, &hscale);
+	} else {
+		wscale = hscale = total_scale = 1.0;
+	}
 	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, round(width * total_scale * wscale)),
 		MAX(1, round(height * total_scale * hscale)));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
