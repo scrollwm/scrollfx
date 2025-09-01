@@ -96,7 +96,7 @@ runtime.
 	Sets position of the bar. Default is _bottom_.
 
 *scroller_indicator* yes|no
-	Enable or disable the scoller modes indicator. Default is _yes_.
+	Enable or disable the scroller modes indicator. Default is _yes_.
 
 *separator_symbol* <symbol>
 	Specifies the separator symbol to separate blocks on the bar.
