@@ -711,8 +711,6 @@ void scene_surface_set_clip(struct sway_scene_surface *surface, struct wlr_box *
  */
 bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scale);
 
-struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node);
-
 void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface);
 
 #endif // _SWAY_SCENE_H

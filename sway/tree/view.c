@@ -1381,3 +1381,24 @@ void view_reconfigure(struct sway_view *view) {
 
 	clip_view(view);
 }
+
+double view_get_total_scale(struct sway_view *view) {
+	double scale;
+	if (!view) {
+		return -1.0;
+	}
+	struct sway_container *container = view->container;
+	if (!container) {
+		return -1.0;
+	}
+	if (container_is_fullscreen_or_child(container)) {
+		scale = -1.0f;
+	} else {
+		struct sway_workspace *ws = container->pending.workspace;
+		scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+	}
+	if (view_is_content_scaled(view)) {
+		scale = (scale > 0.0f ? scale : 1.0f) * view_get_content_scale(view);
+	}
+	return scale;
+}

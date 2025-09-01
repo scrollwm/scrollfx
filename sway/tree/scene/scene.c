@@ -1275,6 +1275,9 @@ void sway_scene_node_set_position(struct sway_scene_node *node, int x, int y) {
 		// We want to correct the coordinates of nodes descending from a popup/view,
 		// but not the popup/view node itself, because it contains the coordinates
 		// of the parent view/view
+		// For unamanaged Xwayland surfaces (popups), the coordinates are absolute,
+		// so we set them as parents in scene_node_get_parent_total_scale() and
+		// don't correct them.
 		x *= scale;
 		y *= scale;
 	}
@@ -1434,11 +1437,19 @@ static bool scene_node_at_iterator(struct sway_scene_node *node,
 		struct sway_scene_buffer *scene_buffer = sway_scene_buffer_from_node(node);
 
 		double total_scale = 1.0;
-		float scale;
-		scene_node_get_parent_total_scale(node, &scale);
-		if (scale > 0.0f) {
-			total_scale *= scale;
+		struct sway_scene_surface *scene_surface =
+			sway_scene_surface_try_from_buffer(scene_buffer);
+
+		if (scene_surface) {
+			struct sway_view *view = view_from_wlr_surface(scene_surface->surface);
+			if (view) {
+				total_scale = view_get_total_scale(view);
+				if (total_scale <= 0.0) {
+					total_scale = 1.0;
+				}
+			}
 		}
+
 		// Correct the coordinates to buffer local from desktop logical
 		rx /= total_scale;
 		ry /= total_scale;
@@ -2615,57 +2626,32 @@ bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scal
 	while (tree) {
 		// Check scene descriptor
 		struct sway_view *view = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_VIEW);
-		if (!view) {
-			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_POPUP);
-			if (desc && desc->view) {
-				if (container_is_fullscreen_or_child(desc->view->container)) {
-					*scale = 1.0f;
-				} else {
-					struct sway_workspace *ws = desc->view->container->pending.workspace;
-					*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
-				}
-				if (view_is_content_scaled(desc->view)) {
-					*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(desc->view);
-				}
-				return &tree->node == node;
-			}
-		} else if (view->container) {
-			if (container_is_fullscreen_or_child(view->container)) {
-				*scale = 1.0f;
-			} else {
-				struct sway_workspace *ws = view->container->pending.workspace;
-				*scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
-			}
-			if (view_is_content_scaled(view)) {
-				*scale = (*scale > 0.0f ? *scale : 1.0f) * view_get_content_scale(view);
-			}
+		if (view && view->container) {
+			*scale = view_get_total_scale(view);
+			return &tree->node == node;
+		}
+		struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node,SWAY_SCENE_DESC_POPUP);
+		if (desc && desc->view) {
+			*scale = view_get_total_scale(desc->view);
 			return &tree->node == node;
 		}
 		tree = tree->node.parent;
 	}
+	if (node->type == SWAY_SCENE_NODE_BUFFER) {
+		struct sway_scene_buffer *scene_buffer = sway_scene_buffer_from_node(node);
+		double total_scale = -1.0;
+		struct sway_scene_surface *scene_surface =
+			sway_scene_surface_try_from_buffer(scene_buffer);
+
+		if (scene_surface) {
+			struct sway_view *view = view_from_wlr_surface(scene_surface->surface);
+			if (view) {
+				total_scale = view_get_total_scale(view);
+			}
+		}
+		*scale = total_scale;
+		return true;
+	}
 	*scale = -1.0f;
 	return false;
-}
-
-struct sway_view *scene_node_get_parent_view(struct sway_scene_node *node) {
-	struct sway_scene_tree *tree;
-	if (node->type == SWAY_SCENE_NODE_TREE) {
-		tree = sway_scene_tree_from_node(node);
-	} else {
-		tree = node->parent;
-	}
-	while (tree) {
-		// Check scene descriptor
-		struct sway_view *view = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_VIEW);
-		if (!view) {
-			struct sway_popup_desc *desc = scene_descriptor_try_get(&tree->node, SWAY_SCENE_DESC_POPUP);
-			if (desc && desc->view) {
-				return desc->view;
-			}
-		} else {
-			return view;
-		}
-		tree = tree->node.parent;
-	}
-	return NULL;
 }

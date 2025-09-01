@@ -53,6 +53,53 @@ static void unmanaged_handle_set_geometry(struct wl_listener *listener, void *da
 	sway_scene_node_set_position(&surface->surface_scene->buffer->node, xsurface->x, xsurface->y);
 }
 
+static void get_node_coords(struct wlr_xwayland_surface *xsurface, double *dx, double *dy) {
+	double x, y;
+	struct sway_view *view = view_from_wlr_xwayland_surface(xsurface);
+
+	if (view && view->container) {
+		struct sway_container *con = view->container;
+		struct sway_workspace *ws = con->pending.workspace;
+		double scale = -1.0;
+		double ws_scale = 1.0;
+		if (layout_scale_enabled(ws)) {
+			scale = layout_scale_get(ws);
+			ws_scale = scale;
+		}
+		if (view_is_content_scaled(view)) {
+			float content_scale = view_get_content_scale(view);
+			scale = scale > 0.0 ? scale * content_scale : content_scale;
+		}
+		if (scale > 0.0) {
+			x = con->pending.content_x + (xsurface->x - con->pending.content_x) * scale;
+			y = con->pending.content_y + (xsurface->y - con->pending.content_y) * scale;
+
+			if (container_is_floating(con)) {
+				// When we scale the workspace, this is how floating windows are
+				// manipulated in arrage_workspace_floating() to have their virtual
+				// workspace centered.
+				const double minx = ws->output->lx + 0.5 * ws->output->width * (1.0 - ws_scale);
+				const double miny = ws->output->ly + 0.5 * ws->output->height * (1.0 - ws_scale);
+				const double cx = minx + ws_scale * (con->pending.x - ws->output->lx);
+				const double cy = miny + ws_scale * (con->pending.y - ws->output->ly);
+				const double coffsetx = cx - con->pending.x;
+				const double coffsety = cy - con->pending.y;
+
+				x += coffsetx;
+				y += coffsety;
+			}
+		} else {
+			x = xsurface->x;
+			y = xsurface->y;
+		}
+	} else {
+		x = xsurface->x;
+		y = xsurface->y;
+	}
+	*dx = x;
+	*dy = y;
+}
+
 static void unmanaged_handle_map(struct wl_listener *listener, void *data) {
 	struct sway_xwayland_unmanaged *surface =
 		wl_container_of(listener, surface, map);
@@ -64,8 +111,11 @@ static void unmanaged_handle_map(struct wl_listener *listener, void *data) {
 	if (surface->surface_scene) {
 		scene_descriptor_assign(&surface->surface_scene->buffer->node,
 			SWAY_SCENE_DESC_XWAYLAND_UNMANAGED, surface);
+		double x, y;
+		get_node_coords(xsurface, &x, &y);
+
 		sway_scene_node_set_position(&surface->surface_scene->buffer->node,
-			xsurface->x, xsurface->y);
+			round(x), round(y));
 
 		wl_signal_add(&xsurface->events.set_geometry, &surface->set_geometry);
 		surface->set_geometry.notify = unmanaged_handle_set_geometry;
@@ -785,7 +835,13 @@ static void handle_dissociate(struct wl_listener *listener, void *data) {
 
 struct sway_view *view_from_wlr_xwayland_surface(
 		struct wlr_xwayland_surface *xsurface) {
-	return xsurface->data;
+	while (xsurface) {
+		if (xsurface->data) {
+			return xsurface->data;
+		}
+		xsurface = xsurface->parent;
+	}
+	return NULL;
 }
 
 struct sway_xwayland_view *create_xwayland_view(struct wlr_xwayland_surface *xsurface) {
