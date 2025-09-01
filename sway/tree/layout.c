@@ -1563,7 +1563,8 @@ static void move_overlapping(list_t *children, struct sway_container *container)
 	}
 }
 
-static void organize_floating_windows(list_t *children) {
+static void organize_floating_windows(struct sway_workspace *workspace) {
+	list_t *children = workspace->floating;
 	// Save positions
 	for (int i = 0; i < children->length; ++i) {
 		struct sway_container *con = children->items[i];
@@ -1582,13 +1583,15 @@ static void organize_floating_windows(list_t *children) {
 		}
 	}
 	list_free(done);
-	// Move bounding box to origin
+	// Move bounding box to the workspace output's center
 	double minx, maxx, miny, maxy;
 	layout_compute_bounding_box(children, &minx, &maxx, &miny, &maxy);
+	const double offsetx = workspace->output->lx + 0.5 * (workspace->output->width - (minx + maxx));
+	const double offsety = workspace->output->ly + 0.5 * (workspace->output->height - (miny + maxy));
 	for (int i = 0; i < children->length; ++i) {
 		struct sway_container *con = children->items[i];
-		con->pending.x -= minx;
-		con->pending.y -= miny;
+		con->pending.x += offsetx;
+		con->pending.y += offsety;
 		node_set_dirty(&con->node);
 	}
 }
@@ -1614,7 +1617,7 @@ void layout_jump_floating() {
 	for (int i = 0; i < jump_data->workspaces->length; ++i) {
 		struct sway_workspace *workspace = jump_data->workspaces->items[i];
 		// Move windows so they don't overlap and scale the workspace to fit
-		organize_floating_windows(workspace->floating);
+		organize_floating_windows(workspace);
 		enum sway_layout_overview mode = layout_overview_mode(workspace);
 		if (mode != OVERVIEW_FLOATING) {
 			if (mode != OVERVIEW_DISABLED) {
@@ -1781,7 +1784,7 @@ void layout_jump_scratchpad(struct sway_workspace *workspace) {
 	}
 
 	// Move windows so they don't overlap and scale the workspace to fit
-	organize_floating_windows(workspace->floating);
+	organize_floating_windows(workspace);
 	enum sway_layout_overview mode = layout_overview_mode(workspace);
 	if (mode != OVERVIEW_FLOATING) {
 		if (mode != OVERVIEW_DISABLED) {
