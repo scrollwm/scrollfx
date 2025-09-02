@@ -855,7 +855,7 @@ static void animation_arrange_children(struct sway_workspace *workspace,
 static void arrange_container(struct sway_container *con,
 		double dwidth, double dheight, bool title_bar, int gaps,
 		struct sway_workspace *workspace) {
-	if (!root->filters.container_filter(con, root->filters.container_filter_data)) {
+	if (!root->filters.container_filter(workspace, con, root->filters.container_filter_data)) {
 		sway_scene_node_set_enabled(&con->scene_tree->node, false);
 		return;
 	}

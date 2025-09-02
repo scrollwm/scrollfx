@@ -14,7 +14,7 @@ supports some added features:
 
 * Animations: *scroll* supports very customizable animations.
 
-* Content scaling: The content of individual Wayland windows can be scaled
+* Content scaling: The content of individual windows can be scaled
   independently of the general output scale.
 
 * Overview and Jump modes: You can see an overview of the desktop and work
@@ -383,6 +383,7 @@ you also see the content of the windows.
 You can also click on the item (container, workspace etc.) to exit jump mode
 and focus on that element.
 
+There are also special jump modes for the scratchpad and trailmarks.
 
 ### Scratchpad
 
@@ -406,8 +407,8 @@ You can use this to quickly select one of them instead of having to cycle.
 
 *scroll* lets you scale the content of a window independently of the current
 monitor scale or fractional scale. You can have several copies of the same
-application with different scales. This works well for Wayland windows, and
-only partially for XWayland windows.
+application with different scales. This works well for both Wayland and
+XWayland windows.
 
 Add these key bindings to your config:
 
@@ -631,7 +632,10 @@ as you want, too.
 Creating your first trailmark (`trailmark toggle`) will create a trail. From
 then on, every trailmark you create will be assigned to that trail. You can
 navigate back (`trailmark prev`) and forth (`trailmark next`) within the
-collection of trailmarks contained in the trail.
+collection of trailmarks contained in the trail. You can also use
+`trailmark jump` to enable jump mode for the windows on a trail. This is quite
+powerful, as it allows you to create groups of windows you can access very
+quickly, regardless of which workspace they belong to.
 
 To create a new trail, use `trail new`. With `trail prev` and `trail next`
 you can navigate trails, changing the active one. The active trail will be
@@ -816,14 +820,33 @@ possible jump labels.
 
 ### General Options
 
-`fullscreen_movefocus`: default is `true`. If `true`, changing focus while in
-full screen mode will keep full screen status for the new window. You can use
-overview/jump while in full screen mode to move to other window, making it
-full screen too.
-
 `align_reset_auto`: default is `no` (`false`). If `true`, every time you
 change focus, any active alignment (`align` command) will be reset automatically,
 without any need to call `align reset`, for a behavior similar to hyprscroller's.
+
+`cursor_shake_magnify <true|false>`: Default value is `false`. If `true`,
+shaking the cursor will magnify it. It can be useful to find the location of
+the cursor on very big displays.
+
+`cycle_size_wrap <true|false>`: Default value is `false`. Enables wrapping
+sizes in the `cycle_size` command. Incrementing from the last available size
+will start again from the beginning, and decrementing the first one will move
+to the last.
+
+`fullscreen_movefocus <true}false> [follow|nofollow]`: default is `true`.
+If `true`, changing focus while in full screen mode will keep full screen
+status for the new window. You can use overview/jump while in full screen mode
+to move to other window, making it full screen too.
+
+`maximize_if_single <true|false>`: Default value is `false`. If `true`,
+whenever there is a single tiling window in the workspace, it will be
+maximized, unless you explicitly resize	it.
+
+`workspace_next_on_output_create_empty <true|false>`: The default is `true`.
+If `true`, when calling `workspace next_on_output`,	if the current workspace
+is the last one, it will create a new workspace	instead	of wrapping to the
+first one. The new workspace will be the first unused one for that output.
+If `false`, instead of creating a new workspace, it will focus on the first one.
 
 ### Workspace Options
 
@@ -858,6 +881,14 @@ animation step. The default is approximately the refresh rate of a monitor
 that works at 60 Hz. If you need smoother animations, reduce this value. Use
 with caution to avoid crashes or performance issues. The default should work
 for most cases unless you have a very high refresh rate monitor.
+
+`style <clip|scale>`: Default is `clip`. `clip` keeps the resolution of
+the client and clips the container while animating. This leads to a part
+of the container showing the background when resizing containers to a
+smaller size, but at the same time, the content is always the same, making it
+easier to read. `scale`, instead, scales the content of the container to the
+animated size of the container.	This makes transitions smoother, but the
+content may be deformed	while animating.
 
 `default`: defines the default animation curve. Follows the format explained
 below. default is `yes 300 var 3 [ 0.215 0.61 0.355 1 ]`
