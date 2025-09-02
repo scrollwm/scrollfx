@@ -370,7 +370,8 @@ static bool default_workspace_floating_filter(struct sway_workspace *workspace, 
 	return floating;
 }
 
-static bool default_container_filter(struct sway_container *container, void *data) {
+static bool default_container_filter(struct sway_workspace *workspace,
+		struct sway_container *container, void *data) {
 	return true;
 }
 

@@ -37,6 +37,8 @@ struct cmd_results *cmd_trailmark(int argc, char **argv) {
 		layout_trailmark_next();
 	} else if (strcasecmp(argv[0], "prev") == 0) {
 		layout_trailmark_prev();
+	} else if (strcasecmp(argv[0], "jump") == 0) {
+		layout_jump_trailmark(config->handler_context.workspace);
 	} else {
 		return cmd_results_new(CMD_INVALID, "Unknown argument %s for command 'trailmark", argv[0]);
 	}

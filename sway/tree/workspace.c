@@ -677,8 +677,9 @@ static bool workspace_switch_workspace_filter(struct sway_workspace *workspace, 
 	return true;
 }
 
-static bool workspace_switch_container_filter(struct sway_container *container, void *filter_data) {
-	if (!switching_output(container->pending.workspace, filter_data)) {
+static bool workspace_switch_container_filter(struct sway_workspace *workspace,
+		struct sway_container *container, void *filter_data) {
+	if (!switching_output(workspace, filter_data)) {
 		return true;
 	}
 	struct workspace_switch_data *data = filter_data;

@@ -441,6 +441,7 @@ mode "trailmark" {
     bindsym bracketright trailmark next
     bindsym bracketleft trailmark prev
     bindsym semicolon trailmark toggle; mode default
+    bindsym --no-repeat slash trailmark jump; mode default
     bindsym Escape mode "default"
 }
 bindsym $mod+semicolon mode "trailmark"

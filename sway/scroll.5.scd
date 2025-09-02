@@ -83,7 +83,7 @@ The following commands may only be used in the configuration file.
 	background when resizing containers to a smaller size, but at the same time,
 	the content is always the same, making it easier to read. _scale_, instead,
 	scales the content of the container to the animated size of the container.
-	This makes the transitiions smoother, but the content may be deformed
+	This makes the transitions smoother, but the content may be deformed
 	while animating.
 
 	*default* enabled [duration] [var animation curve] [off animation curve]
@@ -580,8 +580,8 @@ set|plus|minus|toggle <amount>
 *scale_content* <exact number|increment number|reset>
 	Scales the content of a window independently of the current monitor scale
 	or fractional scale. You can have several copies of the same application
-	with different scales. This works well for Wayland windows, and only
-	partially for XWayland windows. Use _exact_ and a scale to set the scale.
+	with different scales. This works well for Wayland and XWayland windows.
+	Use _exact_ and a scale to set the scale.
 	Use _increment_ with a delta value (for example 0.05 or -0.05) to increment
 	or decrement the current scale. Use _reset_ to recover the original scale.
 
@@ -808,7 +808,7 @@ set|plus|minus|toggle <amount>
 	_to_selection_: creates a _selection_ with the trailmarks of the active
 	trail. See *selection* to learn what you can do with them.
 
-*trailmark* toggle|prev|next
+*trailmark* toggle|prev|next|jump
 	When you want to navigate to certain windows frequently, you can assign them
 	a trailmark. A trailmark will become an anonymous mark assigned to a trail,
 	and you can navigate the trailmarks of a trail using _prev_ and _next_. This
@@ -817,6 +817,7 @@ set|plus|minus|toggle <amount>
 	_toggle_: assigns/removes the trailmark from the active window.
 	_prev_: focus the previous trailmarked window on the active trail.
 	_next_: focus the next trailmarked window on the active trail.
+	_jump_: enter jump mode for the windows in the active trail.
 
 
 ## Config or runtime commands

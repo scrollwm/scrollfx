@@ -16,7 +16,7 @@ typedef bool (*sway_root_workspace_filter_func_t)(
 	struct sway_workspace *workspace, void *data);
 
 typedef bool (*sway_root_container_filter_func_t)(
-	struct sway_container *container, void *data);
+	struct sway_workspace *workspace, struct sway_container *container, void *data);
 
 struct sway_root {
 	struct sway_node node;
