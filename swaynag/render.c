@@ -7,6 +7,31 @@
 #include "swaynag/types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+static void render_message_text(cairo_t *cairo, int width, const PangoFontDescription *desc,
+		double scale, bool markup, const char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	char *buf = vformat_str(fmt, args);
+	va_end(args);
+	if (buf == NULL) {
+		return;
+	}
+
+	PangoLayout *layout = get_pango_layout(cairo, desc, buf, scale, markup);
+	if (width > 0) {
+		pango_layout_set_width(layout, PANGO_SCALE * width);
+	}
+	cairo_font_options_t *fo = cairo_font_options_create();
+	cairo_get_font_options(cairo, fo);
+	pango_cairo_context_set_font_options(pango_layout_get_context(layout), fo);
+	cairo_font_options_destroy(fo);
+	pango_cairo_update_layout(cairo, layout);
+	pango_cairo_show_layout(cairo, layout);
+	g_object_unref(layout);
+
+	free(buf);
+}
+
 static uint32_t render_message(cairo_t *cairo, struct swaynag *swaynag) {
 	int text_width, text_height;
 	get_text_size(cairo, swaynag->type->font_description, &text_width, &text_height, NULL,
@@ -14,15 +39,24 @@ static uint32_t render_message(cairo_t *cairo, struct swaynag *swaynag) {
 
 	int padding = swaynag->type->message_padding;
 
-	uint32_t ideal_height = text_height + padding * 2;
+	int nlines, width;
+	if (swaynag->width > 0) {
+		width = swaynag->width - 2 * swaynag->type->button_border_thickness
+			- swaynag->type->button_gap_close - 2 * padding;
+		nlines = ceil((double)(text_width + padding * 2) / width);
+	} else {
+		width = 0;
+		nlines = 1;
+	}
+	uint32_t ideal_height = text_height * nlines + padding * 2;
 	uint32_t ideal_surface_height = ideal_height;
 	if (swaynag->height < ideal_surface_height) {
 		return ideal_surface_height;
 	}
 
 	cairo_set_source_u32(cairo, swaynag->type->text);
-	cairo_move_to(cairo, padding, (int)(ideal_height - text_height) / 2);
-	render_text(cairo, swaynag->type->font_description, 1, false,
+	cairo_move_to(cairo, padding, padding);
+	render_message_text(cairo, width, swaynag->type->font_description, 1, false,
 			"%s", swaynag->message);
 
 	return ideal_surface_height;
@@ -263,7 +297,7 @@ void render_frame(struct swaynag *swaynag) {
 	cairo_restore(cairo);
 	uint32_t height = render_to_cairo(cairo, swaynag);
 	if (height != swaynag->height) {
-		zwlr_layer_surface_v1_set_size(swaynag->layer_surface, 0, height);
+		zwlr_layer_surface_v1_set_size(swaynag->layer_surface, swaynag->width, height);
 		zwlr_layer_surface_v1_set_exclusive_zone(swaynag->layer_surface,
 				height);
 		wl_surface_commit(swaynag->surface);

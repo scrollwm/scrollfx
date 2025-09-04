@@ -26,6 +26,7 @@ struct swaynag_type *swaynag_type_new(const char *name) {
 	type->button_margin_right = -1;
 	type->button_padding = -1;
 	type->layer = -1;
+	type->width = -1;
 	return type;
 }
 
@@ -37,6 +38,7 @@ void swaynag_types_add_default(list_t *types) {
 		| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
 		| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 	type_defaults->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+	type_defaults->width = 0;
 	type_defaults->button_background = 0x333333FF;
 	type_defaults->details_background = 0x333333FF;
 	type_defaults->background = 0x323232FF;
@@ -104,6 +106,10 @@ void swaynag_type_merge(struct swaynag_type *dest, struct swaynag_type *src) {
 
 	if (src->layer >= 0) {
 		dest->layer = src->layer;
+	}
+
+	if (src->width >= 0) {
+		dest->width = src->width;
 	}
 
 	// Colors

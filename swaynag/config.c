@@ -84,6 +84,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		{"dismiss-button", required_argument, NULL, 's'},
 		{"type", required_argument, NULL, 't'},
 		{"version", no_argument, NULL, 'v'},
+		{"width", required_argument, NULL, 'w'},
 
 		{"background", required_argument, NULL, TO_COLOR_BACKGROUND},
 		{"border", required_argument, NULL, TO_COLOR_BORDER},
@@ -131,6 +132,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		"  -s, --dismiss-button <text>     Set the dismiss button text.\n"
 		"  -t, --type <type>               Set the message type.\n"
 		"  -v, --version                   Show the version number and quit.\n"
+		"  -w, --width <number>            Set the width.\n"
 		"\n"
 		"The following appearance options can also be given:\n"
 		"  --background RRGGBB[AA]         Background color.\n"
@@ -151,7 +153,7 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 
 	optind = 1;
 	while (1) {
-		int c = getopt_long(argc, argv, "b:B:z:Z:c:de:y:f:hlL:m:o:s:t:v", opts, NULL);
+		int c = getopt_long(argc, argv, "b:B:z:Z:c:de:y:f:hlL:m:o:s:t:vw:", opts, NULL);
 		if (c == -1) {
 			break;
 		}
@@ -197,6 +199,11 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 				} else if (strcmp(optarg, "bottom") == 0) {
 					type->anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+				} else if (strcmp(optarg, "center") == 0) {
+					type->anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
 						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
 						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 				} else {
@@ -277,6 +284,17 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		case 'v': // Version
 			printf("scrollnag version " SWAY_VERSION "\n");
 			return -1;
+		case 'w': // Width
+			if (type) {
+				char *end;
+				int width = strtol(optarg, &end, 10);
+				if (width < 0 || end[0] != '\0') {
+					type->width = 0;
+				} else {
+					type->width = width;
+				}
+			}
+			break;
 		case TO_COLOR_BACKGROUND: // Background color
 			if (type && !parse_color(optarg, &type->background)) {
 				fprintf(stderr, "Invalid background color: %s", optarg);
