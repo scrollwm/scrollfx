@@ -45,8 +45,8 @@ _scrollnag_ [options...]
 *-d, --debug*
 	Enable debugging.
 
-*-e, --edge* top|bottom
-	Set the edge to use.
+*-e, --edge* top|bottom|center
+	Set the edge to use, or _center_ to center in on the screen.
 
 *-y, --layer* overlay|top|bottom|background
 	Set the layer to use.
@@ -82,6 +82,9 @@ _scrollnag_ [options...]
 
 *-v, --version*
 	Show the version number and quit.
+
+*-w, --width* <size>
+	Set the width of the message window.
 
 # APPEARANCE OPTIONS
 

@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
 	swaynag_type_merge(type, swaynag.type);
 	swaynag_type_merge(type, swaynag_type_get(types, "<args>"));
 	swaynag.type = type;
+	swaynag.width = swaynag.type->width;
 
 	if (swaynag.details.message) {
 		swaynag.details.button_details = calloc(1, sizeof(struct swaynag_button));

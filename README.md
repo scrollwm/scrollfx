@@ -644,7 +644,7 @@ quickly, regardless of which workspace they belong to.
 
 To create a new trail, use `trail new`. With `trail prev` and `trail next`
 you can navigate trails, changing the active one. The active trail will be
-the one used for the trailmark command (`toggle`, `next`, and `prev`).
+the one used for the trailmark command (`toggle`, `next`, `prev` and `jump`).
 
 Clear all the trailmarks of the active trail using `trail clear`, or delete
 the trail from the list with `trail delete`.

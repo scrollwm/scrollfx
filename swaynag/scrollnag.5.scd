@@ -76,8 +76,11 @@ The following sizing options can also be set:
 
 Additionally, the following options can be assigned a default per-type:
 
-*edge=top|bottom*
-	Set the edge to use.
+*edge=top|bottom|center*
+	Set the edge to use, or center for center of screen.
+
+*width=<size>*
+	Set the width of the message window in pixels.
 
 *layer=overlay|top|bottom|background*
 	Set the layer to use.

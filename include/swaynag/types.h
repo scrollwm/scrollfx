@@ -12,6 +12,7 @@ struct swaynag_type {
 	char *output;
 	uint32_t anchors;
 	int32_t layer; // enum zwlr_layer_shell_v1_layer or -1 if unset
+	int32_t width;
 
 	// Colors
 	uint32_t button_text;
