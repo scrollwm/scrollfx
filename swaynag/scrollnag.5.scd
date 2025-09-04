@@ -65,12 +65,6 @@ The following sizing options can also be set:
 *button-gap=<gap>*
 	Set the size of the gap between buttons.
 
-*button-dismiss-gap=<gap>*
-	Set the size of the gap between the dismiss button and another button.
-
-*button-margin-right=<margin>*
-	Set the margin from the right of the dismiss button to edge.
-
 *button-padding=<padding>*
 	Set the padding for the button text.
 

@@ -29,8 +29,6 @@ struct swaynag_type {
 	ssize_t details_border_thickness;
 	ssize_t button_border_thickness;
 	ssize_t button_gap;
-	ssize_t button_gap_close;
-	ssize_t button_margin_right;
 	ssize_t button_padding;
 };
 

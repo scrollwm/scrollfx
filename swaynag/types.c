@@ -22,8 +22,6 @@ struct swaynag_type *swaynag_type_new(const char *name) {
 	type->details_border_thickness = -1;
 	type->button_border_thickness = -1;
 	type->button_gap = -1;
-	type->button_gap_close = -1;
-	type->button_margin_right = -1;
 	type->button_padding = -1;
 	type->layer = -1;
 	type->width = -1;
@@ -51,8 +49,6 @@ void swaynag_types_add_default(list_t *types) {
 	type_defaults->details_border_thickness = 3;
 	type_defaults->button_border_thickness = 3;
 	type_defaults->button_gap = 20;
-	type_defaults->button_gap_close = 15;
-	type_defaults->button_margin_right = 2;
 	type_defaults->button_padding = 3;
 	list_add(types, type_defaults);
 
@@ -161,14 +157,6 @@ void swaynag_type_merge(struct swaynag_type *dest, struct swaynag_type *src) {
 
 	if (src->button_gap > -1) {
 		dest->button_gap = src->button_gap;
-	}
-
-	if (src->button_gap_close > -1) {
-		dest->button_gap_close = src->button_gap_close;
-	}
-
-	if (src->button_margin_right > -1) {
-		dest->button_margin_right = src->button_margin_right;
 	}
 
 	if (src->button_padding > -1) {
