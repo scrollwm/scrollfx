@@ -61,8 +61,6 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		TO_THICK_DET_BORDER,
 		TO_THICK_BTN_BORDER,
 		TO_GAP_BTN,
-		TO_GAP_BTN_DISMISS,
-		TO_MARGIN_BTN_RIGHT,
 		TO_PADDING_BTN,
 	};
 
@@ -98,8 +96,6 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		{"details-background", required_argument, NULL, TO_COLOR_DETAILS},
 		{"button-border-size", required_argument, NULL, TO_THICK_BTN_BORDER},
 		{"button-gap", required_argument, NULL, TO_GAP_BTN},
-		{"button-dismiss-gap", required_argument, NULL, TO_GAP_BTN_DISMISS},
-		{"button-margin-right", required_argument, NULL, TO_MARGIN_BTN_RIGHT},
 		{"button-padding", required_argument, NULL, TO_PADDING_BTN},
 
 		{0, 0, 0, 0}
@@ -147,8 +143,6 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		"  --details-background RRGGBB[AA] Details background color.\n"
 		"  --button-border-size size       Thickness for the button border.\n"
 		"  --button-gap gap                Size of the gap between buttons\n"
-		"  --button-dismiss-gap gap        Size of the gap for dismiss button.\n"
-		"  --button-margin-right margin    Margin from dismiss button to edge.\n"
 		"  --button-padding padding        Padding for the button text.\n";
 
 	optind = 1;
@@ -353,16 +347,6 @@ int swaynag_parse_options(int argc, char **argv, struct swaynag *swaynag,
 		case TO_GAP_BTN: // Gap between buttons
 			if (type) {
 				type->button_gap = strtol(optarg, NULL, 0);
-			}
-			break;
-		case TO_GAP_BTN_DISMISS:  // Gap between dismiss button
-			if (type) {
-				type->button_gap_close = strtol(optarg, NULL, 0);
-			}
-			break;
-		case TO_MARGIN_BTN_RIGHT:  // Margin on the right side of button area
-			if (type) {
-				type->button_margin_right = strtol(optarg, NULL, 0);
 			}
 			break;
 		case TO_PADDING_BTN:  // Padding for the button text
