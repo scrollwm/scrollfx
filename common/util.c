@@ -66,6 +66,16 @@ float parse_float(const char *value) {
 	return flt;
 }
 
+bool parse_integer(const char *arg, long *n) {
+	char *endptr = NULL;
+	errno = 0;
+	*n = strtol(arg, &endptr, 10);
+	if (errno != 0 || endptr == arg) {
+		return false;
+	}
+	return true;
+}
+
 enum movement_unit parse_movement_unit(const char *unit) {
 	if (strcasecmp(unit, "px") == 0) {
 		return MOVEMENT_UNIT_PX;

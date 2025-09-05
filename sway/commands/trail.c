@@ -3,6 +3,7 @@
 #include "sway/commands.h"
 #include "sway/tree/container.h"
 #include "sway/tree/layout.h"
+#include "util.h"
 
 /*
  *  Trailmarks
@@ -60,7 +61,16 @@ struct cmd_results *cmd_trail(int argc, char **argv) {
 		return error;
 	}
 
-	if (strcasecmp(argv[0], "new") == 0) {
+	if (strcasecmp(argv[0], "number") == 0) {
+		if (argc < 2) {
+			return cmd_results_new(CMD_INVALID, "Expected trail number");
+		}
+		long n;
+		if (!parse_integer(argv[1], &n)) {
+			return cmd_results_new(CMD_INVALID, "Invalid trail number '%s'", argv[1]);
+		}
+		layout_trail_number(n);
+	} else if (strcasecmp(argv[0], "new") == 0) {
 		layout_trail_new();
 	} else if (strcasecmp(argv[0], "next") == 0) {
 		layout_trail_next();
