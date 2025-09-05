@@ -3124,7 +3124,7 @@ void layout_selection_to_trail() {
 static struct sway_trail *trail_create() {
 	struct sway_trail *trail = calloc(1, sizeof(struct sway_trail));
 	trail->marks = create_list();
-	trail->active = -1;
+	trail->active = 0;
 	return trail;
 }
 
@@ -3136,7 +3136,7 @@ static void trail_destroy(struct sway_trail *trail) {
 static void trail_clear(struct sway_trail *trail) {
 	list_free(trail->marks);
 	trail->marks = create_list();
-	trail->active = -1;
+	trail->active = 0;
 }
 
 static void trail_to_selection(struct sway_trail *trail) {
@@ -3182,13 +3182,13 @@ void layout_trail_number(int n) {
 }
 
 void layout_trail_delete() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	trail_destroy(trails->trails->items[trails->active]);
 	list_del(trails->trails, trails->active);
 	if (trails->trails->length == 0) {
-		trails->active = -1;
+		trails->active = 0;
 	} else if (trails->active > 0) {
 		trails->active--;
 	}
@@ -3196,7 +3196,7 @@ void layout_trail_delete() {
 }
 
 void layout_trail_clear() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	trail_clear(trails->trails->items[trails->active]);
@@ -3204,14 +3204,14 @@ void layout_trail_clear() {
 }
 
 void layout_trail_to_selection() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	trail_to_selection(trails->trails->items[trails->active]);
 }
 
 void layout_trailmark_toggle(struct sway_view *view) {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		layout_trail_new();
 	}
 	struct sway_trail *trail = trails->trails->items[trails->active];
@@ -3222,7 +3222,7 @@ void layout_trailmark_toggle(struct sway_view *view) {
 	} else {
 		list_del(trail->marks, idx);
 		if (trail->marks->length == 0) {
-			trail->active = -1;
+			trail->active = 0;
 		} else if (trail->active > 0) {
 			trail->active--;
 		}
@@ -3233,7 +3233,7 @@ void layout_trailmark_toggle(struct sway_view *view) {
 
 static void trails_focus_view() {
 	struct sway_trail *trail = trails->trails->items[trails->active];
-	if (trail->active < 0) {
+	if (trail->marks->length == 0) {
 		return;
 	}
 	struct sway_view *view = trail->marks->items[trail->active];
@@ -3243,11 +3243,11 @@ static void trails_focus_view() {
 }
 
 void layout_trailmark_next() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	struct sway_trail *trail = trails->trails->items[trails->active];
-	if (trail->active == -1) {
+	if (trail->marks->length == 0) {
 		return;
 	}
 	trail->active = trail->active == trail->marks->length - 1 ? 0 : trail->active + 1;
@@ -3255,11 +3255,11 @@ void layout_trailmark_next() {
 }
 
 void layout_trailmark_prev() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	struct sway_trail *trail = trails->trails->items[trails->active];
-	if (trail->active == -1) {
+	if (trail->marks->length == 0) {
 		return;
 	}
 	trail->active = trail->active == 0 ? trail->marks->length - 1 : trail->active - 1;
@@ -3267,7 +3267,7 @@ void layout_trailmark_prev() {
 }
 
 void layout_trail_remove_view(struct sway_view *view) {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return;
 	}
 	bool update = false;
@@ -3279,7 +3279,7 @@ void layout_trail_remove_view(struct sway_view *view) {
 				list_del(trail->marks, j);
 				if (trail->active == j) {
 					if (trail->marks->length == 0) {
-						trail->active = -1;
+						trail->active = 0;
 					} else if (trail->active > 0) {
 						trail->active--;
 					}
@@ -3310,7 +3310,7 @@ int layout_trails_active() {
 }
 
 int layout_trails_active_length() {
-	if (trails == NULL || trails->active == -1) {
+	if (trails == NULL || trails->trails->length == 0) {
 		return 0;
 	}
 	struct sway_trail *trail = trails->trails->items[trails->active];
@@ -3318,7 +3318,7 @@ int layout_trails_active_length() {
 }
 
 bool layout_trails_trailmarked(struct sway_view *view) {
-	if (trails == NULL || trails->active == -1 || view == NULL) {
+	if (trails == NULL || trails->trails->length == 0 || view == NULL) {
 		return false;
 	}
 	struct sway_trail *trail = trails->trails->items[trails->active];
