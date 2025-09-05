@@ -449,6 +449,16 @@ bindsym $mod+semicolon mode "trailmark"
 mode "trail" {
     bindsym bracketright trail next
     bindsym bracketleft trail prev
+    bindsym 0 trail number 0; mode default
+    bindsym 1 trail number 1; mode default
+    bindsym 2 trail number 2; mode default
+    bindsym 3 trail number 3; mode default
+    bindsym 4 trail number 4; mode default
+    bindsym 5 trail number 5; mode default
+    bindsym 6 trail number 6; mode default
+    bindsym 7 trail number 7; mode default
+    bindsym 8 trail number 8; mode default
+    bindsym 9 trail number 9; mode default
     bindsym semicolon trail new; mode default
     bindsym d trail delete; mode default
     bindsym c trail clear; mode default

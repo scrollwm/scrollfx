@@ -219,6 +219,7 @@ void layout_selection_set(struct sway_container *container, bool selected);
 void layout_trail_new();
 void layout_trail_next();
 void layout_trail_prev();
+void layout_trail_number(int n);
 void layout_trail_delete();
 void layout_trail_clear();
 void layout_trail_to_selection();

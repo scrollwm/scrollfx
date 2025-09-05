@@ -795,7 +795,7 @@ set|plus|minus|toggle <amount>
 	*toggle_size* saves the sizes of the affected windows when you call the
 	command so you can go back to them when toggling to normal mode again.
 
-*trail* new|prev|next|delete|clear|to_selection
+*trail* new|prev|next|delete|clear|to_selection|number
 	Manages trails. A _trail_ is a path of trailmarks. A _trailmark_ is an
 	anonymous mark. You can create as many trailmarks as you want in a trail,
 	and as many trails as you want. A view can belong to any number of trails.
@@ -803,6 +803,7 @@ set|plus|minus|toggle <amount>
 	_new_: creates a new trail and makes it the active one.
 	_prev_: makes the previous trail on the list the active one.
 	_next_: makes the next trail on the list the active one.
+	_number_ <n>: makes trail number _n_ on the list the active one.
 	_delete_: deletes the active trail from the list.
 	_clear_: clears all the trailmarks in the active trail.
 	_to_selection_: creates a _selection_ with the trailmarks of the active

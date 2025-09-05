@@ -1982,7 +1982,7 @@ void layout_jump_trailmark(struct sway_workspace *workspace) {
 	// Make the active trail look like the workspace's floating windows
 	workspace->floating = create_list();
 	specific->workspaces = create_list();
-	struct sway_trail *trail = trails->trails->items[layout_trails_active() - 1];
+	struct sway_trail *trail = trails->trails->items[layout_trails_active()];
 	for (int i = 0; i < trail->marks->length; ++i) {
 		struct sway_view *view = trail->marks->items[i];
 		struct sway_container *con = view->container;
@@ -3173,6 +3173,14 @@ void layout_trail_prev() {
 	ipc_event_trails();
 }
 
+void layout_trail_number(int n) {
+	if (trails == NULL || n < 0 || n >= trails->trails->length) {
+		return;
+	}
+	trails->active = n;
+	ipc_event_trails();
+}
+
 void layout_trail_delete() {
 	if (trails == NULL || trails->active == -1) {
 		return;
@@ -3298,7 +3306,7 @@ int layout_trails_active() {
 	if (trails == NULL) {
 		return 0;
 	}
-	return trails->active + 1;
+	return trails->active;
 }
 
 int layout_trails_active_length() {
