@@ -364,6 +364,7 @@ mode "trailmark" {
     bindsym bracketright trailmark next
     bindsym bracketleft trailmark prev
     bindsym semicolon trailmark toggle; mode default
+    bindsym --no-repeat slash trailmark jump; mode default
     bindsym Escape mode "default"
 }
 bindsym $mod+semicolon mode "trailmark"
@@ -382,7 +383,7 @@ bindsym $mod+Shift+semicolon mode "trail"
 
 You can create selections from trails, and a new trail for the current
 selection. This also provides memory for selections, and a way to quickly
-navigate favorite windows.
+navigate favorite windows by using `trailmark jump`.
 
 ## Working in Full Screen Mode
 
@@ -413,8 +414,8 @@ the current workspace, or *all* of them. See the manual for details.
     bindsym $mod+Ctrl+Alt+f fullscreen_application reset
 
     # Toggle Size (and maximize)
-    bindsym $mod+Ctrl+t toggle_size active 1.0 1.0
-    bindsym $mod+Ctrl+Shift+t toggle_size this 1.0 1.0
+    bindsym $mod+t toggle_size this 1.0 1.0
+    bindsym $mod+Shift+t toggle_size active 1.0 1.0
 
 mode "togglesizeh" {
     bindsym 1 toggle_size all 0.125 1.0; mode default
@@ -434,7 +435,7 @@ mode "togglesizeh" {
     # Return to default mode
     bindsym Escape mode "default"
 }
-bindsym $mod+t mode "togglesizeh"
+bindsym $mod+Ctrl+t mode "togglesizeh"
 
 mode "togglesizev" {
     bindsym 1 toggle_size all 1.0 0.125; mode default
@@ -454,7 +455,7 @@ mode "togglesizev" {
     # Return to default mode
     bindsym Escape mode "default"
 }
-bindsym $mod+Shift+t mode "togglesizev"
+bindsym $mod+Ctrl+Shift+t mode "togglesizev"
 ```
 
 ## Touchpad Gestures
