@@ -1344,7 +1344,7 @@ static void view_get_animation_sizes(struct sway_view *view, double *wt, double 
 
 void view_get_animation_scales(struct sway_view *view,
 		double *wscale, double *hscale) {
-	if (view && view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
+	if (view && view->container && view->container->pending.fullscreen_mode == FULLSCREEN_NONE &&
 		config->animations.style == ANIM_STYLE_SCALE &&
 		!container_is_floating(view->container)) {
 		double wt, ht, w1, h1;
@@ -1358,6 +1358,9 @@ void view_get_animation_scales(struct sway_view *view,
 }
 
 static void clip_view(struct sway_view *view) {
+	if (!view || !view->container) {
+		return;
+	}
 	if (animation_enabled() && config->animations.style == ANIM_STYLE_CLIP) {
 		double wt, ht, w1, h1;
 		view_get_animation_sizes(view, &wt, &ht, &w1, &h1);
