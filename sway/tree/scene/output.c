@@ -2,7 +2,7 @@
 
 #include "output.h"
 
-void output_pending_resolution(struct wlr_output *output,
+void scene_output_pending_resolution(struct wlr_output *output,
 		const struct wlr_output_state *state, int *width, int *height) {
 	if (state->committed & WLR_OUTPUT_STATE_MODE) {
 		switch (state->mode_type) {
@@ -22,7 +22,7 @@ void output_pending_resolution(struct wlr_output *output,
 	}
 }
 
-const struct wlr_output_image_description *output_pending_image_description(
+const struct wlr_output_image_description *scene_output_pending_image_description(
 		struct wlr_output *output, const struct wlr_output_state *state) {
 	if (state->committed & WLR_OUTPUT_STATE_IMAGE_DESCRIPTION) {
 		return state->image_description;
@@ -30,7 +30,7 @@ const struct wlr_output_image_description *output_pending_image_description(
 	return output->image_description;
 }
 
-void output_state_get_buffer_src_box(const struct wlr_output_state *state,
+void scene_output_state_get_buffer_src_box(const struct wlr_output_state *state,
 		struct wlr_fbox *out) {
 	out->x = state->buffer_src_box.x;
 	out->y = state->buffer_src_box.y;

@@ -2117,7 +2117,7 @@ static enum scene_direct_scanout_result scene_entry_try_direct_scanout(
 		return SCANOUT_INELIGIBLE;
 	}
 
-	const struct wlr_output_image_description *img_desc = output_pending_image_description(scene_output->output, state);
+	const struct wlr_output_image_description *img_desc = scene_output_pending_image_description(scene_output->output, state);
 	if (buffer->transfer_function != 0 || buffer->primaries != 0) {
 		if (img_desc == NULL || img_desc->transfer_function != buffer->transfer_function ||
 				img_desc->primaries != buffer->primaries) {
@@ -2280,7 +2280,7 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 	};
 
 	int resolution_width, resolution_height;
-	output_pending_resolution(output, state,
+	scene_output_pending_resolution(output, state,
 		&resolution_width, &resolution_height);
 
 	if (state->committed & WLR_OUTPUT_STATE_TRANSFORM) {
@@ -2435,7 +2435,7 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 	struct wlr_color_transform *color_transform = NULL;
 	const struct wlr_color_primaries *primaries = NULL;
 	struct wlr_color_primaries primaries_value;
-	const struct wlr_output_image_description *img_desc = output_pending_image_description(output, state);
+	const struct wlr_output_image_description *img_desc = scene_output_pending_image_description(output, state);
 	if (img_desc != NULL) {
 		color_transform = wlr_color_transform_init_linear_to_inverse_eotf(img_desc->transfer_function);
 		sway_color_primaries_from_named(&primaries_value, img_desc->primaries);

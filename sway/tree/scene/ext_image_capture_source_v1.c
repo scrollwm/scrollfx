@@ -175,14 +175,14 @@ static bool output_test(struct wlr_output *output, const struct wlr_output_state
 
 	if (state->committed & WLR_OUTPUT_STATE_BUFFER) {
 		int pending_width, pending_height;
-		output_pending_resolution(output, state,
+		scene_output_pending_resolution(output, state,
 			&pending_width, &pending_height);
 		if (state->buffer->width != pending_width ||
 				state->buffer->height != pending_height) {
 			return false;
 		}
 		struct wlr_fbox src_box;
-		output_state_get_buffer_src_box(state, &src_box);
+		scene_output_state_get_buffer_src_box(state, &src_box);
 		if (src_box.x != 0.0 || src_box.y != 0.0 ||
 				src_box.width != (double)state->buffer->width ||
 				src_box.height != (double)state->buffer->height) {

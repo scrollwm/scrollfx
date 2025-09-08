@@ -1295,10 +1295,23 @@ void view_send_frame_done(struct sway_view *view) {
 	}
 }
 
+const float VIEW_MIN_CONTENT_SCALE = 0.2f;
+const float VIEW_MAX_CONTENT_SCALE = 4.0f;
+
 void view_set_content_scale(struct sway_view *view, float scale) {
+	if (scale < VIEW_MIN_CONTENT_SCALE) {
+		scale = VIEW_MIN_CONTENT_SCALE;
+	} else if (scale > VIEW_MAX_CONTENT_SCALE) {
+		scale = VIEW_MAX_CONTENT_SCALE;
+	}
 	view->content_scale = scale;
 	arrange_container(view->container);
 	transaction_commit_dirty();
+}
+
+void view_increment_content_scale(struct sway_view *view, double increment) {
+	double scale = increment + (view->content_scale <= 0.0f ? 1.0 : view->content_scale);
+	view_set_content_scale(view, scale);
 }
 
 float view_get_content_scale(struct sway_view *view) {

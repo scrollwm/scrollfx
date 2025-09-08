@@ -3,22 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include "sway/commands.h"
-#include "sway/tree/workspace.h"
-#include "sway/output.h"
 #include "sway/tree/view.h"
-#include "sway/tree/arrange.h"
-#include <wlr/types/wlr_fractional_scale_v1.h>
-
-#define MIN_SCALE 0.2f
-#define MAX_SCALE 4.0f
-
-static void apply_scale(struct sway_container *container, float scale) {
-	view_set_content_scale(container->view, scale);
-}
-
-static void reset_scale(struct sway_container *container) {
-	view_reset_content_scale(container->view);
-}
 
 /*
  *  We can set the scale, modify or reset it.
@@ -45,32 +30,17 @@ struct cmd_results *cmd_scale_content(int argc, char **argv) {
 			fail = 1;
 		} else {
 			double number = strtod(argv[1], NULL);
-			if (number < MIN_SCALE) {
-				number = MIN_SCALE;
-			} else if (number > MAX_SCALE) {
-				number = MAX_SCALE;
-			}
-			apply_scale(container, number);
+			view_set_content_scale(container->view, number);
 		}
 	} else if (strcasecmp(argv[0], "increment") == 0 || strcasecmp(argv[0], "incr") == 0) {
 		if (argc < 2) {
 			fail = 1;
 		} else {
 			double number = strtod(argv[1], NULL);
-			if (!view_is_content_scaled(container->view)) {
-				number += 1.0;
-			} else {
-				number += view_get_content_scale(container->view);
-			}
-			if (number < MIN_SCALE) {
-				number = MIN_SCALE;
-			} else if (number > MAX_SCALE) {
-				number = MAX_SCALE;
-			}
-			apply_scale(container, number);
+			view_increment_content_scale(container->view, number);
 		}
 	} else if (strcasecmp(argv[0], "reset") == 0) {
-		reset_scale(container);
+		view_reset_content_scale(container->view);
 	} else {
 		fail = 1;
 	}
