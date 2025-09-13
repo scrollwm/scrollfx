@@ -98,6 +98,9 @@ static void workspace_focus_fullscreen(struct sway_workspace *workspace) {
 
 static void container_move_to_workspace(struct sway_container *container,
 		struct sway_workspace *workspace) {
+	if (container->scratchpad) {
+		root_scratchpad_remove_container(container);
+	}
 	if (container->pending.workspace == workspace) {
 		return;
 	}
@@ -204,6 +207,9 @@ static struct cmd_results *cmd_move_container(bool no_auto_back_and_forth,
 	if (container->pending.fullscreen_mode == FULLSCREEN_GLOBAL) {
 		return cmd_results_new(CMD_FAILURE,
 				"Can't move fullscreen global container");
+	}
+	if (container->pending.fullscreen_mode == FULLSCREEN_WORKSPACE) {
+		container_set_fullscreen(container, FULLSCREEN_NONE);
 	}
 
 	struct sway_seat *seat = config->handler_context.seat;
@@ -600,6 +606,10 @@ static struct cmd_results *cmd_move_to_position(int argc, char **argv) {
 				"can be moved to an absolute position");
 	}
 
+	if (container->pending.fullscreen_mode != FULLSCREEN_NONE) {
+		container_set_fullscreen(container, FULLSCREEN_NONE);
+	}
+
 	if (!argc) {
 		return cmd_results_new(CMD_INVALID, "%s", expected_position_syntax);
 	}
@@ -750,6 +760,9 @@ static struct cmd_results *cmd_move_to_scratchpad(void) {
 		while (con->pending.parent) {
 			con = con->pending.parent;
 		}
+	}
+	if (con->pending.fullscreen_mode != FULLSCREEN_NONE) {
+		container_set_fullscreen(con, FULLSCREEN_NONE);
 	}
 
 	if (!con->scratchpad) {
