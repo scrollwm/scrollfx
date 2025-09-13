@@ -11,6 +11,8 @@ const struct wlr_output_image_description *scene_output_pending_image_descriptio
 
 void scene_output_state_get_buffer_src_box(const struct wlr_output_state *state,
 		struct wlr_fbox *out);
+
+void scene_output_transform_coords(enum wl_output_transform tr, double *x, double *y);
  
 #endif // _SWAY_TREE_SCENE_OUTPUT_H
 

@@ -50,7 +50,7 @@ struct text_buffer {
 
 	bool visible;
 	float scale;
-	float content_scale;
+	double content_scale;
 	enum wl_output_subpixel subpixel;
 
 	struct wl_listener outputs_update;
@@ -75,7 +75,7 @@ static void render_backing_buffer(struct text_buffer *buffer) {
 		return;
 	}
 
-	float scale = buffer->scale * buffer->content_scale;
+	double scale = buffer->scale * buffer->content_scale;
 	int width = ceil(get_text_width(&buffer->props) * scale);
 	int height = ceil(buffer->props.height * scale);
 	float *color = (float *)&buffer->props.color;
@@ -246,7 +246,7 @@ struct sway_text_node *sway_text_node_create(struct sway_scene_tree *parent,
 	buffer->outputs_update.notify = handle_outputs_update;
 	wl_signal_add(&node->events.outputs_update, &buffer->outputs_update);
 
-	buffer->content_scale = 1.0f;
+	buffer->content_scale = 1.0;
 
 	text_calc_size(buffer);
 
@@ -302,7 +302,7 @@ void sway_text_node_set_background(struct sway_text_node *node, float background
 	render_backing_buffer(buffer);
 }
 
-void sway_text_node_scale(struct sway_text_node *node, float scale) {
+void sway_text_node_scale(struct sway_text_node *node, double scale) {
 	struct text_buffer *buffer = wl_container_of(node, buffer, props);
 	buffer->content_scale = scale;
 	sway_scene_buffer_set_dest_size(buffer->buffer_node,

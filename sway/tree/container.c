@@ -361,9 +361,9 @@ void container_update_itself_and_parents(struct sway_container *con) {
 	}
 }
 
-static void update_rect_list(struct sway_scene_tree *tree, pixman_region32_t *region) {
+static void update_rect_list(struct sway_scene_tree *tree, pixman_region64f_t *region) {
 	int len;
-	const pixman_box32_t *rects = pixman_region32_rectangles(region, &len);
+	const pixman_box64f_t *rects = pixman_region64f_rectangles(region, &len);
 
 	sway_scene_node_set_enabled(&tree->node, len > 0);
 	if (len == 0) {
@@ -377,7 +377,7 @@ static void update_rect_list(struct sway_scene_tree *tree, pixman_region32_t *re
 		sway_scene_node_set_enabled(&rect->node, i < len);
 
 		if (i < len) {
-			const pixman_box32_t *box = &rects[i++];
+			const pixman_box64f_t *box = &rects[i++];
 			sway_scene_node_set_position(&rect->node, box->x1, box->y1);
 			sway_scene_rect_set_size(rect, box->x2 - box->x1, box->y2 - box->y1);
 		}
@@ -387,20 +387,20 @@ static void update_rect_list(struct sway_scene_tree *tree, pixman_region32_t *re
 void container_arrange_title_bar(struct sway_container *con) {
 	enum alignment title_align = config->title_align;
 	int marks_buffer_width = 0;
-	int width = con->title_width;
+	double width = con->title_width;
 	int height = container_titlebar_height();
 
-	pixman_region32_t text_area;
-	pixman_region32_init(&text_area);
+	pixman_region64f_t text_area;
+	pixman_region64f_init(&text_area);
 
 	struct sway_workspace *workspace = con->pending.workspace;
-	float scale = workspace ? (layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f) : 1.0f;
+	double scale = workspace ? (layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0) : 1.0;
 
 	if (con->title_bar.marks_text) {
 		struct sway_text_node *node = con->title_bar.marks_text;
 		marks_buffer_width = node->width;
 
-		int h_padding;
+		double h_padding;
 		if (title_align == ALIGN_RIGHT) {
 			h_padding = config->titlebar_h_padding;
 		} else {
@@ -409,69 +409,69 @@ void container_arrange_title_bar(struct sway_container *con) {
 
 		h_padding = MAX(h_padding, config->titlebar_h_padding);
 
-		int alloc_width = MIN((int)node->width,
+		double alloc_width = MIN(node->width,
 			width - h_padding - config->titlebar_h_padding);
 		alloc_width = MAX(alloc_width, 0);
 
-		sway_text_node_set_max_width(node, alloc_width);
+		sway_text_node_set_max_width(node, round(alloc_width));
 		sway_scene_node_set_position(node->node,
-			round(scale * h_padding), round(scale * ((height - node->height) >> 1)));
+			scale * h_padding, scale * (height - node->height) * 0.5);
 		sway_text_node_scale(node, scale);
 
-		pixman_region32_union_rect(&text_area, &text_area,
-			node->node->x, node->node->y, round(scale * alloc_width), round(scale * node->height));
+		pixman_region64f_union_rectf(&text_area, &text_area,
+			node->node->x, node->node->y, round(scale * alloc_width), scale * node->height);
 	}
 
 	if (con->title_bar.title_text) {
 		struct sway_text_node *node = con->title_bar.title_text;
 
-		int h_padding;
+		double h_padding;
 		if (title_align == ALIGN_RIGHT) {
 			h_padding = width - config->titlebar_h_padding - node->width;
 		} else if (title_align == ALIGN_CENTER) {
-			h_padding = ((int)width - marks_buffer_width - node->width) >> 1;
+			h_padding = (width - marks_buffer_width - node->width) * 0.5;
 		} else {
 			h_padding = config->titlebar_h_padding;
 		}
 
 		h_padding = MAX(h_padding, config->titlebar_h_padding);
 
-		int alloc_width = MIN((int) node->width,
+		double alloc_width = MIN(node->width,
 			width - h_padding - config->titlebar_h_padding);
 		alloc_width = MAX(alloc_width, 0);
 
-		sway_text_node_set_max_width(node, alloc_width);
+		sway_text_node_set_max_width(node, round(alloc_width));
 		sway_scene_node_set_position(node->node,
-			round(scale * h_padding), round(scale * ((height - node->height) >> 1)));
+			scale * h_padding, scale * (height - node->height) * 0.5);
 		sway_text_node_scale(node, scale);
 
-		pixman_region32_union_rect(&text_area, &text_area,
-			node->node->x, node->node->y, round(scale * alloc_width), round(scale * node->height));
+		pixman_region64f_union_rectf(&text_area, &text_area,
+			node->node->x, node->node->y, round(scale * alloc_width), scale * node->height);
 	}
 
 	// silence pixman errors
 	if (width <= 0 || height <= 0) {
-		pixman_region32_fini(&text_area);
+		pixman_region64f_fini(&text_area);
 		return;
 	}
 
-	pixman_region32_t background, border;
+	pixman_region64f_t background, border;
 
 	int thickness = max(1, round(scale * config->titlebar_border_thickness));
-	pixman_region32_init_rect(&background,
+	pixman_region64f_init_rectf(&background,
 		thickness, thickness,
-		round(scale * width) - thickness * 2, round(scale * height) - thickness * 2);
-	pixman_region32_init_rect(&border, 0, 0, round(scale * width), round(scale * height));
-	pixman_region32_subtract(&border, &border, &background);
+		scale * width - thickness * 2, scale * height - thickness * 2);
+	pixman_region64f_init_rectf(&border, 0, 0, scale * width, scale * height);
+	pixman_region64f_subtract(&border, &border, &background);
 
-	pixman_region32_subtract(&background, &background, &text_area);
-	pixman_region32_fini(&text_area);
+	pixman_region64f_subtract(&background, &background, &text_area);
+	pixman_region64f_fini(&text_area);
 
 	update_rect_list(con->title_bar.background, &background);
-	pixman_region32_fini(&background);
+	pixman_region64f_fini(&background);
 
 	update_rect_list(con->title_bar.border, &border);
-	pixman_region32_fini(&border);
+	pixman_region64f_fini(&border);
 
 	container_update(con);
 }

@@ -70,6 +70,8 @@ client.focused #15439e #000000 #e0e0e0 #2e9ef4 #15439e
 client.focused_inactive #595959 #000000 #e0e0e0 #2e9ef4 #595959
 client.unfocused #595959 #000000 #e0e0e0 #2e9ef4 #595959
 
+titlebar_border_thickness 2
+
 # Idle inhibit for fullscreen windows
 for_window [all] inhibit_idle fullscreen
 

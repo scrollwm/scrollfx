@@ -80,7 +80,7 @@ struct sway_scroller {
 	} modifiers;
 
 	enum sway_layout_overview overview;
-	float mem_scale; // Stores the current workspace scale when calling overview, so it can be restored later
+	double mem_scale; // Stores the current workspace scale when calling overview, so it can be restored later
 	struct sway_container *fullscreen;  // stores the full screen container when calling overview, so it can be restored later
 
 	struct {
@@ -91,7 +91,7 @@ struct sway_scroller {
 	struct {
 		double x, y;
 		double width, height;
-		float scale;
+		double scale;
 		struct sway_scene_tree *tree;
 		struct sway_text_node *text;
 	} workspaces;
@@ -130,15 +130,15 @@ enum sway_layout_overview layout_overview_mode(struct sway_workspace *workspace)
 bool layout_overview_workspaces_enabled();
 void layout_overview_workspaces_toggle();
 
-void layout_scale_set(struct sway_workspace *workspace, float scale);
+void layout_scale_set(struct sway_workspace *workspace, double scale);
 void layout_scale_reset(struct sway_workspace *workspace);
-float layout_scale_get(struct sway_workspace *workspace);
+double layout_scale_get(struct sway_workspace *workspace);
 bool layout_scale_enabled(struct sway_workspace *workspace);
 
 // Set the scale for an individual window (used for floating windows)
-void layout_view_scale_set(struct sway_container *view, float scale);
+void layout_view_scale_set(struct sway_container *view, double scale);
 void layout_view_scale_reset(struct sway_container *view);
-float layout_view_scale_get(struct sway_container *view);
+double layout_view_scale_get(struct sway_container *view);
 bool layout_view_scale_enabled(struct sway_container *view);
 
 // Mode modifiers

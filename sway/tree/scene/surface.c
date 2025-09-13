@@ -165,8 +165,8 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 			buffer_width, buffer_height);
 		wlr_output_transform_coords(state->transform, &buffer_width, &buffer_height);
 
-		src_box.x += (double)(clip->x * src_box.width) / state->width;
-		src_box.y += (double)(clip->y * src_box.height) / state->height;
+		src_box.x += (clip->x * src_box.width) / state->width;
+		src_box.y += (clip->y * src_box.height) / state->height;
 		src_box.width *= (double)width / state->width;
 		src_box.height *= (double)height / state->height;
 
@@ -212,8 +212,8 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	} else {
 		wscale = hscale = total_scale = 1.0;
 	}
-	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, round(width * total_scale * wscale)),
-		MAX(1, round(height * total_scale * hscale)));
+	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, width * total_scale * wscale),
+		MAX(1, height * total_scale * hscale));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
 	sway_scene_buffer_set_opacity(scene_buffer, opacity);
 	sway_scene_buffer_set_transfer_function(scene_buffer, tf);
@@ -285,7 +285,7 @@ static void handle_scene_surface_surface_commit(
 	// schedule the frame however if the node is enabled and there is an
 	// output intersecting, otherwise the frame done events would never reach
 	// the surface anyway.
-	int lx, ly;
+	double lx, ly;
 	bool enabled = sway_scene_node_coords(&scene_buffer->node, &lx, &ly);
 
 	if (!wl_list_empty(&surface->surface->current.frame_callback_list) &&

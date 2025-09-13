@@ -25,6 +25,6 @@ void sway_text_node_set_max_width(struct sway_text_node *node, int max_width);
 
 void sway_text_node_set_background(struct sway_text_node *node, float background[4]);
 
-void sway_text_node_scale(struct sway_text_node *node, float scale);
+void sway_text_node_scale(struct sway_text_node *node, double scale);
 
 #endif
