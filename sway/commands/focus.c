@@ -480,7 +480,8 @@ struct cmd_results *cmd_focus(int argc, char **argv) {
 	}
 	if (next_focus) {
 		if (next_focus->type == N_CONTAINER) {
-			if (config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NONE) {
+			if (config->fullscreen_movefocus != FULLSCREEN_MOVEFOCUS_NONE &&
+				container->pending.workspace == next_focus->sway_container->pending.workspace) {
 				// Deal with full screen
 				enum sway_fullscreen_mode fullscreen_mode = container->pending.fullscreen_mode;
 				// Allow fullscreen_movefocus for WORKSPACE type full screen
