@@ -1374,6 +1374,11 @@ static void clip_view(struct sway_view *view) {
 	if (!view || !view->container) {
 		return;
 	}
+
+	if (wl_list_empty(&view->content_tree->children)) {
+		return;
+	}
+
 	if (animation_enabled() && config->animations.style == ANIM_STYLE_CLIP) {
 		double wt, ht, w1, h1;
 		view_get_animation_sizes(view, &wt, &ht, &w1, &h1);
