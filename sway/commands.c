@@ -133,6 +133,7 @@ static const struct cmd_handler config_handlers[] = {
 	{ "workspace_layout", cmd_workspace_layout },
 	{ "workspace_next_on_output_create_empty", cmd_workspace_next_on_output_create_empty },
 	{ "xwayland", cmd_xwayland },
+	{ "xwayland_output_scale", cmd_xwayland_output_scale },
 };
 
 /* Runtime-only commands. Keep alphabetized */

@@ -848,6 +848,12 @@ is the last one, it will create a new workspace	instead	of wrapping to the
 first one. The new workspace will be the first unused one for that output.
 If `false`, instead of creating a new workspace, it will focus on the first one.
 
+`xwayland_output_scale <true|false>`: The default is `true`. If `true`,
+XWayland windows get fractional scaling. Make it `false` if you want XWayland
+windows to ignore the output's fractional scaling value and keep a scale of 1.
+This option is equivalent to applying to each XWayland window a content scale
+with value the inverse of the output's fractional scale.
+
 ### Workspace Options
 
 Scroll adds another subcommand to Sway's `workspace`. You can create a rule

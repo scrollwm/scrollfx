@@ -1293,6 +1293,17 @@ void view_increment_content_scale(struct sway_view *view, double increment) {
 }
 
 float view_get_content_scale(struct sway_view *view) {
+#if WLR_HAS_XWAYLAND
+	if (!config->xwayland_output_scale && view->type == SWAY_VIEW_XWAYLAND && view->container) {
+		struct sway_workspace *workspace = view->container->pending.workspace;
+		if (workspace && workspace->output) {
+			float oscale = workspace->output->wlr_output->scale;
+			if (oscale != 1.0f) {
+				return view->content_scale > 0.0f ? view->content_scale / oscale : 1.0f / oscale;
+			}
+		}
+	}
+#endif
 	return view->content_scale;
 }
 
@@ -1305,6 +1316,17 @@ void view_reset_content_scale(struct sway_view *view) {
 }
 
 bool view_is_content_scaled(struct sway_view *view) {
+#if WLR_HAS_XWAYLAND
+	if (!config->xwayland_output_scale && view->type == SWAY_VIEW_XWAYLAND && view->container) {
+		struct sway_workspace *workspace = view->container->pending.workspace;
+		if (workspace && workspace->output) {
+			float oscale = workspace->output->wlr_output->scale;
+			if (oscale != 1.0f) {
+				return true;
+			}
+		}
+	}
+#endif
 	return view->content_scale > 0.0f;
 }
 

@@ -47,7 +47,7 @@
 #include <wlr/types/wlr_xdg_foreign_registry.h>
 #include <wlr/types/wlr_xdg_foreign_v1.h>
 #include <wlr/types/wlr_xdg_foreign_v2.h>
-#include <wlr/types/wlr_xdg_output_v1.h>
+#include "sway/protocol/xdg_output_v1.h"
 #include <xf86drm.h>
 #include "config.h"
 #include "list.h"
@@ -296,7 +296,7 @@ bool server_init(struct sway_server *server) {
 	wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
 	server->xdg_output_manager_v1 =
-		wlr_xdg_output_manager_v1_create(server->wl_display, root->output_layout);
+		sway_xdg_output_manager_v1_create(server->wl_display, root->output_layout);
 
 	server->idle_notifier_v1 = wlr_idle_notifier_v1_create(server->wl_display);
 	sway_idle_inhibit_manager_v1_init();

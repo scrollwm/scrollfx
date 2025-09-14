@@ -227,6 +227,7 @@ sway_cmd cmd_workspace_layout;
 sway_cmd cmd_workspace_next_on_output_create_empty;
 sway_cmd cmd_ws_auto_back_and_forth;
 sway_cmd cmd_xwayland;
+sway_cmd cmd_xwayland_output_scale;
 
 sway_cmd bar_cmd_bindcode;
 sway_cmd bar_cmd_binding_mode_indicator;
