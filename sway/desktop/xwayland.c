@@ -53,9 +53,30 @@ static void unmanaged_handle_set_geometry(struct wl_listener *listener, void *da
 	sway_scene_node_set_position(&surface->surface_scene->buffer->node, xsurface->x, xsurface->y);
 }
 
+static bool find_container_by_pid(struct sway_container *con, void *data) {
+	if (con && con->view) {
+		pid_t *pid = data;
+		struct sway_view *view = con->view;
+		if (view->pid == *pid) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static void get_node_coords(struct wlr_xwayland_surface *xsurface, double *dx, double *dy) {
 	double x, y;
 	struct sway_view *view = view_from_wlr_xwayland_surface(xsurface);
+
+	if (!view || !view->container) {
+		// We could be here if an unmanaged surface (a tooltip for example) is
+		// created without a parent view. Try to find the "parent" by checking PIDs
+		pid_t pid = xsurface->pid;
+		struct sway_container *con = root_find_container(find_container_by_pid, &pid);
+		if (con && con->view) {
+			view = con->view;
+		}
+	}
 
 	if (view && view->container) {
 		struct sway_container *con = view->container;

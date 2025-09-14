@@ -248,6 +248,13 @@ The following commands may only be used in the configuration file.
 	machines, it may be desirable to have Xwayland started immediately by
 	using _force_ instead of _enable_.
 
+*xwayland_output_scale* <true|false>
+	The default is _true_. If _true_, XWayland windows get fractional scaling.
+	Make it _false_ if you want XWayland windows to ignore the output's
+	fractional scaling value. This option is equivalent to applying to each
+	XWayland window a content scale with value the inverse of the output's
+	fractional scale.
+
 ## Runtime only commands
 The following commands cannot be used directly in the configuration file.
 They are expected to be used with *bindsym* or at runtime through *scrollmsg*(1).
