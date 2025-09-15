@@ -359,6 +359,8 @@ float view_get_content_scale(struct sway_view *view);
 
 void view_reset_content_scale(struct sway_view *view);
 
+void view_increment_content_scale(struct sway_view *view, double increment);
+
 bool view_is_content_scaled(struct sway_view *view);
 
 void view_reconfigure(struct sway_view *view);
