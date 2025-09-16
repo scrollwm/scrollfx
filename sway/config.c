@@ -290,8 +290,8 @@ static void config_defaults(struct sway_config *config) {
 	color_to_rgba(config->jump_labels_background, 0x00000000);
 	config->jump_labels_scale = 0.5;
 	config->jump_labels_keys = strdup("1234");
-	config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_FOLLOW;
-	config->align_reset_auto = false;
+	config->fullscreen_movefocus = FULLSCREEN_MOVEFOCUS_NOFOLLOW;
+	config->align_reset_auto = true;
 	config->cycle_size_wrap = false;
 	config->maximize_if_single = false;
 	config->cursor_shake_magnify = false;
@@ -364,7 +364,7 @@ static void config_defaults(struct sway_config *config) {
 	if (!(config->font = strdup("monospace 10"))) goto cleanup;
 	config->font_description = pango_font_description_from_string(config->font);
 	config->urgent_timeout = 500;
-	config->focus_on_window_activation = FOWA_URGENT;
+	config->focus_on_window_activation = FOWA_FOCUS;
 	config->popup_during_fullscreen = POPUP_SMART;
 	config->xwayland = XWAYLAND_MODE_LAZY;
 
@@ -381,7 +381,7 @@ static void config_defaults(struct sway_config *config) {
 	// Flags
 	config->focus_follows_mouse = FOLLOWS_YES;
 	config->mouse_warping = WARP_OUTPUT;
-	config->focus_wrapping = WRAP_YES;
+	config->focus_wrapping = WRAP_NO;
 	config->validating = false;
 	config->reloading = false;
 	config->active = false;
