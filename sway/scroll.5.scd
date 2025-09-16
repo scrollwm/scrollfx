@@ -1193,7 +1193,8 @@ The default colors are:
 	If set to _urgent_, the urgent state will be set for that window. If set to
 	_focus_, the window will become focused. If set to _smart_, the window will
 	become focused only if it is already visible, otherwise the urgent state
-	will be set. Default is _urgent_.
+	will be set. Default is _urgent_. See also *xdg_activation_force* to force
+	activation when clients don't implement the full protocol.
 
 *focus_wrapping* yes|no|force|workspace
 	This option determines what to do when attempting to focus over the edge
@@ -1450,6 +1451,12 @@ The default colors are:
 	prior workspace. For example, if you are currently on workspace 1,
 	switch to workspace 2, then invoke the *workspace 2* command again, you
 	will be returned to workspace 1. Default is _no_.
+
+*xdg_activation_force* <true|false>
+	The default is _false_. When _true_, clients that don't implement the
+	xdg-activation protocol correctly will be able to activate focus on other
+	windows. See *focus_on_window_activation* to set the state of the activated
+	window to _urgent_ or _focused_.
 
 *lua* script
 	Loads and executes the lua script. See *LUA* for details about the API and
