@@ -927,6 +927,7 @@ static void arrange_container(struct sway_container *con,
 
 		// Update content geometry
 		view_autoconfigure(con->view);
+#if WLR_HAS_XWAYLAND
 		// Re-configure Xwayland views that change position. The reason is unlike
 		// sway, we update the positions of containers when the transaction is
 		// committed (instead of every time a arrange.c:arrange_XXX() happens.
@@ -952,6 +953,7 @@ static void arrange_container(struct sway_container *con,
 				con->current.content_height = con->pending.content_height;
 			}
 		}
+#endif
 		view_reconfigure(con->view);
 	} else {
 		// make sure to disable the title bar if the parent is not managing it
