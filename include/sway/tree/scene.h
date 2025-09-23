@@ -43,6 +43,7 @@ struct sway_scene_output_layout;
 struct wlr_presentation;
 struct wlr_linux_dmabuf_v1;
 struct wlr_gamma_control_manager_v1;
+struct wlr_color_manager_v1;
 struct wlr_output_state;
 
 typedef bool (*sway_scene_buffer_point_accepts_input_func_t)(
@@ -112,11 +113,13 @@ struct sway_scene {
 	// May be NULL
 	struct wlr_linux_dmabuf_v1 *linux_dmabuf_v1;
 	struct wlr_gamma_control_manager_v1 *gamma_control_manager_v1;
+	struct wlr_color_manager_v1 *color_manager_v1;
 
 	struct {
 		struct wl_listener linux_dmabuf_v1_destroy;
 		struct wl_listener gamma_control_manager_v1_destroy;
 		struct wl_listener gamma_control_manager_v1_set_gamma;
+		struct wl_listener color_manager_v1_destroy;
 
 		enum sway_scene_debug_damage_option debug_damage_option;
 		bool direct_scanout;
@@ -375,6 +378,13 @@ void sway_scene_set_linux_dmabuf_v1(struct sway_scene *scene,
  */
 void sway_scene_set_gamma_control_manager_v1(struct sway_scene *scene,
 	struct wlr_gamma_control_manager_v1 *gamma_control);
+
+/**
+ * Handles color_management_v1 feedback for all surfaces in the scene.
+ *
+ * Asserts that a struct wlr_color_manager_v1 hasn't already been set for the scene.
+ */
+void sway_scene_set_color_manager_v1(struct sway_scene *scene, struct wlr_color_manager_v1 *manager);
 
 /**
  * Add a node displaying nothing but its children.
