@@ -44,11 +44,3 @@ void scene_output_state_get_buffer_src_box(const struct wlr_output_state *state,
 		out->height = state->buffer_src_box.height;
 	}
 }
-
-void scene_output_transform_coords(enum wl_output_transform tr, double *x, double *y) {
-	if (tr & WL_OUTPUT_TRANSFORM_90) {
-		double tmp = *x;
-		*x = *y;
-		*y = tmp;
-	}
-}

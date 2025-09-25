@@ -1254,9 +1254,11 @@ void scene_node_get_size(struct sway_scene_node *node,
 			*width = scene_buffer->dst_width;
 			*height = scene_buffer->dst_height;
 		} else {
-			*width = scene_buffer->buffer_width;
-			*height = scene_buffer->buffer_height;
-			scene_output_transform_coords(scene_buffer->transform, width, height);
+			int w = scene_buffer->buffer_width;
+			int h = scene_buffer->buffer_height;
+			wlr_output_transform_coords(scene_buffer->transform, &w, &h);
+			*width = w;
+			*height = h;
 		}
 		break;
 	}
@@ -2135,9 +2137,9 @@ static enum scene_direct_scanout_result scene_entry_try_direct_scanout(
 	}
 
 	// The native size of the buffer after any transform is applied
-	double default_width = buffer->buffer->width;
-	double default_height = buffer->buffer->height;
-	scene_output_transform_coords(buffer->transform, &default_width, &default_height);
+	int default_width = buffer->buffer->width;
+	int default_height = buffer->buffer->height;
+	wlr_output_transform_coords(buffer->transform, &default_width, &default_height);
 	struct wlr_fbox default_box = {
 		.width = default_width,
 		.height = default_height,
