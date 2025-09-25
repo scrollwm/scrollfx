@@ -2518,9 +2518,9 @@ bool sway_scene_output_build_state(struct sway_scene_output *scene_output,
 				// (layer_shell ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND), we want to
 				// reset the calculated visibility to avoid having remains of the
 				// un-scaled nodes that are part of the workspace.
+				pixman_region32_fini(&entry->node->visible);
 				pixman_region32_init_rect(&entry->node->visible, render_data.logical.x,
 					render_data.logical.y, render_data.logical.width, render_data.logical.height);
-				pixman_region32_fini(&entry->node->visible);
 			}
 			if (!layout_overview_workspaces_enabled()) {
 				// We must only cull opaque regions that are visible by the node.
