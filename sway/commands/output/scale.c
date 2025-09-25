@@ -16,7 +16,17 @@ struct cmd_results *output_cmd_scale(int argc, char **argv) {
 		return cmd_results_new(CMD_INVALID, "Invalid scale.");
 	}
 
-	config->handler_context.leftovers.argc = argc - 1;
-	config->handler_context.leftovers.argv = argv + 1;
+	int nargs = 1;
+	if (argc > 1) {
+		if (strcasecmp(argv[1], "force") == 0) {
+			++nargs;
+			config->handler_context.output_config->scale_force = true;
+		} else {
+			return cmd_results_new(CMD_INVALID, "Invalid extra parameter: scale <number> [force].");
+		}
+	}
+
+	config->handler_context.leftovers.argc = argc - nargs;
+	config->handler_context.leftovers.argv = argv + nargs;
 	return NULL;
 }

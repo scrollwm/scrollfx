@@ -70,13 +70,17 @@ must be separated by one space. For example:
 	Note that the left x-pos of eDP1 is 1600 = 3200/2 and the bottom y-pos is
 	1020 + (1800 / 2) = 1920 = 0 + 1920
 
-*output* <name> scale <factor>
+*output* <name> scale <factor> [force]
 	Scales the specified output by the specified scale _factor_. An integer is
 	recommended, but fractional values are also supported. You may be better
 	served by setting an integer scale factor and adjusting the font size of
 	your applications to taste. HiDPI isn't supported with Xwayland clients
 	(windows will blur). A fractional scale may be slightly adjusted to match
 	requirements of the protocol.
+
+	If _force_ is not used, scroll will warn you and try to adjust your scale
+	_factor_ to one close to it that improves rendering quality. If _force_ is
+	specified, scroll will use _factor_ as scale, regardless of the consequences.
 
 *output* <name> scale_filter linear|nearest|smart
 	Indicates how to scale application buffers that are rendered at a scale

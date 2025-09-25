@@ -69,6 +69,7 @@ struct output_config *new_output_config(const char *name) {
 	oc->drm_mode.type = -1;
 	oc->x = oc->y = INT_MAX;
 	oc->scale = -1;
+	oc->scale_force = false;
 	oc->scale_filter = SCALE_FILTER_DEFAULT;
 	oc->transform = -1;
 	oc->subpixel = WL_OUTPUT_SUBPIXEL_UNKNOWN;
@@ -108,6 +109,9 @@ static void supersede_output_config(struct output_config *dst, struct output_con
 	}
 	if (src->scale != -1) {
 		dst->scale = -1;
+	}
+	if (src->scale_force == true) {
+		dst->scale_force = false;
 	}
 	if (src->scale_filter != SCALE_FILTER_DEFAULT) {
 		dst->scale_filter = SCALE_FILTER_DEFAULT;
@@ -203,6 +207,9 @@ static void merge_output_config(struct output_config *dst, struct output_config 
 	}
 	if (src->scale != -1) {
 		dst->scale = src->scale;
+	}
+	if (src->scale_force) {
+		dst->scale_force = true;
 	}
 	if (src->scale_filter != SCALE_FILTER_DEFAULT) {
 		dst->scale_filter = src->scale_filter;
@@ -521,6 +528,31 @@ static bool output_config_is_disabling(struct output_config *oc) {
 	return oc && (!oc->enabled || oc->power == 0);
 }
 
+static float verify_good_scale(int width, int height, float user_scale) {
+	double logical_width = width / user_scale;
+	double logical_height = height / user_scale;
+	if (logical_width == floor(logical_width) && logical_height == floor(logical_height)) {
+		// not using a fractional scale
+		return user_scale;
+	}
+	// Fractional scaling: first, get a valid scale according to the protocol
+	float scale = round(user_scale * 120.0) / 120.0;
+	// Try to find a sane scale according to the resolution and the input scale
+	int iscale = round(scale * 120.0);
+	for (int i = 0; i < 120; ++i) {
+		for (int j = -1; j <= 1; j += 2) {
+			double scale = (iscale + i * j) / 120.0;
+			double lwidth = width / scale;
+			double lheight = height / scale;
+			if (lwidth == floor(lwidth) && lheight == floor(lheight)) {
+				return scale;
+			}
+		}
+	}
+	// Could not find a sane scale around the user's value
+	return iscale / 120.0f;
+}
+
 static void queue_output_config(struct output_config *oc,
 		struct sway_output *output, struct wlr_output_state *pending) {
 	if (output == root->fallback_output) {
@@ -566,6 +598,18 @@ static void queue_output_config(struct output_config *oc,
 	// Apply the scale after sorting out the mode, because the scale
 	// auto-detection reads the pending output size
 	if (oc && oc->scale > 0) {
+		if (!oc->scale_force) {
+			// Verify the user doesn't use a "bad" value for the scale
+			int width = oc->width > 0 ? oc->width : wlr_output->width;
+			int height = oc->height > 0 ? oc->height : wlr_output->height;
+			float scale = verify_good_scale(width, height, oc->scale);
+			if (scale != oc->scale) {
+				swaynag_log(config->swaynag_command, &config->swaynag_config_errors,
+					"Invalid output scale %f, using %f", oc->scale, scale);
+				swaynag_show(&config->swaynag_config_errors);
+				oc->scale = scale;
+			}
+		}
 		// The factional-scale-v1 protocol uses increments of 120ths to send
 		// the scale factor to the client. Adjust the scale so that we use the
 		// same value as the clients'.
