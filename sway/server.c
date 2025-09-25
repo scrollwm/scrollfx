@@ -481,7 +481,7 @@ bool server_init(struct sway_server *server) {
 			.primaries = primaries,
 			.primaries_len = sizeof(primaries) / sizeof(primaries[0]),
 		});
-		wlr_scene_set_color_manager_v1(root->root_scene, cm);
+		sway_scene_set_color_manager_v1(root->root_scene, cm);
 	}
 
 	wl_list_init(&server->pending_launcher_ctxs);
