@@ -58,7 +58,7 @@ enum sway_scene_node_type {
 };
 
 struct sway_scene_node_info {
-	float scale;			// scale for everything below
+	double scale;			// scale for everything below
 	struct wlr_output *wlr_output;	// wlr_output the node belongs to (if tiled, otherwise NULL)
 	struct sway_workspace *workspace;
 	bool background;	// bakground layer shell, usually the wallpaper
@@ -73,7 +73,7 @@ struct sway_scene_node {
 	struct wl_list link; // sway_scene_tree.children
 
 	bool enabled;
-	int x, y; // relative to parent
+	double x, y; // relative to parent
 
 	struct {
 		struct wl_signal destroy;
@@ -148,7 +148,7 @@ struct sway_scene_surface {
 /** A scene-graph node displaying a solid-colored rectangle */
 struct sway_scene_rect {
 	struct sway_scene_node node;
-	int width, height;
+	double width, height;
 	float color[4];
 };
 
@@ -191,7 +191,7 @@ struct sway_scene_buffer {
 	float opacity;
 	enum wlr_scale_filter_mode filter_mode;
 	struct wlr_fbox src_box;
-	int dst_width, dst_height;
+	double dst_width, dst_height;
 	enum wl_output_transform transform;
 	pixman_region32_t opaque_region;
 
@@ -293,7 +293,7 @@ void sway_scene_node_set_enabled(struct sway_scene_node *node, bool enabled);
 /**
  * Set the position of the node relative to its parent.
  */
-void sway_scene_node_set_position(struct sway_scene_node *node, int x, int y);
+void sway_scene_node_set_position(struct sway_scene_node *node, double x, double y);
 /**
  * Move the node right above the specified sibling.
  * Asserts that node and sibling are distinct and share the same parent.
@@ -324,7 +324,7 @@ void sway_scene_node_reparent(struct sway_scene_node *node,
  *
  * True is returned if the node and all of its ancestors are enabled.
  */
-bool sway_scene_node_coords(struct sway_scene_node *node, int *lx, int *ly);
+bool sway_scene_node_coords(struct sway_scene_node *node, double *lx, double *ly);
 /**
  * Call `iterator` on each buffer in the scene-graph, with the buffer's
  * position in layout coordinates. The function is called from root to leaves
@@ -432,12 +432,12 @@ struct sway_scene_surface *sway_scene_surface_try_from_buffer(
  * The color argument must be a premultiplied color value.
  */
 struct sway_scene_rect *sway_scene_rect_create(struct sway_scene_tree *parent,
-		int width, int height, const float color[static 4]);
+		double width, double height, const float color[static 4]);
 
 /**
  * Change the width and height of an existing rectangle node.
  */
-void sway_scene_rect_set_size(struct sway_scene_rect *rect, int width, int height);
+void sway_scene_rect_set_size(struct sway_scene_rect *rect, double width, double height);
 
 /**
  * Change the color of an existing rectangle node.
@@ -517,7 +517,7 @@ void sway_scene_buffer_set_source_box(struct sway_scene_buffer *scene_buffer,
  * destination size is zero.
  */
 void sway_scene_buffer_set_dest_size(struct sway_scene_buffer *scene_buffer,
-	int width, int height);
+	double width, double height);
 
 /**
  * Set a transform which will be applied to the buffer.
@@ -701,6 +701,8 @@ struct sway_scene_tree *sway_scene_drag_icon_create(
 
 struct sway_scene *scene_node_get_root(struct sway_scene_node *node);
 
+void scene_node_get_size(struct sway_scene_node *node, double *width, double *height);
+
 void scene_surface_set_clip(struct sway_scene_surface *surface, struct wlr_box *clip);
 
 /**
@@ -709,7 +711,7 @@ void scene_surface_set_clip(struct sway_scene_surface *surface, struct wlr_box *
  * Returns: true if the current node is a popup or view (parent view), else false
  * (children surfaces or popups)
  */
-bool scene_node_get_parent_total_scale(struct sway_scene_node *node, float *scale);
+bool scene_node_get_parent_total_scale(struct sway_scene_node *node, double *scale);
 
 void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface);
 

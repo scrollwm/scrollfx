@@ -61,8 +61,8 @@ to *scroll-input*(5) and *scroll-output*(5).
 The following commands may only be used in the configuration file.
 
 *align_reset_auto* <true|false>
-	The default value is _false_. If _true_, alignment is reset when changing
-	focus, otherwise the user needs to do it manually.
+	The default value is _true_. If _true_, alignment is reset when changing
+	focus, otherwise the user needs to do it manually through *align reset*.
 
 *animations* <animations-subcommands...>
 	Subcommands are:
@@ -151,7 +151,7 @@ The following commands may only be used in the configuration file.
 	Sets the default container layout for tiled containers.
 
 *fullscreen_movefocus* <true|false> [follow|nofollow]
-	Default value is _true_ and _follow_.
+	Default value is _true_ and _nofollow_.
 
 	_true_. Allows you to change focus while in full screen mode.
 
@@ -1193,7 +1193,8 @@ The default colors are:
 	If set to _urgent_, the urgent state will be set for that window. If set to
 	_focus_, the window will become focused. If set to _smart_, the window will
 	become focused only if it is already visible, otherwise the urgent state
-	will be set. Default is _urgent_.
+	will be set. Default is _focus_. See also *xdg_activation_force* to force
+	activation when clients don't implement the full protocol.
 
 *focus_wrapping* yes|no|force|workspace
 	This option determines what to do when attempting to focus over the edge
@@ -1204,7 +1205,7 @@ The default colors are:
 	to the opposite edge of the container, even if there are other containers
 	in the direction. If set to _workspace_, focus will wrap like in the _yes_
 	case and additionally wrap when moving outside of workspaces boundaries.
-	Default is _yes_.
+	Default is _no_.
 
 *font* [pango:]<font>
 	Sets font to use for the title bars. To enable support for pango markup,
@@ -1450,6 +1451,12 @@ The default colors are:
 	prior workspace. For example, if you are currently on workspace 1,
 	switch to workspace 2, then invoke the *workspace 2* command again, you
 	will be returned to workspace 1. Default is _no_.
+
+*xdg_activation_force* <true|false>
+	The default is _false_. When _true_, clients that don't implement the
+	xdg-activation protocol correctly will be able to activate focus on other
+	windows. See *focus_on_window_activation* to set the state of the activated
+	window to _urgent_ or _focused_.
 
 *lua* script
 	Loads and executes the lua script. See *LUA* for details about the API and

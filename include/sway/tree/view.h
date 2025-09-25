@@ -234,8 +234,8 @@ const char *view_get_shell(struct sway_view *view);
 void view_get_constraints(struct sway_view *view, double *min_width,
 		double *max_width, double *min_height, double *max_height);
 
-uint32_t view_configure(struct sway_view *view, double lx, double ly, int width,
-	int height);
+uint32_t view_configure(struct sway_view *view, double lx, double ly, double width,
+	double height);
 
 bool view_inhibit_idle(struct sway_view *view);
 

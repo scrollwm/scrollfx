@@ -342,14 +342,14 @@ static void popup_unconstrain(struct sway_layer_popup *popup) {
 		return;
 	}
 
-	int lx, ly;
+	double lx, ly;
 	sway_scene_node_coords(&popup->toplevel->scene->tree->node, &lx, &ly);
 
 	// the output box expressed in the coordinate system of the toplevel parent
 	// of the popup
 	struct wlr_box output_toplevel_sx_box = {
-		.x = output->lx - lx,
-		.y = output->ly - ly,
+		.x = output->lx - round(lx),
+		.y = output->ly - round(ly),
 		.width = output->width,
 		.height = output->height,
 	};

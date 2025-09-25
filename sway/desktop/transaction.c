@@ -255,7 +255,7 @@ static void apply_container_state(struct sway_container *container,
 }
 
 static void arrange_title_bar(struct sway_container *con,
-		int x, int y, int width, int height) {
+		double x, double y, double width, double height) {
 	container_update(con);
 
 	bool has_title_bar = height > 0;
@@ -266,10 +266,7 @@ static void arrange_title_bar(struct sway_container *con,
 
 	sway_scene_node_set_position(&con->title_bar.tree->node, x, y);
 
-	struct sway_workspace *workspace = con->pending.workspace;
-	float scale = workspace ? (layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f) : 1.0f;
-
-	con->title_width = width / scale;
+	con->title_width = width;
 	container_arrange_title_bar(con);
 }
 
@@ -727,7 +724,7 @@ static void default_arrange_children(struct sway_workspace *workspace,
 			} else {
 				child->animation.yt = child->animation.y0;
 			}
-			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
+			sway_scene_node_set_position(&child->scene_tree->node, 0, child->animation.yt - workspace->y);
 			child->current.y = off;
 			child->pending.y = off;
 			if (parent) {
@@ -769,7 +766,7 @@ static void default_arrange_children(struct sway_workspace *workspace,
 			} else {
 				child->animation.yt = child->animation.y0;
 			}
-			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
+			sway_scene_node_set_position(&child->scene_tree->node, 0, child->animation.yt - workspace->y);
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.wt = fmax(1, linear_scale(child->animation.w0, child->animation.w1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
@@ -792,7 +789,7 @@ static void default_arrange_children(struct sway_workspace *workspace,
 				child->animation.xt = child->animation.x0;
 			}
 			sway_scene_node_set_enabled(&child->border.tree->node, true);
-			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
+			sway_scene_node_set_position(&child->scene_tree->node, child->animation.xt - workspace->x, 0);
 			// Update child for next iteration. Transactions don't re-arrange
 			// the layout (arrange.c:apply_xxx()), so we need to set it here,
 			// otherwise the next call will have the positions wrong and the
@@ -838,7 +835,7 @@ static void default_arrange_children(struct sway_workspace *workspace,
 			} else {
 				child->animation.xt = child->animation.x0;
 			}
-			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
+			sway_scene_node_set_position(&child->scene_tree->node, child->animation.xt - workspace->x, 0);
 			sway_scene_node_reparent(&child->scene_tree->node, content);
 			child->animation.ht = fmax(1, linear_scale(child->animation.h0, child->animation.h1, t));
 			arrange_container(child, child->animation.wt, child->animation.ht, true, gaps, workspace);
@@ -868,11 +865,11 @@ static void arrange_container(struct sway_container *con,
 	}
 
 	if (con->view) {
-		float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
-		int border_top = round(container_titlebar_height() * scale);
-		int border_width = max(1, round(con->current.border_thickness * scale));
-		int width = scale * dwidth;
-		int height = scale * dheight;
+		double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
+		double border_top = container_titlebar_height() * scale;
+		double border_width = MAX(1, con->current.border_thickness * scale);
+		double width = scale * dwidth;
+		double height = scale * dheight;
 
 		if (title_bar && con->current.border != B_NORMAL) {
 			sway_scene_node_set_enabled(&con->title_bar.tree->node, false);
@@ -883,7 +880,7 @@ static void arrange_container(struct sway_container *con,
 
 		if (con->current.border == B_NORMAL) {
 			if (title_bar) {
-				arrange_title_bar(con, 0, 0, width, border_top);
+				arrange_title_bar(con, 0, 0, dwidth, border_top);
 			} else {
 				border_top = 0;
 				// should be handled by the parent container
@@ -902,10 +899,10 @@ static void arrange_container(struct sway_container *con,
 			sway_assert(false, "unreachable");
 		}
 
-		int border_bottom = con->current.border_bottom ? border_width : 0;
-		int border_left = con->current.border_left ? border_width : 0;
-		int border_right = con->current.border_right ? border_width : 0;
-		int vert_border_height = MAX(0, height - border_top - border_bottom);
+		double border_bottom = con->current.border_bottom ? border_width : 0;
+		double border_left = con->current.border_left ? border_width : 0;
+		double border_right = con->current.border_right ? border_width : 0;
+		double vert_border_height = MAX(0, height - border_top - border_bottom);
 
 		sway_scene_rect_set_size(con->border.top, width, border_top);
 		sway_scene_rect_set_size(con->border.bottom, width, border_bottom);
@@ -930,6 +927,7 @@ static void arrange_container(struct sway_container *con,
 
 		// Update content geometry
 		view_autoconfigure(con->view);
+#if WLR_HAS_XWAYLAND
 		// Re-configure Xwayland views that change position. The reason is unlike
 		// sway, we update the positions of containers when the transaction is
 		// committed (instead of every time a arrange.c:arrange_XXX() happens.
@@ -948,13 +946,14 @@ static void arrange_container(struct sway_container *con,
 				con->pending.content_width != con->current.content_width ||
 				con->pending.content_height != con->current.content_height)) {
 				view_configure(con->view, con->pending.content_x, con->pending.content_y,
-					round(con->pending.content_width), round(con->pending.content_height));
+					con->pending.content_width, con->pending.content_height);
 				con->current.content_x = con->pending.content_x;
 				con->current.content_y = con->pending.content_y;
 				con->current.content_width = con->pending.content_width;
 				con->current.content_height = con->pending.content_height;
 			}
 		}
+#endif
 		view_reconfigure(con->view);
 	} else {
 		// make sure to disable the title bar if the parent is not managing it
@@ -1166,7 +1165,7 @@ void arrange_popups(struct sway_scene_tree *popups) {
 			SWAY_SCENE_DESC_POPUP);
 
 		if (popup) {
-			int lx, ly;
+			double lx, ly;
 			sway_scene_node_coords(popup->relative, &lx, &ly);
 			sway_scene_node_set_position(node, lx, ly);
 		}
@@ -1314,7 +1313,7 @@ static void animation_arrange_children(struct sway_workspace *workspace,
 			} else {
 				child->animation.yt = child->animation.y0;
 			}
-			sway_scene_node_set_position(&child->scene_tree->node, 0, round(child->animation.yt - workspace->y));
+			sway_scene_node_set_position(&child->scene_tree->node, 0, child->animation.yt - workspace->y);
 			child->current.y = off;
 			child->pending.y = off;
 			if (parent) {
@@ -1340,7 +1339,7 @@ static void animation_arrange_children(struct sway_workspace *workspace,
 				child->animation.xt = child->animation.x0;
 			}
 			sway_scene_node_set_enabled(&child->border.tree->node, true);
-			sway_scene_node_set_position(&child->scene_tree->node, round(child->animation.xt - workspace->x), 0);
+			sway_scene_node_set_position(&child->scene_tree->node, child->animation.xt - workspace->x, 0);
 			// Update child for next iteration. Transactions don't re-arrange
 			// the layout (arrange.c:apply_xxx()), so we need to set it here,
 			// otherwise the next call will have the positions wrong and the
@@ -1475,8 +1474,8 @@ static void transaction_commit(struct sway_transaction *transaction) {
 			instruction->serial = view_configure(node->sway_container->view,
 					instruction->container_state.content_x,
 					instruction->container_state.content_y,
-					round(instruction->container_state.content_width),
-					round(instruction->container_state.content_height));
+					instruction->container_state.content_width,
+					instruction->container_state.content_height);
 			if (!hidden) {
 				instruction->waiting = true;
 				++transaction->num_waiting;

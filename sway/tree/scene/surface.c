@@ -96,8 +96,11 @@ static void scene_buffer_unmark_client_buffer(struct sway_scene_buffer *scene_bu
 		return;
 	}
 
-	assert(buffer->WLR_PRIVATE.n_ignore_locks > 0);
-	buffer->WLR_PRIVATE.n_ignore_locks--;
+	// If the buffer was a single-pixel buffer where we cached its color
+	// then it won't have been marked as damage-allowed.
+	if (buffer->WLR_PRIVATE.n_ignore_locks > 0) {
+		buffer->WLR_PRIVATE.n_ignore_locks--;
+	}
 }
 
 static int min(int a, int b) {
@@ -131,13 +134,10 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 			buffer_width, buffer_height);
 		wlr_output_transform_coords(state->transform, &buffer_width, &buffer_height);
 
-		// Round so wlroots/render/pass,c:wlr_render_pass_add_texture() doesn't
-		// assert on rounding errors. It happened sometimes when resizing a
-		// container in a scaled workspace.
-		src_box.x = round(src_box.x + (double)(clip->x * src_box.width) / state->width);
-		src_box.y = round(src_box.y + (double)(clip->y * src_box.height) / state->height);
-		src_box.width = round(src_box.width * (double)width / state->width);
-		src_box.height = round(src_box.height * (double)height / state->height);
+		src_box.x += (clip->x * src_box.width) / state->width;
+		src_box.y += (clip->y * src_box.height) / state->height;
+		src_box.width *= (double)width / state->width;
+		src_box.height *= (double)height / state->height;
 
 		wlr_fbox_transform(&src_box, &src_box, wlr_output_transform_invert(state->transform),
 			buffer_width, buffer_height);
@@ -172,8 +172,8 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	} else {
 		wscale = hscale = total_scale = 1.0;
 	}
-	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, round(width * total_scale * wscale)),
-		MAX(1, round(height * total_scale * hscale)));
+	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, width * total_scale * wscale),
+		MAX(1, height * total_scale * hscale));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
 	sway_scene_buffer_set_opacity(scene_buffer, opacity);
 
@@ -243,7 +243,7 @@ static void handle_scene_surface_surface_commit(
 	// schedule the frame however if the node is enabled and there is an
 	// output intersecting, otherwise the frame done events would never reach
 	// the surface anyway.
-	int lx, ly;
+	double lx, ly;
 	bool enabled = sway_scene_node_coords(&scene_buffer->node, &lx, &ly);
 
 	if (!wl_list_empty(&surface->surface->current.frame_callback_list) &&

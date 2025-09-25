@@ -70,6 +70,8 @@ client.focused #15439e #000000 #e0e0e0 #2e9ef4 #15439e
 client.focused_inactive #595959 #000000 #e0e0e0 #2e9ef4 #595959
 client.unfocused #595959 #000000 #e0e0e0 #2e9ef4 #595959
 
+titlebar_border_thickness 2
+
 # Idle inhibit for fullscreen windows
 for_window [all] inhibit_idle fullscreen
 
@@ -79,7 +81,19 @@ layout_default_height 1.0
 layout_widths [0.33333333 0.5 0.666666667 1.0]
 layout_heights [0.33333333 0.5 0.666666667 1.0]
 
-fullscreen_movefocus true follow
+# These are the default values for some useful scroll options, consult
+# `man 5 scroll` and change them to your preference
+
+# align_reset_auto yes
+# cursor_shake_magnify false
+# cycle_size_wrap false
+# fullscreen_movefocus true nofollow
+# maximize_if_single false
+# workspace_next_on_output_create_empty true
+# xwayland_output_scale true
+# focus_wrapping no
+# focus_on_window_activation focus
+# xdg_activation_force false
 
 # Animations
 animations {

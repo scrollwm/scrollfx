@@ -48,7 +48,11 @@ void xdg_activation_v1_handle_request_activate(struct wl_listener *listener,
 		view_request_activate(view, ctx->token->seat->data);
 	} else {
 		// The token is valid, but cannot be used to activate a window
-		view_request_urgent(view);
+		if (config->xdg_activation_force) {
+			view_request_activate(view, NULL);
+		} else {
+			view_request_urgent(view);
+		}
 	}
 }
 

@@ -298,6 +298,7 @@ struct output_config {
 	drmModeModeInfo drm_mode;
 	int x, y;
 	float scale;
+	bool scale_force;
 	enum scale_filter_mode scale_filter;
 	int32_t transform;
 	enum wl_output_subpixel subpixel;
@@ -626,6 +627,7 @@ struct sway_config {
 	bool cursor_shake_magnify;
 	bool workspace_next_on_output_create_empty;
 	bool xwayland_output_scale;
+	bool xdg_activation_force;
 	bool gesture_scroll_enable;
 	uint32_t gesture_scroll_fingers;
 	float gesture_scroll_sentitivity;

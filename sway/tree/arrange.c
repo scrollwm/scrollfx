@@ -40,11 +40,11 @@ static void apply_horiz_layout(list_t *children, struct sway_container *active, 
 	// box has already applied outer and inner gaps
 	for (int i = 0; i < children->length; ++i) {
 		struct sway_container *child = children->items[i];
-		child->pending.width = round(child->width_fraction * box->width - 2 * inner_gap);
+		child->pending.width = child->width_fraction * box->width - 2 * inner_gap;
 		if (parent) {
-			child->pending.height = round(height * box->height - 2 * inner_gap);
+			child->pending.height = height * box->height - 2 * inner_gap;
 		} else {
-			child->pending.height = round(child->height_fraction * box->height - 2 * inner_gap);
+			child->pending.height = child->height_fraction * box->height - 2 * inner_gap;
 		}
 	}
 }
@@ -68,11 +68,11 @@ static void apply_vert_layout(list_t *children, struct sway_container *active, s
 	// box has already applied outer and inner gaps
 	for (int i = 0; i < children->length; ++i) {
 		struct sway_container *child = children->items[i];
-		child->pending.height = round(child->height_fraction * box->height - 2 * inner_gap);
+		child->pending.height = child->height_fraction * box->height - 2 * inner_gap;
 		if (parent) {
-			child->pending.width = round(width * box->width - 2 * inner_gap);
+			child->pending.width = width * box->width - 2 * inner_gap;
 		} else {
-			child->pending.width = round(child->width_fraction * box->width - 2 * inner_gap);
+			child->pending.width = child->width_fraction * box->width - 2 * inner_gap;
 		}
 	}
 }

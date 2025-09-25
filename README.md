@@ -820,7 +820,7 @@ possible jump labels.
 
 ### General Options
 
-`align_reset_auto`: default is `no` (`false`). If `true`, every time you
+`align_reset_auto`: default is `yes` (`true`). If `true`, every time you
 change focus, any active alignment (`align` command) will be reset automatically,
 without any need to call `align reset`, for a behavior similar to hyprscroller's.
 
@@ -833,10 +833,16 @@ sizes in the `cycle_size` command. Incrementing from the last available size
 will start again from the beginning, and decrementing the first one will move
 to the last.
 
-`fullscreen_movefocus <true}false> [follow|nofollow]`: default is `true`.
-If `true`, changing focus while in full screen mode will keep full screen
-status for the new window. You can use overview/jump while in full screen mode
-to move to other window, making it full screen too.
+`fullscreen_movefocus <true|false> [follow|nofollow]`: Default value is `true`
+and `nofollow`.
+* `true` allows you to change focus while in full screen mode.
+* `false`. Focusing other containers in the same workspace is not allowed until
+exiting full screen mode.
+* `follow`. Full screen will follow focus. You can still use overview/jump to
+select a new window, and full screen state will follow.
+* `nofollow`. You can focus other windows, but they will not become full screen.
+However, those in full screen mode will recover that mode when focusing on them
+again.
 
 `maximize_if_single <true|false>`: Default value is `false`. If `true`,
 whenever there is a single tiling window in the workspace, it will be
@@ -853,6 +859,11 @@ XWayland windows get fractional scaling. Make it `false` if you want XWayland
 windows to ignore the output's fractional scaling value and keep a scale of 1.
 This option is equivalent to applying to each XWayland window a content scale
 with value the inverse of the output's fractional scale.
+
+`xdg_activation_force <true|false>`: The default is `false`. When `true`,
+clients that don't implement the xdg-activation protocol correctly will be able
+to activate focus on other windows. See `focus_on_window_activation` to set the
+state of the activated window to `urgent` or `focused`.
 
 ### Workspace Options
 

@@ -210,10 +210,14 @@ void view_get_constraints(struct sway_view *view, double *min_width,
 	}
 }
 
-uint32_t view_configure(struct sway_view *view, double lx, double ly, int width,
-		int height) {
+uint32_t view_configure(struct sway_view *view, double lx, double ly, double width,
+		double height) {
 	if (view->impl->configure) {
-		return view->impl->configure(view, lx, ly, width, height);
+		double cx = round(lx);
+		double cy = round(ly);
+		double ex = round(lx + width);
+		double ey = round(ly + height);
+		return view->impl->configure(view, cx, cy, ex - cx, ey - cy);
 	}
 	return 0;
 }
@@ -999,8 +1003,8 @@ void view_center_and_clip_surface(struct sway_view *view) {
 	if (container_is_floating(con)) {
 		// We always center the current coordinates rather than the next, as the
 		// geometry immediately affects the currently active rendering.
-		int x = (int) fmax(0, (con->current.content_width - view->geometry.width) / 2);
-		int y = (int) fmax(0, (con->current.content_height - view->geometry.height) / 2);
+		double x = fmax(0, 0.5 * (con->current.content_width - view->geometry.width));
+		double y = fmax(0, 0.5 * (con->current.content_height - view->geometry.height));
 		clip_to_geometry = !view->xdg_decoration;
 
 		sway_scene_node_set_position(&view->content_tree->node, x, y);
@@ -1015,8 +1019,8 @@ void view_center_and_clip_surface(struct sway_view *view) {
 			clip = (struct wlr_box){
 				.x = con->view->geometry.x,
 				.y = con->view->geometry.y,
-				.width = con->current.content_width,
-				.height = con->current.content_height,
+				.width = round(con->current.content_width),
+				.height = round(con->current.content_height),
 			};
 		}
 		sway_scene_subsurface_tree_set_clip(&con->view->content_tree->node, &clip);
@@ -1210,6 +1214,8 @@ static void view_save_buffer_iterator(struct sway_scene_buffer *buffer,
 	sway_scene_buffer_set_dest_size(sbuf,
 		buffer->dst_width, buffer->dst_height);
 	sway_scene_buffer_set_opaque_region(sbuf, &buffer->opaque_region);
+	sway_scene_buffer_set_opacity(sbuf, buffer->opacity);
+	sway_scene_buffer_set_filter_mode(sbuf, buffer->filter_mode);
 	sway_scene_buffer_set_source_box(sbuf, &buffer->src_box);
 	sway_scene_node_set_position(&sbuf->node, sx, sy);
 	sway_scene_buffer_set_transform(sbuf, buffer->transform);
@@ -1260,7 +1266,11 @@ bool view_can_tear(struct sway_view *view) {
 static void send_frame_done_iterator(struct sway_scene_buffer *scene_buffer,
 		int x, int y, void *data) {
 	struct timespec *when = data;
-	wl_signal_emit_mutable(&scene_buffer->events.frame_done, when);
+	struct sway_scene_surface *scene_surface = sway_scene_surface_try_from_buffer(scene_buffer);
+	if (scene_surface == NULL) {
+		return;
+	}
+	wlr_surface_send_frame_done(scene_surface->surface, when);
 }
 
 void view_send_frame_done(struct sway_view *view) {
@@ -1384,11 +1394,11 @@ static void clip_view(struct sway_view *view) {
 		view_get_animation_sizes(view, &wt, &ht, &w1, &h1);
 		double content_scale = view_is_content_scaled(view) ?
 			view_get_content_scale(view) : 1.0;
-		struct wlr_box clip = (struct wlr_box){
+		struct wlr_box clip = {
 			.x = view->geometry.x,
 			.y = view->geometry.y,
-			.width = wt / content_scale,
-			.height = ht / content_scale
+			.width = round(wt / content_scale),
+			.height = round(ht / content_scale)
 		};
 		sway_scene_subsurface_tree_set_clip(&view->content_tree->node, &clip);
 	} else {
@@ -1398,11 +1408,11 @@ static void clip_view(struct sway_view *view) {
 			clip_to_geometry = !view->xdg_decoration;
 		}
 		if (clip_to_geometry) {
-			struct wlr_box clip = (struct wlr_box){
+			struct wlr_box clip = {
 				.x = view->geometry.x,
 				.y = view->geometry.y,
-				.width = view->container->pending.content_width,
-				.height = view->container->pending.content_height
+				.width = round(view->container->pending.content_width),
+				.height = round(view->container->pending.content_height)
 			};
 			sway_scene_subsurface_tree_set_clip(&view->content_tree->node, &clip);
 		}
@@ -1435,13 +1445,13 @@ double view_get_total_scale(struct sway_view *view) {
 		return -1.0;
 	}
 	if (container_is_fullscreen_or_child(container)) {
-		scale = -1.0f;
+		scale = -1.0;
 	} else {
 		struct sway_workspace *ws = container->pending.workspace;
-		scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0f) : -1.0f;
+		scale = ws ? (layout_scale_enabled(ws) ? layout_scale_get(ws) : -1.0) : -1.0;
 	}
 	if (view_is_content_scaled(view)) {
-		scale = (scale > 0.0f ? scale : 1.0f) * view_get_content_scale(view);
+		scale = (scale > 0.0f ? scale : 1.0) * view_get_content_scale(view);
 	}
 	return scale;
 }

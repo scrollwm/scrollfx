@@ -104,7 +104,7 @@ static void recreate_view_buffer(struct sway_container *view) {
 	// in scaled mode need to be reconfigured, so reconfigure everything
 	// just in case.
 	view_configure(view->view, view->pending.content_x, view->pending.content_y,
-		round(view->pending.content_width), round(view->pending.content_height));
+		view->pending.content_width, view->pending.content_height);
 	view_reconfigure(view->view);
 	node_set_dirty(&view->node);
 }
@@ -130,7 +130,7 @@ static void recreate_buffers(struct sway_workspace *workspace) {
 	}
 }
 
-static void workspace_set_scale(struct sway_workspace *workspace, float scale) {
+static void workspace_set_scale(struct sway_workspace *workspace, double scale) {
 	workspace->layers.tiling->node.info.scale = scale;
 	for (int i = 0; i < workspace->floating->length; ++i) {
 		struct sway_container *con = workspace->floating->items[i];
@@ -201,7 +201,7 @@ void layout_overview_recompute_scale(struct sway_workspace *workspace, int gaps)
 	if (maxh < fh) {
 		maxh = fh;
 	}
-	float scale = fmin(workspace->width / w, workspace->height / maxh);
+	double scale = fmin(workspace->width / w, workspace->height / maxh);
 	if (workspace->layers.tiling->node.info.scale != scale) {
 		workspace_set_scale(workspace, scale);
 		node_set_dirty(&workspace->node);
@@ -345,7 +345,7 @@ void layout_overview_workspaces_toggle() {
 	}
 }
 
-void layout_scale_set(struct sway_workspace *workspace, float scale) {
+void layout_scale_set(struct sway_workspace *workspace, double scale) {
 	if (!workspace) {
 		return;
 	}
@@ -359,13 +359,13 @@ void layout_scale_reset(struct sway_workspace *workspace) {
 	if (!workspace) {
 		return;
 	}
-	workspace_set_scale(workspace, -1.0f);
+	workspace_set_scale(workspace, -1.0);
 	node_set_dirty(&workspace->node);
 	recreate_buffers(workspace);
 	ipc_event_scroller("scale", workspace);
 }
 
-float layout_scale_get(struct sway_workspace *workspace) {
+double layout_scale_get(struct sway_workspace *workspace) {
 	return workspace->layers.tiling->node.info.scale;
 }
 
@@ -373,23 +373,23 @@ bool layout_scale_enabled(struct sway_workspace *workspace) {
 	if (!workspace) {
 		return false;
 	}
-	return workspace->layers.tiling->node.info.scale > 0.0f;
+	return workspace->layers.tiling->node.info.scale > 0.0;
 }
 
-void layout_view_scale_set(struct sway_container *view, float scale) {
+void layout_view_scale_set(struct sway_container *view, double scale) {
 	view->scene_tree->node.info.scale = scale;
 }
 
 void layout_view_scale_reset(struct sway_container *view) {
-	view->scene_tree->node.info.scale = -1.0f;
+	view->scene_tree->node.info.scale = -1.0;
 }
 
-float layout_view_scale_get(struct sway_container *view) {
+double layout_view_scale_get(struct sway_container *view) {
 	return view->scene_tree->node.info.scale;
 }
 
 bool layout_view_scale_enabled(struct sway_container *view) {
-	return view->scene_tree->node.info.scale > 0.0f;
+	return view->scene_tree->node.info.scale > 0.0;
 }
 
 void layout_modifiers_init(struct sway_workspace *workspace) {
@@ -1271,8 +1271,8 @@ static void container_toggle_jump_decoration(struct sway_workspace *workspace,
 	}
 	sway_text_node_set_background(con->jump.text, config->jump_labels_background);
 	double jscale = config->jump_labels_scale;
-	float wscale = workspace && layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
-	float scale = fmin(width / con->jump.text->width, height / con->jump.text->height);
+	double wscale = workspace && layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
+	double scale = fmin(width / con->jump.text->width, height / con->jump.text->height);
 	sway_text_node_scale(con->jump.text, jscale * scale * wscale);
 	int x = 0.5 * wscale * (width - con->jump.text->width * jscale * scale);
 	int y = 0.5 * wscale * (height - con->jump.text->height * jscale * scale);
@@ -2045,7 +2045,7 @@ static void workspace_toggle_jump_decoration(struct sway_workspace *ws, char *te
 	}
 	sway_text_node_set_background(ws->layout.workspaces.text, config->jump_labels_background);
 	double jscale = config->jump_labels_scale;
-	float scale = fmin((double) ws->width / ws->layout.workspaces.text->width,
+	double scale = fmin((double) ws->width / ws->layout.workspaces.text->width,
 		(double) ws->height / ws->layout.workspaces.text->height);
 	const double oscale = ws->output->wlr_output->scale;
 	const double wscale = ws->layout.workspaces.scale;
@@ -2312,7 +2312,7 @@ void layout_jump_container(struct sway_container *container) {
 
 static struct sway_container *get_mouse_container(struct sway_seat *seat) {
 	struct sway_workspace *workspace = seat->workspace;
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 
 	// If there is a pinned container, check it before anything else
 	struct sway_container *pin = workspace->gesture.pin;
@@ -2417,7 +2417,7 @@ static void layout_scroll_float_pinned_container(struct sway_workspace *workspac
 	// Move windows that are outside of the viewport on the pin side to be
 	// adjacent to the rest
 	enum sway_layout_pin pos = workspace->gesture.pin_position;
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	enum sway_container_layout layout = layout_get_type(workspace);
 	if (layout == L_HORIZ) {
 		const double move = scale * (2.0 * workspace->gaps_inner + pin->pending.width);
@@ -2468,7 +2468,7 @@ static void layout_scroll_unfloat_pinned_container(struct sway_workspace *worksp
 	enum sway_layout_pin pos = workspace->gesture.pin_position;
 	enum sway_container_layout layout = layout_get_type(workspace);
 	struct sway_seat *seat = input_manager_current_seat();
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	// There will be one container that overlaps the inner edge of the pin.
 	// That container's center point will give the future location of the
 	// container with respect to the pin.
@@ -2531,7 +2531,7 @@ static void layout_scroll_unfloat_pinned_container(struct sway_workspace *worksp
 bool layout_scroll_begin(struct sway_seat *seat) {
 	struct sway_workspace *workspace = seat->workspace;
 	// Check if we can scroll
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	double total_width = 0.0, max_height = 0.0;
 	const int gap = workspace->gaps_inner;
 	for (int i = 0; i < workspace->tiling->length; ++i) {
@@ -2575,7 +2575,7 @@ void layout_scroll_update(struct sway_seat *seat, double dx, double dy) {
 	if (workspace->tiling->length == 0) {
 		return;
 	}
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	dx *= config->gesture_scroll_sentitivity * scale;
 	dy *= config->gesture_scroll_sentitivity * scale;
 
@@ -2614,7 +2614,7 @@ static void scroll_end_horizontal(struct sway_seat *seat, list_t *children, int 
 		enum sway_layout_direction scrolling_direction) {
 	struct sway_container *active = children->items[active_idx];
 	struct sway_workspace *workspace = active->pending.workspace;
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	if (scrolling_direction == DIR_LEFT) {
 		struct sway_container *new_active = children->items[children->length - 1];
 		double offset = active->pending.x + scale * (active->pending.width + 2.0 * workspace->gaps_inner);
@@ -2656,7 +2656,7 @@ static void scroll_end_vertical(struct sway_seat *seat, list_t *children, int ac
 		enum sway_layout_direction scrolling_direction) {
 	struct sway_container *active = children->items[active_idx];
 	struct sway_workspace *workspace = active->pending.workspace;
-	float scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0f;
+	double scale = layout_scale_enabled(workspace) ? layout_scale_get(workspace) : 1.0;
 	if (scrolling_direction == DIR_UP) {
 		struct sway_container *new_active = children->items[children->length - 1];
 		double offset = active->pending.y + scale * (active->pending.height + 2.0 * workspace->gaps_inner);
