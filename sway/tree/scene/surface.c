@@ -5,12 +5,14 @@
 #include "sway/config.h"
 #include "sway/tree/scene.h"
 #include "sway/tree/view.h"
+#include "sway/output.h"
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_linux_drm_syncobj_v1.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/util/transform.h>
+#include "util.h"
 
 static double get_surface_preferred_buffer_scale(struct wlr_surface *surface) {
 	double scale = 1;
@@ -192,8 +194,18 @@ static void scene_buffer_unmark_client_buffer(struct sway_scene_buffer *scene_bu
 	}
 }
 
-static int min(int a, int b) {
-	return a < b ? a : b;
+static double compute_src_size(float oscale, double size, double dst) {
+	int scale = floor(size / dst);
+	if (scale > 1) {
+		return scale * dst;
+	}
+	int src = round(round(size / oscale) * oscale);
+	for (int i = src; i >= 0; i--) {
+		if (i / oscale == floor(i / oscale)) {
+			return i;
+		}
+	}
+	return size;
 }
 
 void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
@@ -257,10 +269,11 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 		primaries = wlr_color_manager_v1_primaries_to_wlr(img_desc->primaries_named); 
 	}
 
-	sway_scene_buffer_set_opaque_region(scene_buffer, &opaque);
-	sway_scene_buffer_set_source_box(scene_buffer, &src_box);
 	double wscale, hscale, total_scale;
 	struct sway_view *view = view_from_wlr_surface(surface);
+	struct sway_output *output = view_get_output(view);
+	double oscale = output && output->scroller_options.fractional_scaling_exact ?
+		output->wlr_output->scale : 1.0;
 	if (view) {
 		total_scale = view_get_total_scale(view);
 		if (total_scale < 0.0) {
@@ -270,8 +283,21 @@ void sway_scene_surface_reconfigure(struct sway_scene_surface *scene_surface) {
 	} else {
 		wscale = hscale = total_scale = 1.0;
 	}
-	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, width * total_scale * wscale),
-		MAX(1, height * total_scale * hscale));
+	// Compute a dst that can perfectly fit an aligned buffer in logical space
+	double dst_width = width * total_scale * wscale;
+	double dst_height = height * total_scale * hscale;
+	if (output && output->scroller_options.fractional_scaling_exact) {
+		dst_width = valid_logical_size(oscale, dst_width);
+		dst_height = valid_logical_size(oscale, dst_height);
+		src_box.x = round(src_box.x);
+		src_box.y = round(src_box.y);
+		src_box.width = compute_src_size(oscale, src_box.width, dst_width);
+		src_box.height = compute_src_size(oscale, src_box.height, dst_height);
+	}
+	sway_scene_buffer_set_opaque_region(scene_buffer, &opaque);
+	sway_scene_buffer_set_source_box(scene_buffer, &src_box);
+	sway_scene_buffer_set_dest_size(scene_buffer, MAX(1, dst_width),
+		MAX(1, dst_height));
 	sway_scene_buffer_set_transform(scene_buffer, state->transform);
 	sway_scene_buffer_set_opacity(scene_buffer, opacity);
 	sway_scene_buffer_set_transfer_function(scene_buffer, tf);
