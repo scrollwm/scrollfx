@@ -96,6 +96,20 @@ enum sway_scene_debug_damage_option {
 	SWAY_SCENE_DEBUG_DAMAGE_HIGHLIGHT
 };
 
+/** Corner locations for rounded corners */
+enum corner_location {
+	CORNER_LOCATION_NONE = 0,
+	CORNER_LOCATION_TOP_LEFT = 1 << 0,
+	CORNER_LOCATION_TOP_RIGHT = 1 << 1,
+	CORNER_LOCATION_BOTTOM_LEFT = 1 << 2,
+	CORNER_LOCATION_BOTTOM_RIGHT = 1 << 3,
+	CORNER_LOCATION_TOP = CORNER_LOCATION_TOP_LEFT | CORNER_LOCATION_TOP_RIGHT,
+	CORNER_LOCATION_BOTTOM = CORNER_LOCATION_BOTTOM_LEFT | CORNER_LOCATION_BOTTOM_RIGHT,
+	CORNER_LOCATION_LEFT = CORNER_LOCATION_TOP_LEFT | CORNER_LOCATION_BOTTOM_LEFT,
+	CORNER_LOCATION_RIGHT = CORNER_LOCATION_TOP_RIGHT | CORNER_LOCATION_BOTTOM_RIGHT,
+	CORNER_LOCATION_ALL = CORNER_LOCATION_TOP | CORNER_LOCATION_BOTTOM,
+};
+
 /** A sub-tree in the scene-graph. */
 struct sway_scene_tree {
 	struct sway_scene_node node;
@@ -150,6 +164,9 @@ struct sway_scene_rect {
 	struct sway_scene_node node;
 	double width, height;
 	float color[4];
+	int corner_radius;
+	enum corner_location corner_location;
+	bool has_backdrop_blur;
 };
 
 struct sway_scene_outputs_update_event {
@@ -445,6 +462,24 @@ void sway_scene_rect_set_size(struct sway_scene_rect *rect, double width, double
  * The color argument must be a premultiplied color value.
  */
 void sway_scene_rect_set_color(struct sway_scene_rect *rect, const float color[static 4]);
+
+/**
+ * Set the corner radius of a rectangle node.
+ *
+ * @param rect The rectangle node to modify
+ * @param radius The corner radius in pixels
+ * @param location Which corners should be rounded (bitfield of enum corner_location)
+ */
+void sway_scene_rect_set_corner_radius(struct sway_scene_rect *rect, int radius,
+		enum corner_location location);
+
+/**
+ * Enable or disable backdrop blur for a rectangle node.
+ *
+ * @param rect The rectangle node to modify
+ * @param enabled Whether backdrop blur should be enabled
+ */
+void sway_scene_rect_set_backdrop_blur(struct sway_scene_rect *rect, bool enabled);
 
 /**
  * Add a node displaying a buffer to the scene-graph.

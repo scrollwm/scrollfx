@@ -7,7 +7,9 @@
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/xwayland.h>
 #include <xcb/xcb_icccm.h>
+#include <scenefx/types/wlr_scene.h>
 #include "log.h"
+#include "sway/config.h"
 #include "sway/desktop/transaction.h"
 #include "sway/input/cursor.h"
 #include "sway/input/input-manager.h"
@@ -16,6 +18,7 @@
 #include "sway/scene_descriptor.h"
 #include "sway/tree/arrange.h"
 #include "sway/tree/container.h"
+#include "sway/tree/root.h"
 #include "sway/server.h"
 #include "sway/tree/scene.h"
 #include "sway/tree/view.h"
@@ -696,6 +699,26 @@ static void handle_request_minimize(struct wl_listener *listener, void *data) {
 	}
 
 	struct wlr_xwayland_minimize_event *e = data;
+	struct sway_container *container = view->container;
+
+	// Enhanced scratchpad minimize integration
+	if (config->scratchpad_minimize && container && container->pending.workspace) {
+		if (e->minimize) {
+			if (!container->scratchpad) {
+				root_scratchpad_add_container(container, NULL);
+			} else if (container->pending.workspace) {
+				root_scratchpad_hide(container);
+			}
+		} else {
+			if (container->scratchpad) {
+				root_scratchpad_show(container);
+			}
+		}
+		transaction_commit_dirty();
+		return;
+	}
+
+	// Default behavior for non-scratchpad minimize
 	struct sway_seat *seat = input_manager_current_seat();
 	bool focused = seat_get_focus(seat) == &view->container->node;
 	wlr_xwayland_surface_set_minimized(xsurface, !focused && e->minimize);

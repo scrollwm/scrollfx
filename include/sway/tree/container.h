@@ -9,6 +9,8 @@
 
 struct sway_view;
 struct sway_seat;
+struct wlr_scene_shadow;
+struct wlr_scene_rect;
 
 enum sway_container_layout {
 	L_NONE,
@@ -180,6 +182,14 @@ struct sway_container {
 	struct wlr_box transform;
 
 	float alpha;
+
+	// SceneFX effect properties
+	struct wlr_scene_shadow *shadow;
+	struct wlr_scene_rect *dim_rect;
+	int corner_radius;
+	bool blur_enabled;
+	bool shadow_enabled;
+	float dim;
 
 	list_t *marks; // char *
 
@@ -415,5 +425,15 @@ void container_arrange_title_bar(struct sway_container *con);
 void container_update(struct sway_container *con);
 
 void container_update_itself_and_parents(struct sway_container *con);
+
+/**
+ * Returns true if the container should have a shadow rendered.
+ */
+bool container_has_shadow(struct sway_container *con);
+
+/**
+ * Returns true if the container should have corner radius applied.
+ */
+bool container_has_corner_radius(struct sway_container *con);
 
 #endif

@@ -372,6 +372,31 @@ static void config_defaults(struct sway_config *config) {
 	config->titlebar_h_padding = 5;
 	config->titlebar_v_padding = 4;
 
+	// SceneFX configuration defaults
+	config->corner_radius = 0;
+	config->smart_corner_radius = false;
+
+	config->default_dim_inactive = 0.0f;
+	color_to_rgba(config->dim_inactive_colors.unfocused, 0x00000000);
+	color_to_rgba(config->dim_inactive_colors.urgent, 0x00000000);
+
+	config->blur_enabled = false;
+	config->blur_xray = false;
+	// blur_data is initialized by SceneFX via wlr_scene_set_blur_data
+
+	config->shadow_enabled = false;
+	config->shadows_on_csd_enabled = true;
+	config->shadow_blur_sigma = 20;
+	color_to_rgba(config->shadow_color, 0x000000FF);
+	color_to_rgba(config->shadow_inactive_color, 0x000000FF);
+	config->shadow_offset_x = 0.0f;
+	config->shadow_offset_y = 0.0f;
+
+	config->titlebar_separator = false;
+	config->scratchpad_minimize = false;
+
+	if (!(config->layer_criteria = create_list())) goto cleanup;
+
 	// floating view
 	config->floating_maximum_width = 0;
 	config->floating_maximum_height = 0;

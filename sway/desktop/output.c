@@ -220,24 +220,31 @@ static enum wlr_scale_filter_mode get_scale_filter(struct sway_output *output,
 }
 
 void output_configure_scene(struct sway_output *output,
-		struct sway_scene_node *node, float opacity) {
+		struct sway_scene_node *node, float opacity, int corner_radius,
+		bool blur_enabled, bool has_titlebar, struct sway_container *closest_con) {
 	if (!node->enabled) {
 		return;
 	}
 
+	// Track container state through scene tree
 	struct sway_container *con =
 		scene_descriptor_try_get(node, SWAY_SCENE_DESC_CONTAINER);
 	if (con) {
+		closest_con = con;
 		opacity = con->alpha;
+		corner_radius = con->corner_radius;
+		blur_enabled = con->blur_enabled;
 	}
 
 	if (node->type == SWAY_SCENE_NODE_BUFFER) {
 		struct sway_scene_buffer *buffer = sway_scene_buffer_from_node(node);
 		struct sway_scene_surface *surface = sway_scene_surface_try_from_buffer(buffer);
+		struct wlr_surface *wlr_surface = surface ? surface->surface : NULL;
 
-		if (surface) {
+		// Apply opacity with alpha modifier support
+		if (wlr_surface) {
 			const struct wlr_alpha_modifier_surface_v1_state *alpha_modifier_state =
-				wlr_alpha_modifier_v1_get_surface_state(surface->surface);
+				wlr_alpha_modifier_v1_get_surface_state(wlr_surface);
 			if (alpha_modifier_state != NULL) {
 				opacity *= (float)alpha_modifier_state->multiplier;
 			}
@@ -251,11 +258,37 @@ void output_configure_scene(struct sway_output *output,
 		}
 
 		sway_scene_buffer_set_opacity(buffer, opacity);
+
+		// Apply corner radius
+		wlr_scene_buffer_set_corner_radius(buffer,
+			container_has_corner_radius(closest_con) ? corner_radius : 0,
+			has_titlebar ? CORNER_LOCATION_BOTTOM : CORNER_LOCATION_ALL);
+
+		// Apply blur
+		wlr_scene_buffer_set_backdrop_blur(buffer, blur_enabled);
+		bool should_optimize_blur = (closest_con &&
+			!container_is_floating_or_child(closest_con)) || config->blur_xray;
+		wlr_scene_buffer_set_backdrop_blur_optimized(buffer, should_optimize_blur);
+
+		// Layer surface blur configuration
+		if (wlr_surface) {
+			struct wlr_layer_surface_v1 *layer_surface =
+				wlr_layer_surface_v1_try_from_wlr_surface(wlr_surface);
+			if (layer_surface && layer_surface->data) {
+				struct sway_layer_surface *sway_layer = layer_surface->data;
+				wlr_scene_buffer_set_backdrop_blur(buffer, sway_layer->blur_enabled);
+				wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer,
+					sway_layer->blur_ignore_transparent);
+				wlr_scene_buffer_set_backdrop_blur_optimized(buffer,
+					sway_layer->blur_xray);
+			}
+		}
 	} else if (node->type == SWAY_SCENE_NODE_TREE) {
 		struct sway_scene_tree *tree = sway_scene_tree_from_node(node);
-		struct sway_scene_node *node;
-		wl_list_for_each(node, &tree->children, link) {
-			output_configure_scene(output, node, opacity);
+		struct sway_scene_node *child;
+		wl_list_for_each(child, &tree->children, link) {
+			output_configure_scene(output, child, opacity, corner_radius,
+				blur_enabled, has_titlebar, closest_con);
 		}
 	}
 }
@@ -285,7 +318,8 @@ static int output_repaint_timer_handler(void *data) {
 		return 0;
 	}
 
-	output_configure_scene(output, &root->root_scene->tree.node, 1.0f);
+	output_configure_scene(output, &root->root_scene->tree.node, 1.0f,
+		0, false, false, NULL);
 
 	struct sway_scene_output_state_options opts = {
 		.color_transform = output->color_transform,

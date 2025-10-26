@@ -178,7 +178,6 @@ sway_cmd cmd_move;
 sway_cmd cmd_new_float;
 sway_cmd cmd_new_window;
 sway_cmd cmd_nop;
-sway_cmd cmd_opacity;
 sway_cmd cmd_no_focus;
 sway_cmd cmd_output;
 sway_cmd cmd_permit;
@@ -362,5 +361,36 @@ sway_cmd animations_cmd_window_open;
 sway_cmd animations_cmd_window_move;
 sway_cmd animations_cmd_window_size;
 sway_cmd animations_cmd_workspace_switch;
+
+// SceneFX commands
+sway_cmd cmd_blur;
+sway_cmd cmd_blur_brightness;
+sway_cmd cmd_blur_contrast;
+sway_cmd cmd_blur_noise;
+sway_cmd cmd_blur_passes;
+sway_cmd cmd_blur_radius;
+sway_cmd cmd_blur_saturation;
+sway_cmd cmd_blur_xray;
+
+sway_cmd cmd_corner_radius;
+sway_cmd cmd_smart_corner_radius;
+bool cmd_corner_radius_parse_value(char *arg, int* result);
+
+sway_cmd cmd_default_dim_inactive;
+sway_cmd cmd_dim_inactive;
+sway_cmd cmd_dim_inactive_colors_unfocused;
+sway_cmd cmd_dim_inactive_colors_urgent;
+
+sway_cmd cmd_shadow_blur_radius;
+sway_cmd cmd_shadow_color;
+sway_cmd cmd_shadow_offset;
+sway_cmd cmd_shadow_inactive_color;
+sway_cmd cmd_shadows;
+sway_cmd cmd_shadows_on_csd;
+
+sway_cmd cmd_layer_effects;
+sway_cmd cmd_opacity;
+sway_cmd cmd_titlebar_separator;
+sway_cmd cmd_scratchpad_minimize;
 
 #endif

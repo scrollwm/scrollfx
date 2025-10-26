@@ -14,6 +14,7 @@ struct sway_workspace;
 struct sway_container;
 struct sway_transaction_instruction;
 struct wlr_box;
+struct wlr_scene_shadow;
 
 enum sway_node_type {
 	N_ROOT,
@@ -94,6 +95,13 @@ void scene_node_disown_children(struct sway_scene_tree *tree);
 // of this scene node preventing memory leaks.
 struct sway_scene_tree *alloc_scene_tree(struct sway_scene_tree *parent,
 		bool *failed);
+
+// a helper function used to allocate shadow nodes. If an allocation failure
+// occurs a flag is flipped that can be checked later to destroy a parent
+// of this scene node preventing memory leaks.
+struct wlr_scene_shadow *alloc_scene_shadow(struct sway_scene_tree *parent,
+		int width, int height, int corner_radius, float blur_sigma,
+		const float color[static 4], bool *failed);
 
 // Set node's focus warp mode that will be applied when the transaction ends.
 // If it is a container, its view will already be mapped and the container's

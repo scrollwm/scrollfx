@@ -13,6 +13,7 @@
 #include "list.h"
 #include "log.h"
 #include "util.h"
+#include <scenefx/types/wlr_scene.h>
 
 // For us, gaps_inner is applied to each container on both sides, regardless
 // of its position. So an edge container will have the same content size
@@ -201,6 +202,13 @@ void arrange_output(struct sway_output *output) {
 	for (int i = 0; i < output->workspaces->length; ++i) {
 		struct sway_workspace *workspace = output->workspaces->items[i];
 		arrange_workspace(workspace);
+	}
+
+	// Update blur layer size to match output resolution
+	if (output->layers.blur_layer) {
+		int output_width, output_height;
+		wlr_output_effective_resolution(output->wlr_output, &output_width, &output_height);
+		wlr_scene_optimized_blur_set_size(output->layers.blur_layer, output_width, output_height);
 	}
 }
 

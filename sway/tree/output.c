@@ -94,6 +94,9 @@ static void destroy_scene_layers(struct sway_output *output) {
 
 	sway_scene_node_destroy(&output->layers.shell_background->node);
 	sway_scene_node_destroy(&output->layers.shell_bottom->node);
+	if (output->layers.blur_layer) {
+		wlr_scene_node_destroy(&output->layers.blur_layer->node);
+	}
 	sway_scene_node_destroy(&output->layers.tiling->node);
 	sway_scene_node_destroy(&output->layers.fullscreen->node);
 	sway_scene_node_destroy(&output->layers.shell_top->node);
@@ -108,6 +111,14 @@ struct sway_output *output_create(struct wlr_output *wlr_output) {
 	bool failed = false;
 	output->layers.shell_background = alloc_scene_tree(root->staging, &failed);
 	output->layers.shell_bottom = alloc_scene_tree(root->staging, &failed);
+
+	// Create optimized blur layer between shell_bottom and tiling
+	output->layers.blur_layer = wlr_scene_optimized_blur_create(root->staging, 0, 0);
+	if (!output->layers.blur_layer) {
+		sway_log(SWAY_ERROR, "Unable to allocate blur layer");
+		failed = true;
+	}
+
 	output->layers.tiling = alloc_scene_tree(root->staging, &failed);
 	output->layers.tiling->node.info.wlr_output = wlr_output;
 	output->layers.fullscreen = alloc_scene_tree(root->staging, &failed);

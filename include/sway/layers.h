@@ -5,6 +5,8 @@
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include "sway/tree/view.h"
 
+struct layer_criteria;
+
 struct sway_layer_surface {
 	struct wl_listener map;
 	struct wl_listener unmap;
@@ -22,6 +24,15 @@ struct sway_layer_surface {
 	struct sway_scene_layer_surface_v1 *scene;
 	struct sway_scene_tree *tree;
 	struct wlr_layer_surface_v1 *layer_surface;
+
+	// SceneFX effect properties
+	struct wlr_scene_shadow *shadow_node;
+
+	bool shadow_enabled;
+	bool blur_enabled;
+	bool blur_xray;
+	bool blur_ignore_transparent;
+	int corner_radius;
 };
 
 struct sway_layer_popup {
@@ -40,5 +51,11 @@ struct wlr_layer_surface_v1 *toplevel_layer_surface_from_surface(
 		struct wlr_surface *surface);
 
 void arrange_layers(struct sway_output *output);
+
+/**
+ * Apply layer criteria effects to a layer surface
+ */
+void layer_apply_criteria(struct sway_layer_surface *surface,
+		struct layer_criteria *criteria);
 
 #endif

@@ -22,6 +22,7 @@
 #include <pango/pangocairo.h>
 #include "sway/desktop/animation.h"
 #include "sway/lua.h"
+#include <scenefx/types/fx/blur_data.h>
 
 // TODO: Refactor this shit
 
@@ -530,6 +531,33 @@ struct sway_config {
 	list_t *active_bar_modifiers;
 	struct sway_mode *current_mode;
 	struct bar_config *current_bar;
+
+	// SceneFX configuration members
+	int corner_radius;
+	bool smart_corner_radius;
+
+	float default_dim_inactive;
+	struct {
+		float unfocused[4];
+		float urgent[4];
+	} dim_inactive_colors;
+
+	bool blur_enabled;
+	bool blur_xray;
+	struct blur_data blur_data;
+
+	bool shadow_enabled;
+	bool shadows_on_csd_enabled;
+	int shadow_blur_sigma;
+	float shadow_color[4];
+	float shadow_inactive_color[4];
+	float shadow_offset_x, shadow_offset_y;
+
+	bool titlebar_separator;
+	bool scratchpad_minimize;
+
+	list_t *layer_criteria;
+
 	uint32_t floating_mod;
 	bool floating_mod_inverse;
 	uint32_t dragging_key;

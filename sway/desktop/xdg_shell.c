@@ -5,6 +5,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include "log.h"
+#include "sway/config.h"
 #include "sway/decoration.h"
 #include "sway/scene_descriptor.h"
 #include "sway/desktop/transaction.h"
@@ -14,6 +15,7 @@
 #include "sway/output.h"
 #include "sway/tree/arrange.h"
 #include "sway/tree/container.h"
+#include "sway/tree/root.h"
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
 #include "sway/xdg_decoration.h"
@@ -438,6 +440,26 @@ static void handle_request_resize(struct wl_listener *listener, void *data) {
 	}
 }
 
+static void handle_request_minimize(struct wl_listener *listener, void *data) {
+	struct sway_xdg_shell_view *xdg_shell_view =
+		wl_container_of(listener, xdg_shell_view, request_minimize);
+	struct sway_view *view = &xdg_shell_view->view;
+	struct sway_container *container = view->container;
+
+	if (!container || !container->pending.workspace) {
+		return;
+	}
+
+	if (!container->scratchpad) {
+		root_scratchpad_add_container(container, NULL);
+	} else if (container->pending.workspace) {
+		root_scratchpad_hide(container);
+	}
+
+	arrange_root();
+	transaction_commit_dirty();
+}
+
 static void handle_unmap(struct wl_listener *listener, void *data) {
 	struct sway_xdg_shell_view *xdg_shell_view =
 		wl_container_of(listener, xdg_shell_view, unmap);
@@ -456,6 +478,11 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 	wl_list_remove(&xdg_shell_view->request_resize.link);
 	wl_list_remove(&xdg_shell_view->set_title.link);
 	wl_list_remove(&xdg_shell_view->set_app_id.link);
+
+	// Remove minimize listener if it was added
+	if (config->scratchpad_minimize) {
+		wl_list_remove(&xdg_shell_view->request_minimize.link);
+	}
 }
 
 static void handle_map(struct wl_listener *listener, void *data) {
@@ -516,6 +543,13 @@ static void handle_map(struct wl_listener *listener, void *data) {
 	xdg_shell_view->set_app_id.notify = handle_set_app_id;
 	wl_signal_add(&toplevel->events.set_app_id,
 			&xdg_shell_view->set_app_id);
+
+	// Add minimize listener if scratchpad_minimize is enabled
+	if (config->scratchpad_minimize) {
+		xdg_shell_view->request_minimize.notify = handle_request_minimize;
+		wl_signal_add(&toplevel->events.request_minimize,
+				&xdg_shell_view->request_minimize);
+	}
 }
 
 static void handle_destroy(struct wl_listener *listener, void *data) {

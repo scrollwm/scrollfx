@@ -864,6 +864,28 @@ void sway_scene_rect_set_color(struct sway_scene_rect *rect, const float color[s
 	scene_node_update(&rect->node, NULL);
 }
 
+void sway_scene_rect_set_corner_radius(struct sway_scene_rect *rect, int radius,
+		enum corner_location location) {
+	if (rect->corner_radius == radius && rect->corner_location == location) {
+		return;
+	}
+
+	assert(radius >= 0);
+
+	rect->corner_radius = radius;
+	rect->corner_location = location;
+	scene_node_update(&rect->node, NULL);
+}
+
+void sway_scene_rect_set_backdrop_blur(struct sway_scene_rect *rect, bool enabled) {
+	if (rect->has_backdrop_blur == enabled) {
+		return;
+	}
+
+	rect->has_backdrop_blur = enabled;
+	scene_node_update(&rect->node, NULL);
+}
+
 static void scene_buffer_handle_buffer_release(struct wl_listener *listener,
 		void *data) {
 	struct sway_scene_buffer *scene_buffer =

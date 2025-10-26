@@ -5,6 +5,7 @@
 #include "sway/tree/root.h"
 #include "sway/tree/workspace.h"
 #include "log.h"
+#include <scenefx/types/wlr_scene.h>
 
 void node_init(struct sway_node *node, enum sway_node_type type, void *thing) {
 	static size_t next_id = 1;
@@ -187,6 +188,24 @@ struct sway_scene_tree *alloc_scene_tree(struct sway_scene_tree *parent,
 	}
 
 	return tree;
+}
+
+struct wlr_scene_shadow *alloc_scene_shadow(struct sway_scene_tree *parent,
+		int width, int height, int corner_radius, float blur_sigma,
+		const float color[static 4], bool *failed) {
+	// fallthrough - if already failed, return NULL
+	if (*failed) {
+		return NULL;
+	}
+
+	struct wlr_scene_shadow *shadow = wlr_scene_shadow_create(
+		&parent->node, width, height, corner_radius, blur_sigma, color);
+	if (!shadow) {
+		sway_log(SWAY_ERROR, "Failed to allocate a scene shadow");
+		*failed = true;
+	}
+
+	return shadow;
 }
 
 void node_set_focus_warp(struct sway_node *node, enum sway_node_focus_warp warp) {

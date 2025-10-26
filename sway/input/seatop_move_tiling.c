@@ -11,6 +11,8 @@
 #include "sway/tree/view.h"
 #include "sway/tree/workspace.h"
 #include "sway/desktop/animation.h"
+#include "sway/config.h"
+#include "sway/tree/container.h"
 
 // Thickness of the dropzone when dragging to the edge of a layout container
 #define DROP_LAYOUT_BORDER 30
@@ -58,6 +60,23 @@ static void handle_motion_prethreshold(struct sway_seat *seat) {
 static void update_indicator(struct seatop_move_tiling_event *e, struct wlr_box *box) {
 	sway_scene_node_set_position(&e->indicator_rect->node, box->x, box->y);
 	sway_scene_rect_set_size(e->indicator_rect, box->width, box->height);
+
+	// Apply corner radius matching the container being moved
+	// NOTE: Assumes config->corner_radius and con->corner_radius exist
+	// (added by other agents in ScrollFX migration)
+	int corner_radius = config->corner_radius;
+	if (e->con) {
+		corner_radius = e->con->corner_radius;
+		if (e->target_node && e->target_node->type != N_CONTAINER) {
+			corner_radius += e->con->current.border_thickness;
+		}
+	}
+
+	// Constrain corner radius to half the smallest dimension
+	int max_radius = (box->width < box->height ? box->width : box->height) / 2;
+	corner_radius = (corner_radius < max_radius ? corner_radius : max_radius);
+
+	sway_scene_rect_set_corner_radius(e->indicator_rect, corner_radius, CORNER_LOCATION_ALL);
 }
 
 static void handle_motion_postthreshold(struct sway_seat *seat) {
@@ -271,6 +290,9 @@ void seatop_begin_move_tiling_threshold(struct sway_seat *seat,
 		free(e);
 		return;
 	}
+
+	// Enable backdrop blur for visual polish during move operations
+	sway_scene_rect_set_backdrop_blur(e->indicator_rect, true);
 
 	e->con = con;
 	e->ref_lx = seat->cursor->cursor->x;

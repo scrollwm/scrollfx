@@ -37,6 +37,7 @@
 #include "sway/tree/scene.h"
 #include "sway/config.h"
 #include "sway/xdg_decoration.h"
+#include <scenefx/types/wlr_scene.h>
 #include "stringop.h"
 
 bool view_init(struct sway_view *view, enum sway_view_type type,
@@ -1012,6 +1013,11 @@ void view_center_and_clip_surface(struct sway_view *view) {
 		sway_scene_node_set_position(&view->content_tree->node, 0, 0);
 	}
 
+	// For SceneFX effects, force clipping even with CSD
+	if (con->blur_enabled || con->shadow_enabled || con->corner_radius > 0) {
+		clip_to_geometry = true;
+	}
+
 	// only make sure to clip the content if there is content to clip
 	if (!wl_list_empty(&con->view->content_tree->children)) {
 		struct wlr_box clip = {0};
@@ -1220,6 +1226,22 @@ static void view_save_buffer_iterator(struct sway_scene_buffer *buffer,
 	sway_scene_node_set_position(&sbuf->node, sx, sy);
 	sway_scene_buffer_set_transform(sbuf, buffer->transform);
 	sway_scene_buffer_set_buffer(sbuf, buffer->buffer);
+
+	// Apply SceneFX properties from buffer if available
+	// These SceneFX API calls preserve visual effects when saving buffers
+	if (buffer->corner_radius > 0) {
+		wlr_scene_buffer_set_corner_radius(&sbuf->scene_buffer,
+			buffer->corner_radius, buffer->corners);
+	}
+	if (buffer->backdrop_blur) {
+		wlr_scene_buffer_set_backdrop_blur(&sbuf->scene_buffer, true);
+	}
+	if (buffer->backdrop_blur_optimized) {
+		wlr_scene_buffer_set_backdrop_blur_optimized(&sbuf->scene_buffer, true);
+	}
+	if (buffer->backdrop_blur_ignore_transparent) {
+		wlr_scene_buffer_set_backdrop_blur_ignore_transparent(&sbuf->scene_buffer, true);
+	}
 }
 
 void view_save_buffer(struct sway_view *view) {

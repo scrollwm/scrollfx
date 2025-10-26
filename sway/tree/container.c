@@ -25,6 +25,7 @@
 #include "log.h"
 #include "stringop.h"
 #include "util.h"
+#include <scenefx/types/wlr_scene.h>
 
 static void handle_output_enter(
 		struct wl_listener *listener, void *data) {
@@ -179,6 +180,21 @@ struct sway_container *container_create(struct sway_view *view) {
 	c->toggle_size.single = false;
 	c->toggle_size.state = TOGGLE_STATE_NONE;
 	c->fullscreen = false;
+
+	// Initialize SceneFX effect properties
+	c->shadow = alloc_scene_shadow(c->scene_tree, 0, 0, 0,
+		config->shadow_blur_sigma, config->shadow_color, &failed);
+	c->dim_rect = NULL;  // Will be created when needed
+	c->corner_radius = config->corner_radius;
+	c->blur_enabled = config->blur_enabled;
+	c->shadow_enabled = config->shadow_enabled;
+	c->dim = config->default_dim_inactive;
+
+	if (failed) {
+		sway_scene_node_destroy(&c->scene_tree->node);
+		free(c);
+		return NULL;
+	}
 
 	wl_signal_init(&c->events.destroy);
 	wl_signal_emit_mutable(&root->events.new_node, &c->node);
@@ -350,6 +366,16 @@ void container_update(struct sway_container *con) {
 	if (con->title_bar.marks_text) {
 		sway_text_node_set_color(con->title_bar.marks_text, colors->text);
 		sway_text_node_set_background(con->title_bar.marks_text, colors->background);
+	}
+
+	// Update dim rect for inactive window dimming
+	if (con->dim_rect) {
+		float *color = config->dim_inactive_colors.unfocused;
+		if (con->view && view_is_urgent(con->view)) {
+			color = config->dim_inactive_colors.urgent;
+		}
+		bool focused = con->current.focused || container_is_current_parent_focused(con);
+		scene_rect_set_color(con->dim_rect, color, focused ? 0.0 : con->dim);
 	}
 }
 
@@ -2073,4 +2099,15 @@ void container_swap(struct sway_container *con1, struct sway_container *con2) {
 	if (fs2) {
 		container_set_fullscreen(con1, fs2);
 	}
+}
+
+bool container_has_shadow(struct sway_container *con) {
+	return con->shadow_enabled
+		&& (con->current.border != B_CSD || config->shadows_on_csd_enabled);
+}
+
+bool container_has_corner_radius(struct sway_container *con) {
+	return (container_is_floating_or_child(con) ||
+		!(config->smart_corner_radius && con->current.workspace->current_gaps.top == 0))
+		&& con->corner_radius;
 }

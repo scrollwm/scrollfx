@@ -20,6 +20,9 @@
 #include "list.h"
 #include "log.h"
 #include "util.h"
+#include <scenefx/types/wlr_scene.h>
+#include <scenefx/types/fx/shadow.h>
+#include <scenefx/types/fx/corner_location.h>
 
 struct sway_transaction {
 	struct wl_event_source *timer;
@@ -954,6 +957,38 @@ static void arrange_container(struct sway_container *con,
 			}
 		}
 #endif
+		// Shadow management
+		if (container_has_shadow(con)) {
+			bool has_corner_radius = container_has_corner_radius(con);
+			int corner_radius = has_corner_radius ?
+				con->corner_radius + con->current.border_thickness : 0;
+
+			wlr_scene_shadow_set_size(con->shadow,
+				width + config->shadow_blur_sigma * 2,
+				height + config->shadow_blur_sigma * 2);
+
+			wlr_scene_node_set_position(&con->shadow->node,
+				con->current.x - config->shadow_blur_sigma + config->shadow_offset_x,
+				con->current.y - config->shadow_blur_sigma + config->shadow_offset_y);
+
+			wlr_scene_shadow_set_clipped_region(con->shadow, (struct clipped_region) {
+				.corner_radius = corner_radius,
+				.corners = CORNER_LOCATION_ALL,
+				.area = {
+					.x = config->shadow_blur_sigma - config->shadow_offset_x,
+					.y = config->shadow_blur_sigma - config->shadow_offset_y,
+					.width = width,
+					.height = height,
+				},
+			});
+
+			float *color = con->current.focused || con->current.urgent ?
+				config->shadow_color : config->shadow_inactive_color;
+			wlr_scene_shadow_set_color(con->shadow, color);
+			wlr_scene_shadow_set_blur_sigma(con->shadow, config->shadow_blur_sigma);
+			wlr_scene_shadow_set_corner_radius(con->shadow, corner_radius);
+		}
+
 		view_reconfigure(con->view);
 	} else {
 		// make sure to disable the title bar if the parent is not managing it
@@ -1121,6 +1156,7 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 
 			sway_scene_node_set_enabled(&output->layers.shell_background->node, !fs);
 			sway_scene_node_set_enabled(&output->layers.shell_bottom->node, !fs);
+			wlr_scene_node_set_enabled(&output->layers.blur_layer->node, !fs);
 			sway_scene_node_set_enabled(&output->layers.fullscreen->node, fs);
 
 			if (fs) {
@@ -1177,10 +1213,17 @@ static void arrange_root(struct sway_root *root) {
 
 	sway_scene_node_set_enabled(&root->layers.shell_background->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.shell_bottom->node, !fs);
+	wlr_scene_node_set_enabled(&root->layers.blur_tree->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.tiling->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.floating->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.shell_top->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.fullscreen->node, !fs);
+
+	// Reparent output blur layers to root blur tree
+	for (int i = 0; i < root->outputs->length; i++) {
+		struct sway_output *output = root->outputs->items[i];
+		wlr_scene_node_reparent(&output->layers.blur_layer->node, root->layers.blur_tree);
+	}
 
 	// hide all contents in the scratchpad
 	for (int i = 0; i < root->scratchpad->length; i++) {
@@ -1201,6 +1244,9 @@ static void arrange_root(struct sway_root *root) {
 	if (fs) {
 		for (int i = 0; i < root->outputs->length; i++) {
 			struct sway_output *output = root->outputs->items[i];
+			if (!output->enabled || !output->wlr_output->enabled) {
+				continue;
+			}
 			struct sway_workspace *ws = output->current.active_workspace;
 
 			sway_scene_output_set_position(output->scene_output, output->lx, output->ly);
@@ -1222,6 +1268,9 @@ static void arrange_root(struct sway_root *root) {
 	} else {
 		for (int i = 0; i < root->outputs->length; i++) {
 			struct sway_output *output = root->outputs->items[i];
+			if (!output->enabled || !output->wlr_output->enabled) {
+				continue;
+			}
 
 			sway_scene_output_set_position(output->scene_output, output->lx, output->ly);
 

@@ -25,6 +25,8 @@ struct sway_output {
 	struct {
 		struct sway_scene_tree *shell_background;
 		struct sway_scene_tree *shell_bottom;
+		// Used for optimized blur. Everything exclusively below gets blurred
+		struct wlr_scene_optimized_blur *blur_layer;
 		struct sway_scene_tree *tiling;
 		struct sway_scene_tree *fullscreen;
 		struct sway_scene_tree *shell_top;
@@ -95,7 +97,8 @@ struct sway_output *output_get_in_direction(struct sway_output *reference,
 		enum wlr_direction direction);
 
 void output_configure_scene(struct sway_output *output,
-	struct sway_scene_node *node, float opacity);
+	struct sway_scene_node *node, float opacity, int corner_radius,
+	bool blur_enabled, bool has_titlebar, struct sway_container *closest_con);
 
 void output_add_workspace(struct sway_output *output,
 		struct sway_workspace *workspace);

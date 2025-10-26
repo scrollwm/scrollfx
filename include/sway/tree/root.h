@@ -46,6 +46,7 @@ struct sway_root {
 	struct {
 		struct sway_scene_tree *shell_background;
 		struct sway_scene_tree *shell_bottom;
+		struct sway_scene_tree *blur_tree;
 		struct sway_scene_tree *tiling;
 		struct sway_scene_tree *floating;
 		struct sway_scene_tree *shell_top;

@@ -7,15 +7,20 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <scenefx/types/wlr_scene.h>
+#include <scenefx/types/fx/corner_location.h>
 #include "log.h"
+#include "sway/config.h"
 #include "sway/scene_descriptor.h"
 #include "sway/desktop/transaction.h"
 #include "sway/input/cursor.h"
 #include "sway/input/input-manager.h"
 #include "sway/input/seat.h"
+#include "sway/layer_criteria.h"
 #include "sway/layers.h"
 #include "sway/output.h"
 #include "sway/server.h"
+#include "sway/tree/node.h"
 #include "sway/tree/scene.h"
 #include "sway/tree/arrange.h"
 #include "sway/tree/workspace.h"
@@ -53,6 +58,19 @@ struct wlr_layer_surface_v1 *toplevel_layer_surface_from_surface(
 	} while (true);
 }
 
+/**
+ * Parse and apply layer criteria to a layer surface
+ */
+static void layer_parse_criteria(struct sway_layer_surface *surface) {
+	if (!surface || !surface->layer_surface || !surface->layer_surface->namespace) {
+		return;
+	}
+
+	struct layer_criteria *criteria =
+		layer_criteria_for_namespace(surface->layer_surface->namespace);
+	layer_apply_criteria(surface, criteria);
+}
+
 static void arrange_surface(struct sway_output *output, const struct wlr_box *full_area,
 		struct wlr_box *usable_area, struct sway_scene_tree *tree, bool exclusive) {
 	struct sway_scene_node *node;
@@ -73,6 +91,48 @@ static void arrange_surface(struct sway_output *output, const struct wlr_box *fu
 		}
 
 		sway_scene_layer_surface_v1_configure(surface->scene, full_area, usable_area);
+
+		// Configure shadow if enabled
+		if (surface->shadow_node) {
+			wlr_scene_node_set_enabled(&surface->shadow_node->node,
+				surface->shadow_enabled);
+
+			if (surface->shadow_enabled && surface->layer_surface->surface->mapped) {
+				struct wlr_layer_surface_v1 *layer_surface = surface->layer_surface;
+				int width = layer_surface->surface->current.width;
+				int height = layer_surface->surface->current.height;
+
+				// Get shadow offset and position from config
+				int shadow_width = width + config->shadow_blur_sigma * 2;
+				int shadow_height = height + config->shadow_blur_sigma * 2;
+
+				wlr_scene_shadow_set_size(surface->shadow_node,
+					shadow_width, shadow_height);
+
+				// Calculate position offset for shadow positioning
+				double x = 0, y = 0;
+				sway_scene_node_coords(&surface->tree->node, &x, &y);
+
+				// Set shadow clipped region for proper corner radius
+				wlr_scene_shadow_set_clipped_region(surface->shadow_node,
+					(struct clipped_region) {
+						.corner_radius = surface->corner_radius,
+						.corners = CORNER_LOCATION_ALL,
+						.area = {
+							.x = (int)(-x),
+							.y = (int)(-y),
+							.width = width,
+							.height = height,
+						},
+					});
+
+				// Update shadow blur sigma and corner radius
+				wlr_scene_shadow_set_blur_sigma(surface->shadow_node,
+					config->shadow_blur_sigma);
+				wlr_scene_shadow_set_corner_radius(surface->shadow_node,
+					surface->corner_radius);
+			}
+		}
 	}
 }
 
@@ -186,6 +246,27 @@ static struct sway_layer_surface *sway_layer_surface_create(
 	surface->popups = popups;
 	surface->layer_surface->data = surface;
 
+	// Initialize SceneFX effect properties
+	surface->shadow_enabled = false;
+	surface->blur_enabled = false;
+	surface->blur_xray = false;
+	surface->blur_ignore_transparent = false;
+	surface->corner_radius = 0;
+
+	// Allocate shadow node for layer surface
+	bool shadow_failed = false;
+	surface->shadow_node = alloc_scene_shadow(surface->tree, 0, 0,
+		0, config->shadow_blur_sigma, config->shadow_color, &shadow_failed);
+
+	if (shadow_failed) {
+		sway_log(SWAY_ERROR, "Failed to allocate shadow node for layer surface");
+		// Continue without shadow - not a fatal error
+		surface->shadow_node = NULL;
+	} else {
+		// Shadow starts disabled by default
+		wlr_scene_node_set_enabled(&surface->shadow_node->node, false);
+	}
+
 	return surface;
 }
 
@@ -290,6 +371,9 @@ static void handle_map(struct wl_listener *listener, void *data) {
 
 	struct wlr_layer_surface_v1 *layer_surface =
 				surface->scene->layer_surface;
+
+	// Apply layer criteria effects based on namespace
+	layer_parse_criteria(surface);
 
 	// focus on new surface
 	if (layer_surface->current.keyboard_interactive &&
