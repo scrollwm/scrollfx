@@ -507,7 +507,7 @@ static bool view_has_executed_criteria(struct sway_view *view,
 		struct criteria *criteria) {
 	for (int i = 0; i < view->executed_criteria->length; ++i) {
 		struct criteria *item = view->executed_criteria->items[i];
-		if (item == criteria) {
+		if (criteria_is_equal(item, criteria)) {
 			return true;
 		}
 	}
