@@ -204,13 +204,13 @@ subdir('common')
 subdir('sway')
 subdir('swaymsg')
 
-if get_option('scrollfxbar') or get_option('scrollfxnag')
+if get_option('scrollbar') or get_option('scrollnag')
 	subdir('client')
 endif
-if get_option('scrollfxbar')
+if get_option('scrollbar')
 	subdir('swaybar')
 endif
-if get_option('scrollfxnag')
+if get_option('scrollnag')
 	subdir('swaynag')
 endif
 
