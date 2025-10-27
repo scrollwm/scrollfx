@@ -1151,12 +1151,16 @@ static void arrange_output(struct sway_output *output, int width, int height) {
 
 		if (activated) {
 			struct sway_container *fs = child->current.fullscreen;
+			// Check if workspace is scaled (overview mode)
+			bool scaled = layout_scale_enabled(child) && layout_scale_get(child) != 1.0;
+
 			sway_scene_node_set_enabled(&child->layers.tiling->node, !fs && tiling);
 			sway_scene_node_set_enabled(&child->layers.fullscreen->node, fs);
 
 			sway_scene_node_set_enabled(&output->layers.shell_background->node, !fs);
 			sway_scene_node_set_enabled(&output->layers.shell_bottom->node, !fs);
-			wlr_scene_node_set_enabled(&output->layers.blur_layer->node, !fs);
+			// Disable blur during fullscreen OR scaling
+			wlr_scene_node_set_enabled(&output->layers.blur_layer->node, !fs && !scaled);
 			sway_scene_node_set_enabled(&output->layers.fullscreen->node, fs);
 
 			if (fs) {
@@ -1211,9 +1215,24 @@ void arrange_popups(struct sway_scene_tree *popups) {
 static void arrange_root(struct sway_root *root) {
 	struct sway_container *fs = root->fullscreen_global;
 
+	// Check if ANY workspace is scaled (overview mode)
+	bool any_scaled = false;
+	for (int i = 0; i < root->outputs->length; i++) {
+		struct sway_output *output = root->outputs->items[i];
+		for (int j = 0; j < output->current.workspaces->length; j++) {
+			struct sway_workspace *ws = output->current.workspaces->items[j];
+			if (layout_scale_enabled(ws) && layout_scale_get(ws) != 1.0) {
+				any_scaled = true;
+				break;
+			}
+		}
+		if (any_scaled) break;
+	}
+
 	sway_scene_node_set_enabled(&root->layers.shell_background->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.shell_bottom->node, !fs);
-	wlr_scene_node_set_enabled(&root->layers.blur_tree->node, !fs);
+	// Disable blur during fullscreen OR any workspace scaling
+	wlr_scene_node_set_enabled(&root->layers.blur_tree->node, !fs && !any_scaled);
 	sway_scene_node_set_enabled(&root->layers.tiling->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.floating->node, !fs);
 	sway_scene_node_set_enabled(&root->layers.shell_top->node, !fs);
