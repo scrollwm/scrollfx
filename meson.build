@@ -1,14 +1,13 @@
 project(
-	'scroll',
+	'scrollfx',
 	'c',
-	version: '1.12-dev',
+	version: '0.1.2',
 	license: 'MIT',
 	meson_version: '>=1.3',
 	default_options: [
 		'c_std=c11',
 		'warning_level=2',
 		'werror=true',
-		'wrap_mode=nodownload',
 	],
 )
 
@@ -19,7 +18,7 @@ add_project_arguments(
 
 		'-Wno-unused-parameter',
 		'-Wno-unused-result',
-		'-Wno-unused-braces',
+		'-Wno-missing-braces',
 		'-Wno-format-zero-length',
 		'-Wundef',
 		'-Wvla',
@@ -46,14 +45,14 @@ subproject(
 scenefx = dependency('scenefx-0.4', fallback: 'scenefx')
 
 # Execute the wlroots subproject, if any
-wlroots_version = ['>=0.20.0', '<0.21.0']
+wlroots_version = ['>=0.19.1', '<0.20.0']
 subproject(
 	'wlroots',
 	default_options: ['examples=false'],
 	required: false,
 	version: wlroots_version,
 )
-wlroots = dependency('wlroots-0.20', version: wlroots_version, fallback: 'wlroots')
+wlroots = dependency('wlroots-0.19', version: wlroots_version, fallback: 'wlroots')
 wlroots_features = {
 	'xwayland': false,
 	'libinput_backend': false,
@@ -72,7 +71,7 @@ pcre2 = dependency('libpcre2-8')
 wayland_server = dependency('wayland-server', version: '>=1.21.0')
 wayland_client = dependency('wayland-client')
 wayland_cursor = dependency('wayland-cursor')
-wayland_protos = dependency('wayland-protocols', version: '>=1.41', default_options: ['tests=false'])
+wayland_protos = dependency('wayland-protocols', version: '>=1.24', default_options: ['tests=false'])
 xkbcommon = dependency('xkbcommon', version: '>=1.5.0')
 cairo = dependency('cairo')
 pango = dependency('pango')
@@ -127,20 +126,20 @@ if scdoc.found()
 	scdoc_prog = find_program(scdoc.get_variable(pkgconfig: 'scdoc'), native: true)
 	mandir = get_option('mandir')
 	man_files = [
-		'sway/scroll.1.scd',
-		'sway/scroll.5.scd',
-		'sway/scroll-bar.5.scd',
-		'sway/scroll-input.5.scd',
-		'sway/scroll-ipc.7.scd',
-		'sway/scroll-output.5.scd',
-		'swaybar/scrollbar-protocol.7.scd',
-		'swaymsg/scrollmsg.1.scd',
+		'sway/scrollfx.1.scd',
+		'sway/scrollfx.5.scd',
+		'sway/scrollfx-bar.5.scd',
+		'sway/scrollfx-input.5.scd',
+		'sway/scrollfx-ipc.7.scd',
+		'sway/scrollfx-output.5.scd',
+		'swaybar/scrollfxbar-protocol.7.scd',
+		'swaymsg/scrollfxmsg.1.scd',
 	]
 
-	if get_option('scrollnag')
+	if get_option('scrollfxnag')
 		man_files += [
-			'swaynag/scrollnag.1.scd',
-			'swaynag/scrollnag.5.scd',
+			'swaynag/scrollfxnag.1.scd',
+			'swaynag/scrollfxnag.5.scd',
 		]
 	endif
 
@@ -205,13 +204,13 @@ subdir('common')
 subdir('sway')
 subdir('swaymsg')
 
-if get_option('scrollbar') or get_option('scrollnag')
+if get_option('scrollfxbar') or get_option('scrollfxnag')
 	subdir('client')
 endif
-if get_option('scrollbar')
+if get_option('scrollfxbar')
 	subdir('swaybar')
 endif
-if get_option('scrollnag')
+if get_option('scrollfxnag')
 	subdir('swaynag')
 endif
 
@@ -224,11 +223,11 @@ configure_file(
 	configuration: config,
 	input: 'config.in',
 	output: '@BASENAME@',
-	install_dir: join_paths(sysconfdir, 'scroll')
+	install_dir: join_paths(sysconfdir, 'scrollfx')
 )
 
 install_data(
-	'scroll.desktop',
+	'scrollfx.desktop',
 	install_dir: join_paths(datadir, 'wayland-sessions')
 )
 
@@ -243,7 +242,7 @@ if get_option('default-wallpaper')
 		'assets/Sway_Wallpaper_Blue_2048x1536.png',
 		'assets/Sway_Wallpaper_Blue_2048x1536_Portrait.png',
 	)
-	wallpaper_install_dir = join_paths(datadir, 'backgrounds', 'scroll')
+	wallpaper_install_dir = join_paths(datadir, 'backgrounds', 'scrollfx')
 
 	install_data(wallpaper_files, install_dir: wallpaper_install_dir)
 endif
@@ -251,6 +250,7 @@ endif
 subdir('completions')
 
 summary({
+	'scenefx': scenefx.found(),
 	'gdk-pixbuf': gdk_pixbuf.found(),
 	'tray': have_tray,
 	'man-pages': scdoc.found(),
