@@ -126,20 +126,20 @@ if scdoc.found()
 	scdoc_prog = find_program(scdoc.get_variable(pkgconfig: 'scdoc'), native: true)
 	mandir = get_option('mandir')
 	man_files = [
-		'sway/scrollfx.1.scd',
-		'sway/scrollfx.5.scd',
-		'sway/scrollfx-bar.5.scd',
-		'sway/scrollfx-input.5.scd',
-		'sway/scrollfx-ipc.7.scd',
-		'sway/scrollfx-output.5.scd',
-		'swaybar/scrollfxbar-protocol.7.scd',
-		'swaymsg/scrollfxmsg.1.scd',
+		'sway/scroll.1.scd',
+		'sway/scroll.5.scd',
+		'sway/scroll-bar.5.scd',
+		'sway/scroll-input.5.scd',
+		'sway/scroll-ipc.7.scd',
+		'sway/scroll-output.5.scd',
+		'swaybar/scrollbar-protocol.7.scd',
+		'swaymsg/scrollmsg.1.scd',
 	]
 
-	if get_option('scrollfxnag')
+	if get_option('scrollnag')
 		man_files += [
-			'swaynag/scrollfxnag.1.scd',
-			'swaynag/scrollfxnag.5.scd',
+			'swaynag/scrollnag.1.scd',
+			'swaynag/scrollnag.5.scd',
 		]
 	endif
 
