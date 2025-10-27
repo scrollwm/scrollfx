@@ -239,7 +239,6 @@ sway_sources = files(
 	'commands/output/disable.c',
 	'commands/output/dpms.c',
 	'commands/output/enable.c',
-	'commands/output/hdr.c',
 	'commands/output/max_render_time.c',
 	'commands/output/mode.c',
 	'commands/output/position.c',
@@ -271,9 +270,6 @@ sway_sources = files(
 	'tree/scene/output_layout.c',
 	'tree/scene/xdg_shell.c',
 	'tree/scene/debug.c',
-	'tree/scene/output.c',
-	'tree/scene/ext_image_capture_source_v1.c',
-	'tree/scene/color.c',
 
 	'protocol/xdg_output_v1.c',
 )
