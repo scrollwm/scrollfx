@@ -223,11 +223,11 @@ configure_file(
 	configuration: config,
 	input: 'config.in',
 	output: '@BASENAME@',
-	install_dir: join_paths(sysconfdir, 'scrollfx')
+	install_dir: join_paths(sysconfdir, 'scroll')
 )
 
 install_data(
-	'scrollfx.desktop',
+	'scroll.desktop',
 	install_dir: join_paths(datadir, 'wayland-sessions')
 )
 
@@ -242,7 +242,7 @@ if get_option('default-wallpaper')
 		'assets/Sway_Wallpaper_Blue_2048x1536.png',
 		'assets/Sway_Wallpaper_Blue_2048x1536_Portrait.png',
 	)
-	wallpaper_install_dir = join_paths(datadir, 'backgrounds', 'scrollfx')
+	wallpaper_install_dir = join_paths(datadir, 'backgrounds', 'scroll')
 
 	install_data(wallpaper_files, install_dir: wallpaper_install_dir)
 endif
