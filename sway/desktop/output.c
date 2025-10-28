@@ -21,6 +21,8 @@
 #include <wlr/util/transform.h>
 #include "config.h"
 #include "log.h"
+#include <scenefx/types/wlr_scene.h>
+#include <scenefx/types/fx/corner_location.h>
 #include "sway/config.h"
 #include "sway/desktop/transaction.h"
 #include "sway/input/input-manager.h"
