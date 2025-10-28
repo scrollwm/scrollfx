@@ -1,7 +1,7 @@
 project(
 	'scrollfx',
 	'c',
-	version: '0.1.2',
+	version: '0.1.6',
 	license: 'MIT',
 	meson_version: '>=1.3',
 	default_options: [
