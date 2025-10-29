@@ -116,11 +116,11 @@ struct buffer_timer {
 };
 
 static int handle_buffer_timer(void *data) {
-	struct sway_scene_buffer *buffer = data;
+	struct wlr_scene_buffer *buffer = data;
 
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
-	sway_scene_buffer_send_frame_done(buffer, &now);
+	wlr_scene_buffer_send_frame_done(buffer, &now);
 	return 0;
 }
 
@@ -133,7 +133,7 @@ static void handle_buffer_timer_destroy(struct wl_listener *listener,
 	free(timer);
 }
 
-static struct buffer_timer *buffer_timer_get_or_create(struct sway_scene_buffer *buffer) {
+static struct buffer_timer *buffer_timer_get_or_create(struct wlr_scene_buffer *buffer) {
 	struct buffer_timer *timer =
 		scene_descriptor_try_get(&buffer->node, SWAY_SCENE_DESC_BUFFER_TIMER);
 	if (timer) {
@@ -160,7 +160,7 @@ static struct buffer_timer *buffer_timer_get_or_create(struct sway_scene_buffer 
 	return timer;
 }
 
-static void send_frame_done_iterator(struct sway_scene_buffer *buffer,
+static void send_frame_done_iterator(struct wlr_scene_buffer *buffer,
 		int x, int y, void *user_data) {
 	struct send_frame_done_data *data = user_data;
 	struct sway_output *output = data->output;
@@ -170,7 +170,7 @@ static void send_frame_done_iterator(struct sway_scene_buffer *buffer,
 		return;
 	}
 
-	struct sway_scene_node *current = &buffer->node;
+	struct wlr_scene_node *current = &buffer->node;
 	while (true) {
 		struct sway_view *view = scene_descriptor_try_get(current,
 			SWAY_SCENE_DESC_VIEW);
@@ -198,16 +198,16 @@ static void send_frame_done_iterator(struct sway_scene_buffer *buffer,
 	if (timer) {
 		wl_event_source_timer_update(timer->frame_done_timer, delay);
 	} else {
-		sway_scene_buffer_send_frame_done(buffer, &data->when);
+		wlr_scene_buffer_send_frame_done(buffer, &data->when);
 	}
 }
 
 static enum wlr_scale_filter_mode get_scale_filter(struct sway_output *output,
-		struct sway_scene_buffer *buffer) {
+		struct wlr_scene_buffer *buffer) {
 	// if we are scaling down, we should always choose linear
 	if (buffer->dst_width > 0 && buffer->dst_height > 0 && (
-			buffer->dst_width < buffer->buffer_width ||
-			buffer->dst_height < buffer->buffer_height)) {
+			buffer->dst_width < buffer->WLR_PRIVATE.buffer_width ||
+			buffer->dst_height < buffer->WLR_PRIVATE.buffer_height)) {
 		return WLR_SCALE_FILTER_BILINEAR;
 	}
 
@@ -221,14 +221,12 @@ static enum wlr_scale_filter_mode get_scale_filter(struct sway_output *output,
 	}
 }
 
-void output_configure_scene(struct sway_output *output,
-		struct sway_scene_node *node, float opacity, int corner_radius,
-		bool blur_enabled, bool has_titlebar, struct sway_container *closest_con) {
+void output_configure_scene(struct sway_output *output, struct wlr_scene_node *node, float opacity,
+		int corner_radius, bool blur_enabled, bool has_titlebar, struct sway_container *closest_con) {
 	if (!node->enabled) {
 		return;
 	}
 
-	// Track container state through scene tree
 	struct sway_container *con =
 		scene_descriptor_try_get(node, SWAY_SCENE_DESC_CONTAINER);
 	if (con) {
@@ -236,17 +234,18 @@ void output_configure_scene(struct sway_output *output,
 		opacity = con->alpha;
 		corner_radius = con->corner_radius;
 		blur_enabled = con->blur_enabled;
+
+		enum sway_container_layout layout = con->current.layout;
+		has_titlebar |= con->current.border == B_NORMAL || layout == L_STACKED || layout == L_TABBED;
 	}
 
-	if (node->type == SWAY_SCENE_NODE_BUFFER) {
-		struct sway_scene_buffer *buffer = sway_scene_buffer_from_node(node);
-		struct sway_scene_surface *surface = sway_scene_surface_try_from_buffer(buffer);
-		struct wlr_surface *wlr_surface = surface ? surface->surface : NULL;
+	if (node->type == WLR_SCENE_NODE_BUFFER) {
+		struct wlr_scene_buffer *buffer = wlr_scene_buffer_from_node(node);
+		struct wlr_scene_surface *surface = wlr_scene_surface_try_from_buffer(buffer);
 
-		// Apply opacity with alpha modifier support
-		if (wlr_surface) {
+		if (surface) {
 			const struct wlr_alpha_modifier_surface_v1_state *alpha_modifier_state =
-				wlr_alpha_modifier_v1_get_surface_state(wlr_surface);
+				wlr_alpha_modifier_v1_get_surface_state(surface->surface);
 			if (alpha_modifier_state != NULL) {
 				opacity *= (float)alpha_modifier_state->multiplier;
 			}
@@ -259,38 +258,48 @@ void output_configure_scene(struct sway_output *output,
 			buffer->filter_mode = get_scale_filter(output, buffer);
 		}
 
-		sway_scene_buffer_set_opacity(buffer, opacity);
+		wlr_scene_buffer_set_opacity(buffer, opacity);
 
-		// Apply corner radius
-		wlr_scene_buffer_set_corner_radius(buffer,
-			container_has_corner_radius(closest_con) ? corner_radius : 0,
-			has_titlebar ? CORNER_LOCATION_BOTTOM : CORNER_LOCATION_ALL);
-
-		// Apply blur
-		wlr_scene_buffer_set_backdrop_blur(buffer, blur_enabled);
-		bool should_optimize_blur = (closest_con &&
-			!container_is_floating_or_child(closest_con)) || config->blur_xray;
-		wlr_scene_buffer_set_backdrop_blur_optimized(buffer, should_optimize_blur);
-
-		// Layer surface blur configuration
-		if (wlr_surface) {
-			struct wlr_layer_surface_v1 *layer_surface =
-				wlr_layer_surface_v1_try_from_wlr_surface(wlr_surface);
-			if (layer_surface && layer_surface->data) {
-				struct sway_layer_surface *sway_layer = layer_surface->data;
-				wlr_scene_buffer_set_backdrop_blur(buffer, sway_layer->blur_enabled);
-				wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer,
-					sway_layer->blur_ignore_transparent);
-				wlr_scene_buffer_set_backdrop_blur_optimized(buffer,
-					sway_layer->blur_xray);
-			}
+		if (!surface || !surface->surface) {
+			return;
 		}
-	} else if (node->type == SWAY_SCENE_NODE_TREE) {
-		struct sway_scene_tree *tree = sway_scene_tree_from_node(node);
-		struct sway_scene_node *child;
-		wl_list_for_each(child, &tree->children, link) {
-			output_configure_scene(output, child, opacity, corner_radius,
-				blur_enabled, has_titlebar, closest_con);
+
+		// Other buffers should set their own effects manually, like the
+		// text buffer and saved views
+		struct wlr_layer_surface_v1 *layer_surface = NULL;
+		if (wlr_xdg_surface_try_from_wlr_surface(surface->surface)
+#if WLR_HAS_XWAYLAND
+				|| wlr_xwayland_surface_try_from_wlr_surface(surface->surface)
+#endif
+				) {
+			wlr_scene_buffer_set_corner_radius(buffer,
+					container_has_corner_radius(closest_con) ? corner_radius : 0,
+					has_titlebar ? CORNER_LOCATION_BOTTOM : CORNER_LOCATION_ALL);
+			wlr_scene_buffer_set_backdrop_blur(buffer, blur_enabled);
+			wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer, false);
+			// Only enable xray blur if tiled or when xray is explicitly enabled
+			bool should_optimize_blur = (closest_con && !container_is_floating_or_child(closest_con)) || config->blur_xray;
+			wlr_scene_buffer_set_backdrop_blur_optimized(buffer, should_optimize_blur);
+		} else if (wlr_subsurface_try_from_wlr_surface(surface->surface)) {
+			wlr_scene_buffer_set_corner_radius(buffer,
+					container_has_corner_radius(closest_con) ? corner_radius : 0,
+					CORNER_LOCATION_ALL);
+		} else if ((layer_surface = wlr_layer_surface_v1_try_from_wlr_surface(surface->surface))
+				&& layer_surface->data) {
+			// Layer effects
+			struct sway_layer_surface *surface = layer_surface->data;
+			wlr_scene_buffer_set_corner_radius(buffer, surface->corner_radius, CORNER_LOCATION_ALL);
+			wlr_scene_shadow_set_blur_sigma(surface->shadow_node, config->shadow_blur_sigma);
+			wlr_scene_shadow_set_corner_radius(surface->shadow_node, surface->corner_radius);
+			wlr_scene_buffer_set_backdrop_blur(buffer, surface->blur_enabled);
+			wlr_scene_buffer_set_backdrop_blur_ignore_transparent(buffer, surface->blur_ignore_transparent);
+			wlr_scene_buffer_set_backdrop_blur_optimized(buffer, surface->blur_xray);
+		}
+	} else if (node->type == WLR_SCENE_NODE_TREE) {
+		struct wlr_scene_tree *tree = wlr_scene_tree_from_node(node);
+		struct wlr_scene_node *node;
+		wl_list_for_each(node, &tree->children, link) {
+			output_configure_scene(output, node, opacity, corner_radius, blur_enabled, has_titlebar, closest_con);
 		}
 	}
 }
@@ -320,7 +329,7 @@ static int output_repaint_timer_handler(void *data) {
 		return 0;
 	}
 
-	output_configure_scene(output, &root->root_scene->tree.node, 1.0f,
+	output_configure_scene(output, (struct wlr_scene_node *)&root->root_scene->tree.node, 1.0f,
 		0, false, false, NULL);
 
 	struct sway_scene_output_state_options opts = {
