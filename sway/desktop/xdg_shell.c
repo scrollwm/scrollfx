@@ -479,7 +479,6 @@ static void handle_unmap(struct wl_listener *listener, void *data) {
 	wl_list_remove(&xdg_shell_view->set_title.link);
 	wl_list_remove(&xdg_shell_view->set_app_id.link);
 
-	// Remove minimize listener if it was added
 	if (config->scratchpad_minimize) {
 		wl_list_remove(&xdg_shell_view->request_minimize.link);
 	}
