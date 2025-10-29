@@ -135,7 +135,7 @@ static void handle_buffer_timer_destroy(struct wl_listener *listener,
 
 static struct buffer_timer *buffer_timer_get_or_create(struct wlr_scene_buffer *buffer) {
 	struct buffer_timer *timer =
-		scene_descriptor_try_get(&buffer->node, SWAY_SCENE_DESC_BUFFER_TIMER);
+		scene_descriptor_try_get((struct sway_scene_node *)&buffer->node, SWAY_SCENE_DESC_BUFFER_TIMER);
 	if (timer) {
 		return timer;
 	}
@@ -152,7 +152,7 @@ static struct buffer_timer *buffer_timer_get_or_create(struct wlr_scene_buffer *
 		return NULL;
 	}
 
-	scene_descriptor_assign(&buffer->node, SWAY_SCENE_DESC_BUFFER_TIMER, timer);
+	scene_descriptor_assign((struct sway_scene_node *)&buffer->node, SWAY_SCENE_DESC_BUFFER_TIMER, timer);
 
 	timer->destroy.notify = handle_buffer_timer_destroy;
 	wl_signal_add(&buffer->node.events.destroy, &timer->destroy);
@@ -172,7 +172,7 @@ static void send_frame_done_iterator(struct wlr_scene_buffer *buffer,
 
 	struct wlr_scene_node *current = &buffer->node;
 	while (true) {
-		struct sway_view *view = scene_descriptor_try_get(current,
+		struct sway_view *view = scene_descriptor_try_get((struct sway_scene_node *)current,
 			SWAY_SCENE_DESC_VIEW);
 		if (view) {
 			view_max_render_time = view->max_render_time;
@@ -228,7 +228,7 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 	}
 
 	struct sway_container *con =
-		scene_descriptor_try_get(node, SWAY_SCENE_DESC_CONTAINER);
+		scene_descriptor_try_get((struct sway_scene_node *)node, SWAY_SCENE_DESC_CONTAINER);
 	if (con) {
 		closest_con = con;
 		opacity = con->alpha;
@@ -236,7 +236,7 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 		blur_enabled = con->blur_enabled;
 
 		enum sway_container_layout layout = con->current.layout;
-		has_titlebar |= con->current.border == B_NORMAL || layout == L_STACKED || layout == L_TABBED;
+		has_titlebar |= con->current.border == B_NORMAL;
 	}
 
 	if (node->type == WLR_SCENE_NODE_BUFFER) {
@@ -267,7 +267,7 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 		// Other buffers should set their own effects manually, like the
 		// text buffer and saved views
 		struct wlr_layer_surface_v1 *layer_surface = NULL;
-		if (wlr_xdg_surface_try_from_wlr_surface(surface->surface)
+		if (wlr_surface_is_xdg_surface(surface->surface)
 #if WLR_HAS_XWAYLAND
 				|| wlr_xwayland_surface_try_from_wlr_surface(surface->surface)
 #endif
@@ -280,7 +280,7 @@ void output_configure_scene(struct sway_output *output, struct wlr_scene_node *n
 			// Only enable xray blur if tiled or when xray is explicitly enabled
 			bool should_optimize_blur = (closest_con && !container_is_floating_or_child(closest_con)) || config->blur_xray;
 			wlr_scene_buffer_set_backdrop_blur_optimized(buffer, should_optimize_blur);
-		} else if (wlr_subsurface_try_from_wlr_surface(surface->surface)) {
+		} else if (wlr_surface_is_subsurface(surface->surface)) {
 			wlr_scene_buffer_set_corner_radius(buffer,
 					container_has_corner_radius(closest_con) ? corner_radius : 0,
 					CORNER_LOCATION_ALL);

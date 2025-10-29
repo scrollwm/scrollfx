@@ -21,7 +21,6 @@
 #include "log.h"
 #include "util.h"
 #include <scenefx/types/wlr_scene.h>
-#include <scenefx/types/fx/shadow.h>
 #include <scenefx/types/fx/corner_location.h>
 
 struct sway_transaction {
